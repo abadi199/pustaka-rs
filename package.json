@@ -1,0 +1,19 @@
+{
+  "name": "pustaka-rs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "chokidar-cli": "^1.2.0",
+    "elm": "^0.18.0"
+  },
+  "devDependencies": {
+    "chokidar-cli": "^1.2.0",
+    "elm": "^0.18.0"
+  },
+  "scripts": {
+    "watch": "chokidar 'src/client/**/*.elm' -c 'elm make src/client/Main.elm --output app/app.js' --initial"
+  },
+  "author": "",
+  "license": "ISC"
+}

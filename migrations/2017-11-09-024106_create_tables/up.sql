@@ -1,0 +1,29 @@
+CREATE TABLE category (
+  id INTEGER NOT NULL PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  parent_id INTEGER NULL
+);
+
+CREATE TABLE media_type (
+  id INTEGER NOT NULL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);
+
+CREATE TABLE author (
+  id INTEGER NOT NULL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);
+
+CREATE TABLE publication (
+  id INTEGER NOT NULL PRIMARY KEY,
+  isbn VARCHAR NOT NULL,
+  title VARCHAR NOT NULL,
+  type INTEGER NULL,
+  author INTEGER NOT NULL
+);
+
+CREATE TABLE publication_category (
+  id INTEGER NOT NULL PRIMARY KEY,
+  publication_id INTEGER NOT NULL,
+  category_id INTEGER NOT NULL
+);
