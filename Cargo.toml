@@ -8,9 +8,9 @@ authors = ["Abadi Kurniawan <abadi.kurniawan@gmail.com>"]
 name = "pustaka"
 path = "src/server/bin/main.rs"
 
-# [[bin]]
-# name = "seed"
-# path = "src/server/bin/seed.rs"
+[[bin]]
+name = "seed"
+path = "src/server/bin/seed.rs"
 
 [lib]
 name = "pustaka_lib"

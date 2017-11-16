@@ -5,4 +5,4 @@ import Html
 
 main : Html.Html msg
 main =
-    Html.text "Hello World, from rocket and elm!"
+    Html.text "Hello World, from rocket and elm!" 

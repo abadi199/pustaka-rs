@@ -4,14 +4,14 @@ use schema::{category, media_type, author, publication, publication_category};
 #[table_name="category"]
 pub struct NewCategory {
     pub name: String,
-    pub parent_id: i32,
+    pub parent_id: Option<i32>,
 }
 
 #[derive(Debug, Queryable)]
 pub struct Category {
     pub id: i32,
     pub name: String,
-    pub parent_id: i32,
+    pub parent_id: Option<i32>,
 }
 
 #[derive(Debug, Insertable)]
