@@ -6,7 +6,11 @@ authors = ["Abadi Kurniawan <abadi.kurniawan@gmail.com>"]
 # bin is the entry point for `cargo run` or `cargo build`
 [[bin]]
 name = "pustaka"
-path = "src/server/main.rs"
+path = "src/server/bin/main.rs"
+
+# [[bin]]
+# name = "seed"
+# path = "src/server/bin/seed.rs"
 
 [lib]
 name = "pustaka_lib"
@@ -18,3 +22,5 @@ rocket_codegen = "0.3.3"
 diesel = { version = "0.16.0", features = ["sqlite"] }
 diesel_codegen = { version = "0.16.0", features = ["sqlite"] }
 dotenv = "0.9.0"
+r2d2 = "*"
+r2d2-diesel = "*"
