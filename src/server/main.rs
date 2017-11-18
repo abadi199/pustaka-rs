@@ -1,8 +1,6 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
-mod api;
-
 extern crate rocket;
 extern crate diesel;
 extern crate rocket_contrib;
@@ -32,6 +30,6 @@ fn main() {
     rocket::ignite()
         .manage(pustaka::db::create_db_pool())
         .mount("/", routes![files, index])
-        .mount("/api/category", api::category::routes())
+        .mount("/api/category", pustaka::api::category::routes())
         .launch();
 }

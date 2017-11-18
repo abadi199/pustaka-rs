@@ -1,7 +1,7 @@
-use pustaka::db::DbConn;
-use pustaka::models::*;
+use db::DbConn;
+use models::*;
 use diesel::prelude::*;
-use pustaka::schema::category::dsl::*;
+use schema::category::dsl::*;
 use rocket_contrib::Json;
 use rocket::Route;
 
