@@ -1,12 +1,12 @@
 extern crate diesel;
-extern crate pustaka_lib;
+extern crate pustaka;
 
 use diesel::prelude::*;
-use pustaka_lib::*;
-use pustaka_lib::models::*;
+use pustaka::*;
+use pustaka::models::*;
 
 fn main() {
-    let connection = create_db_pool().get().unwrap();
+    let connection = db::create_db_pool().get().unwrap();
 
     category(&*connection);
     media_type(&*connection);

@@ -1,7 +1,12 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
+mod api;
+
 extern crate rocket;
+extern crate diesel;
+extern crate rocket_contrib;
+extern crate pustaka;
 
 use std::path::{Path, PathBuf};
 use rocket::response::NamedFile;
@@ -24,5 +29,9 @@ fn index() -> Option<NamedFile> {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![files, index]).mount("/api", routes![hello]).launch();
+    rocket::ignite()
+        .manage(pustaka::db::create_db_pool())
+        .mount("/", routes![files, index])
+        .mount("/api/category", api::category::routes())
+        .launch();
 }
