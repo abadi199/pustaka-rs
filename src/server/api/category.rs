@@ -34,7 +34,7 @@ fn delete(category_id: i32, connection: DbConn) -> Json<bool> {
 }
 
 #[get("/<category_id>")]
-fn get_category(category_id: i32, connection: DbConn) -> Json<Category> {
+fn get(category_id: i32, connection: DbConn) -> Json<Category> {
     let mut row = category
         .filter(id.eq(category_id))
         .limit(1)
@@ -46,12 +46,12 @@ fn get_category(category_id: i32, connection: DbConn) -> Json<Category> {
             panic!(format!(
                 "category with id of {} can't be found",
                 category_id
-            ));
+            ))
         }
         false => Json(row.remove(0)),
     }
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![list, create, delete]
+    routes![list, create, delete, get]
 }

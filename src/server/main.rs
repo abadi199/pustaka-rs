@@ -32,6 +32,7 @@ fn main() {
         .mount("/app", routes![files, index])
         .mount("/api/category", pustaka::api::category::routes())
         .mount("/api/media_type", pustaka::api::media_type::routes())
+        .mount("/api/author", pustaka::api::author::routes())
         .mount("/", routes![redirect_to_app])
         .launch();
 }
