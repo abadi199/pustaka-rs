@@ -23,11 +23,12 @@ fn category(connection: &SqliteConnection) {
 
     let categories = vec!["Fiction".to_string(), "Non Fiction".to_string()];
     for name in categories {
-        diesel::insert(&NewCategory {
-            name: name,
-            parent_id: None,
-        }).into(category)
-            .execute(&*connection)
+        diesel::insert_into(category)
+            .values(&NewCategory {
+                name: name,
+                parent_id: None,
+            })
+            .execute(connection)
             .expect("Error inserting category");
     }
 }
@@ -47,9 +48,9 @@ fn media_type(connection: &SqliteConnection) {
         "hardcopy".to_string(),
     ];
     for name in media_types {
-        diesel::insert(&NewMediaType { name: name })
-            .into(media_type)
-            .execute(&*connection)
+        diesel::insert_into(media_type)
+            .values(&NewMediaType { name: name })
+            .execute(connection)
             .expect("Error inserting media_type");
     }
 
@@ -62,6 +63,7 @@ fn author(connection: &SqliteConnection) {
         "Error deleting authors",
     );
 }
+
 
 fn publication(connection: &SqliteConnection) {
     use schema::publication::dsl::publication;

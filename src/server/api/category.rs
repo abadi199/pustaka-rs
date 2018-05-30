@@ -17,8 +17,8 @@ fn list(connection: DbConn) -> Json<Vec<Category>> {
 
 #[post("/", data = "<new_category>")]
 fn create(new_category: Json<NewCategory>, connection: DbConn) -> Json<usize> {
-    let result = diesel::insert(&new_category.0)
-        .into(category)
+    let result = diesel::insert_into(category)
+        .values(&new_category.0)
         .execute(&*connection)
         .expect("Error inserting category");
     Json(result)

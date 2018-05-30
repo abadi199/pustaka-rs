@@ -17,8 +17,8 @@ fn list(connection: DbConn) -> Json<Vec<MediaType>> {
 
 #[post("/", data = "<new_media_type>")]
 fn create(new_media_type: Json<NewMediaType>, connection: DbConn) -> Json<usize> {
-    let result = diesel::insert(&new_media_type.0)
-        .into(media_type)
+    let result = diesel::insert_into(media_type)
+        .values(&new_media_type.0)
         .execute(&*connection)
         .expect("Error inserting media type");
     Json(result)

@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 use std::ops::Deref;
-use r2d2::{Config, Pool, PooledConnection};
+use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use rocket::{Outcome, Request, State};
 use rocket::http::Status;
@@ -13,9 +13,8 @@ pub fn create_db_pool() -> Pool<ConnectionManager<SqliteConnection>> {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let config = Config::default();
     let manager = ConnectionManager::<SqliteConnection>::new(database_url);
-    Pool::new(config, manager).expect("Failed to create pool.")
+    Pool::builder().build(manager).expect("Failed to create pool.")
 }
 
 pub struct DbConn(PooledConnection<ConnectionManager<SqliteConnection>>);

@@ -1,8 +1,27 @@
 module Main exposing (main)
 
-import Html
+import Html exposing (..)
+import Model exposing (Model)
+import Msg exposing (Msg)
+import Update exposing (update)
+import View exposing (view)
 
 
-main : Html.Html msg
+main : Program Never Model Msg
 main =
-    Html.text "Hello World, from rocket and elm!" 
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( Model.initialModel, Cmd.none )

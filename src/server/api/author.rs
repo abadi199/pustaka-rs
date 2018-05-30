@@ -17,8 +17,8 @@ fn list(connection: DbConn) -> Json<Vec<Author>> {
 
 #[post("/", data = "<new_author>")]
 fn create(new_author: Json<NewAuthor>, connection: DbConn) -> Json<usize> {
-    let result = diesel::insert(&new_author.0)
-        .into(author)
+    let result = diesel::insert_into(author)
+        .values(&new_author.0)
         .execute(&*connection)
         .expect("Error inserting author");
     Json(result)
