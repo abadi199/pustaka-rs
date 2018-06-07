@@ -1,16 +1,14 @@
 module Model exposing (Model, initialModel)
 
-import UI.Input.Text
+import Entity.Category exposing (Category)
+import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 
 
 type alias Model =
-    { firstName : UI.Input.Text.State
-    , lastName : UI.Input.Text.State
-    }
+    { categories : ReloadableWebData (List Category) }
 
 
 initialModel : Model
 initialModel =
-    { firstName = UI.Input.Text.initialState
-    , lastName = UI.Input.Text.initialState
+    { categories = Loading
     }

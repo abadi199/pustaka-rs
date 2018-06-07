@@ -2,8 +2,8 @@ extern crate diesel;
 extern crate pustaka;
 
 use diesel::prelude::*;
-use pustaka::*;
 use pustaka::models::*;
+use pustaka::*;
 
 fn main() {
     let connection = db::create_db_pool().get().unwrap();
@@ -17,9 +17,9 @@ fn main() {
 fn category(connection: &SqliteConnection) {
     use schema::category::dsl::category;
 
-    diesel::delete(category).execute(&*connection).expect(
-        "Error deleting categories",
-    );
+    diesel::delete(category)
+        .execute(&*connection)
+        .expect("Error deleting categories");
 
     let categories = vec!["Fiction".to_string(), "Non Fiction".to_string()];
     for name in categories {
@@ -36,9 +36,9 @@ fn category(connection: &SqliteConnection) {
 fn media_type(connection: &SqliteConnection) {
     use schema::media_type::dsl::media_type;
 
-    diesel::delete(media_type).execute(&*connection).expect(
-        "Error deleting media_types",
-    );
+    diesel::delete(media_type)
+        .execute(&*connection)
+        .expect("Error deleting media_types");
     let media_types = vec![
         "book".to_string(),
         "comic".to_string(),
@@ -53,22 +53,20 @@ fn media_type(connection: &SqliteConnection) {
             .execute(connection)
             .expect("Error inserting media_type");
     }
-
 }
 
 fn author(connection: &SqliteConnection) {
     use schema::author::dsl::author;
 
-    diesel::delete(author).execute(&*connection).expect(
-        "Error deleting authors",
-    );
+    diesel::delete(author)
+        .execute(&*connection)
+        .expect("Error deleting authors");
 }
-
 
 fn publication(connection: &SqliteConnection) {
     use schema::publication::dsl::publication;
 
-    diesel::delete(publication).execute(&*connection).expect(
-        "Error deleting publication",
-    );
+    diesel::delete(publication)
+        .execute(&*connection)
+        .expect("Error deleting publication");
 }

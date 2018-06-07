@@ -1,9 +1,9 @@
 module Msg exposing (Msg(..))
 
-import UI.Input.Text
+import Entity.Category exposing (Category)
+import RemoteData exposing (WebData)
 
 
 type Msg
     = NoOp
-    | FirstNameUpdated UI.Input.Text.State
-    | LastNameUpdated UI.Input.Text.State
+    | GetCategoriesCompleted (WebData (List Category))

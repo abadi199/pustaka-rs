@@ -135,28 +135,6 @@ function A9(fun, a, b, c, d, e, f, g, h, i)
     : fun(a)(b)(c)(d)(e)(f)(g)(h)(i);
 }
 
-var _elm_lang$core$Native_Bitwise = function() {
-
-return {
-	and: F2(function and(a, b) { return a & b; }),
-	or: F2(function or(a, b) { return a | b; }),
-	xor: F2(function xor(a, b) { return a ^ b; }),
-	complement: function complement(a) { return ~a; },
-	shiftLeftBy: F2(function(offset, a) { return a << offset; }),
-	shiftRightBy: F2(function(offset, a) { return a >> offset; }),
-	shiftRightZfBy: F2(function(offset, a) { return a >>> offset; })
-};
-
-}();
-
-var _elm_lang$core$Bitwise$shiftRightZfBy = _elm_lang$core$Native_Bitwise.shiftRightZfBy;
-var _elm_lang$core$Bitwise$shiftRightBy = _elm_lang$core$Native_Bitwise.shiftRightBy;
-var _elm_lang$core$Bitwise$shiftLeftBy = _elm_lang$core$Native_Bitwise.shiftLeftBy;
-var _elm_lang$core$Bitwise$complement = _elm_lang$core$Native_Bitwise.complement;
-var _elm_lang$core$Bitwise$xor = _elm_lang$core$Native_Bitwise.xor;
-var _elm_lang$core$Bitwise$or = _elm_lang$core$Native_Bitwise.or;
-var _elm_lang$core$Bitwise$and = _elm_lang$core$Native_Bitwise.and;
-
 //import Native.Utils //
 
 var _elm_lang$core$Native_Char = function() {
@@ -3190,120 +3168,6 @@ var _elm_lang$core$Platform$Task = {ctor: 'Task'};
 var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
 var _elm_lang$core$Platform$Router = {ctor: 'Router'};
 
-var _Skinney$murmur3$UTF8$accumulate = F3(
-	function (add, $char, _p0) {
-		var _p1 = _p0;
-		var _p3 = _p1._0;
-		var _p2 = _p1._1;
-		if (_p2.ctor === 'Nothing') {
-			return (_elm_lang$core$Native_Utils.cmp($char, 128) < 0) ? {
-				ctor: '_Tuple2',
-				_0: A2(add, $char, _p3),
-				_1: _elm_lang$core$Maybe$Nothing
-			} : ((_elm_lang$core$Native_Utils.cmp($char, 2048) < 0) ? {
-				ctor: '_Tuple2',
-				_0: A2(
-					add,
-					128 | (63 & $char),
-					A2(add, 192 | ($char >>> 6), _p3)),
-				_1: _elm_lang$core$Maybe$Nothing
-			} : (((_elm_lang$core$Native_Utils.cmp($char, 55296) < 0) || (_elm_lang$core$Native_Utils.cmp($char, 57344) > -1)) ? {
-				ctor: '_Tuple2',
-				_0: A2(
-					add,
-					128 | (63 & $char),
-					A2(
-						add,
-						128 | (63 & ($char >>> 6)),
-						A2(add, 224 | ($char >>> 12), _p3))),
-				_1: _elm_lang$core$Maybe$Nothing
-			} : {
-				ctor: '_Tuple2',
-				_0: _p3,
-				_1: _elm_lang$core$Maybe$Just($char)
-			}));
-		} else {
-			var combined = ((1023 & $char) | ((1023 & _p2._0) << 10)) + 65536;
-			return {
-				ctor: '_Tuple2',
-				_0: A2(
-					add,
-					128 | (63 & combined),
-					A2(
-						add,
-						128 | (63 & (combined >>> 6)),
-						A2(
-							add,
-							128 | (63 & (combined >>> 12)),
-							A2(add, 240 | (combined >>> 18), _p3)))),
-				_1: _elm_lang$core$Maybe$Nothing
-			};
-		}
-	});
-var _Skinney$murmur3$UTF8$foldl = F3(
-	function (op, acc, input) {
-		var helper = F2(
-			function ($char, acc) {
-				return A3(
-					_Skinney$murmur3$UTF8$accumulate,
-					op,
-					_elm_lang$core$Char$toCode($char),
-					acc);
-			});
-		return _elm_lang$core$Tuple$first(
-			A3(
-				_elm_lang$core$String$foldl,
-				helper,
-				{ctor: '_Tuple2', _0: acc, _1: _elm_lang$core$Maybe$Nothing},
-				input));
-	});
-
-var _Skinney$murmur3$Murmur3$mur = F2(
-	function (c, h) {
-		return 4294967295 & (((h & 65535) * c) + ((65535 & ((h >>> 16) * c)) << 16));
-	});
-var _Skinney$murmur3$Murmur3$step = function (acc) {
-	var h1 = A2(_Skinney$murmur3$Murmur3$mur, 5, (acc >>> 19) | (acc << 13));
-	return ((h1 & 65535) + 27492) + ((65535 & ((h1 >>> 16) + 58964)) << 16);
-};
-var _Skinney$murmur3$Murmur3$mix = F2(
-	function (h1, h2) {
-		var k1 = A2(_Skinney$murmur3$Murmur3$mur, 3432918353, h2);
-		return h1 ^ A2(_Skinney$murmur3$Murmur3$mur, 461845907, (k1 >>> 17) | (k1 << 15));
-	});
-var _Skinney$murmur3$Murmur3$finalize = function (data) {
-	var acc = (!_elm_lang$core$Native_Utils.eq(data.hash, 0)) ? A2(_Skinney$murmur3$Murmur3$mix, data.seed, data.hash) : data.seed;
-	var h1 = acc ^ data.charsProcessed;
-	var h2 = A2(_Skinney$murmur3$Murmur3$mur, 2246822507, h1 ^ (h1 >>> 16));
-	var h3 = A2(_Skinney$murmur3$Murmur3$mur, 3266489909, h2 ^ (h2 >>> 13));
-	return (h3 ^ (h3 >>> 16)) >>> 0;
-};
-var _Skinney$murmur3$Murmur3$hashFold = F2(
-	function (c, data) {
-		var res = data.hash | (c << data.shift);
-		var _p0 = data.shift;
-		if (_p0 === 24) {
-			var newHash = _Skinney$murmur3$Murmur3$step(
-				A2(_Skinney$murmur3$Murmur3$mix, data.seed, res));
-			return {shift: 0, seed: newHash, hash: 0, charsProcessed: data.charsProcessed + 1};
-		} else {
-			return {shift: data.shift + 8, seed: data.seed, hash: res, charsProcessed: data.charsProcessed + 1};
-		}
-	});
-var _Skinney$murmur3$Murmur3$HashData = F4(
-	function (a, b, c, d) {
-		return {shift: a, seed: b, hash: c, charsProcessed: d};
-	});
-var _Skinney$murmur3$Murmur3$hashString = F2(
-	function (seed, str) {
-		return _Skinney$murmur3$Murmur3$finalize(
-			A3(
-				_Skinney$murmur3$UTF8$foldl,
-				_Skinney$murmur3$Murmur3$hashFold,
-				A4(_Skinney$murmur3$Murmur3$HashData, 0, seed, 0, 0),
-				str));
-	});
-
 //import Native.List //
 
 var _elm_lang$core$Native_Array = function() {
@@ -5893,6 +5757,1292 @@ var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive
 var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 
+var _abadi199$pustaka_rs$Entity_Category$Category = function (a) {
+	return {ctor: 'Category', _0: a};
+};
+var _abadi199$pustaka_rs$Entity_Category$decoder = A3(
+	_elm_lang$core$Json_Decode$map2,
+	F2(
+		function (id, name) {
+			return _abadi199$pustaka_rs$Entity_Category$Category(
+				{id: id, name: name, parent: _elm_lang$core$Maybe$Nothing});
+		}),
+	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
+
+var _elm_lang$http$Native_Http = function() {
+
+
+// ENCODING AND DECODING
+
+function encodeUri(string)
+{
+	return encodeURIComponent(string);
+}
+
+function decodeUri(string)
+{
+	try
+	{
+		return _elm_lang$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch(e)
+	{
+		return _elm_lang$core$Maybe$Nothing;
+	}
+}
+
+
+// SEND REQUEST
+
+function toTask(request, maybeProgress)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var xhr = new XMLHttpRequest();
+
+		configureProgress(xhr, maybeProgress);
+
+		xhr.addEventListener('error', function() {
+			callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'NetworkError' }));
+		});
+		xhr.addEventListener('timeout', function() {
+			callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'Timeout' }));
+		});
+		xhr.addEventListener('load', function() {
+			callback(handleResponse(xhr, request.expect.responseToResult));
+		});
+
+		try
+		{
+			xhr.open(request.method, request.url, true);
+		}
+		catch (e)
+		{
+			return callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'BadUrl', _0: request.url }));
+		}
+
+		configureRequest(xhr, request);
+		send(xhr, request.body);
+
+		return function() { xhr.abort(); };
+	});
+}
+
+function configureProgress(xhr, maybeProgress)
+{
+	if (maybeProgress.ctor === 'Nothing')
+	{
+		return;
+	}
+
+	xhr.addEventListener('progress', function(event) {
+		if (!event.lengthComputable)
+		{
+			return;
+		}
+		_elm_lang$core$Native_Scheduler.rawSpawn(maybeProgress._0({
+			bytes: event.loaded,
+			bytesExpected: event.total
+		}));
+	});
+}
+
+function configureRequest(xhr, request)
+{
+	function setHeader(pair)
+	{
+		xhr.setRequestHeader(pair._0, pair._1);
+	}
+
+	A2(_elm_lang$core$List$map, setHeader, request.headers);
+	xhr.responseType = request.expect.responseType;
+	xhr.withCredentials = request.withCredentials;
+
+	if (request.timeout.ctor === 'Just')
+	{
+		xhr.timeout = request.timeout._0;
+	}
+}
+
+function send(xhr, body)
+{
+	switch (body.ctor)
+	{
+		case 'EmptyBody':
+			xhr.send();
+			return;
+
+		case 'StringBody':
+			xhr.setRequestHeader('Content-Type', body._0);
+			xhr.send(body._1);
+			return;
+
+		case 'FormDataBody':
+			xhr.send(body._0);
+			return;
+	}
+}
+
+
+// RESPONSES
+
+function handleResponse(xhr, responseToResult)
+{
+	var response = toResponse(xhr);
+
+	if (xhr.status < 200 || 300 <= xhr.status)
+	{
+		response.body = xhr.responseText;
+		return _elm_lang$core$Native_Scheduler.fail({
+			ctor: 'BadStatus',
+			_0: response
+		});
+	}
+
+	var result = responseToResult(response);
+
+	if (result.ctor === 'Ok')
+	{
+		return _elm_lang$core$Native_Scheduler.succeed(result._0);
+	}
+	else
+	{
+		response.body = xhr.responseText;
+		return _elm_lang$core$Native_Scheduler.fail({
+			ctor: 'BadPayload',
+			_0: result._0,
+			_1: response
+		});
+	}
+}
+
+function toResponse(xhr)
+{
+	return {
+		status: { code: xhr.status, message: xhr.statusText },
+		headers: parseHeaders(xhr.getAllResponseHeaders()),
+		url: xhr.responseURL,
+		body: xhr.response
+	};
+}
+
+function parseHeaders(rawHeaders)
+{
+	var headers = _elm_lang$core$Dict$empty;
+
+	if (!rawHeaders)
+	{
+		return headers;
+	}
+
+	var headerPairs = rawHeaders.split('\u000d\u000a');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf('\u003a\u0020');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3(_elm_lang$core$Dict$update, key, function(oldValue) {
+				if (oldValue.ctor === 'Just')
+				{
+					return _elm_lang$core$Maybe$Just(value + ', ' + oldValue._0);
+				}
+				return _elm_lang$core$Maybe$Just(value);
+			}, headers);
+		}
+	}
+
+	return headers;
+}
+
+
+// EXPECTORS
+
+function expectStringResponse(responseToResult)
+{
+	return {
+		responseType: 'text',
+		responseToResult: responseToResult
+	};
+}
+
+function mapExpect(func, expect)
+{
+	return {
+		responseType: expect.responseType,
+		responseToResult: function(response) {
+			var convertedResponse = expect.responseToResult(response);
+			return A2(_elm_lang$core$Result$map, func, convertedResponse);
+		}
+	};
+}
+
+
+// BODY
+
+function multipart(parts)
+{
+	var formData = new FormData();
+
+	while (parts.ctor !== '[]')
+	{
+		var part = parts._0;
+		formData.append(part._0, part._1);
+		parts = parts._1;
+	}
+
+	return { ctor: 'FormDataBody', _0: formData };
+}
+
+return {
+	toTask: F2(toTask),
+	expectStringResponse: expectStringResponse,
+	mapExpect: F2(mapExpect),
+	multipart: multipart,
+	encodeUri: encodeUri,
+	decodeUri: decodeUri
+};
+
+}();
+
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
+var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
+var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
+var _elm_lang$core$Task$spawnCmd = F2(
+	function (router, _p0) {
+		var _p1 = _p0;
+		return _elm_lang$core$Native_Scheduler.spawn(
+			A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Platform$sendToApp(router),
+				_p1._0));
+	});
+var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
+var _elm_lang$core$Task$mapError = F2(
+	function (convert, task) {
+		return A2(
+			_elm_lang$core$Task$onError,
+			function (_p2) {
+				return _elm_lang$core$Task$fail(
+					convert(_p2));
+			},
+			task);
+	});
+var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
+var _elm_lang$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return _elm_lang$core$Task$succeed(
+					func(a));
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return _elm_lang$core$Task$succeed(
+							A2(func, a, b));
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return _elm_lang$core$Task$succeed(
+									A3(func, a, b, c));
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map4 = F5(
+	function (func, taskA, taskB, taskC, taskD) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return _elm_lang$core$Task$succeed(
+											A4(func, a, b, c, d));
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map5 = F6(
+	function (func, taskA, taskB, taskC, taskD, taskE) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return A2(
+											_elm_lang$core$Task$andThen,
+											function (e) {
+												return _elm_lang$core$Task$succeed(
+													A5(func, a, b, c, d, e));
+											},
+											taskE);
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$sequence = function (tasks) {
+	var _p3 = tasks;
+	if (_p3.ctor === '[]') {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '[]'});
+	} else {
+		return A3(
+			_elm_lang$core$Task$map2,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			_p3._0,
+			_elm_lang$core$Task$sequence(_p3._1));
+	}
+};
+var _elm_lang$core$Task$onEffects = F3(
+	function (router, commands, state) {
+		return A2(
+			_elm_lang$core$Task$map,
+			function (_p4) {
+				return {ctor: '_Tuple0'};
+			},
+			_elm_lang$core$Task$sequence(
+				A2(
+					_elm_lang$core$List$map,
+					_elm_lang$core$Task$spawnCmd(router),
+					commands)));
+	});
+var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
+	{ctor: '_Tuple0'});
+var _elm_lang$core$Task$onSelfMsg = F3(
+	function (_p7, _p6, _p5) {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '_Tuple0'});
+	});
+var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
+var _elm_lang$core$Task$Perform = function (a) {
+	return {ctor: 'Perform', _0: a};
+};
+var _elm_lang$core$Task$perform = F2(
+	function (toMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(_elm_lang$core$Task$map, toMessage, task)));
+	});
+var _elm_lang$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(
+					_elm_lang$core$Task$onError,
+					function (_p8) {
+						return _elm_lang$core$Task$succeed(
+							resultToMessage(
+								_elm_lang$core$Result$Err(_p8)));
+					},
+					A2(
+						_elm_lang$core$Task$andThen,
+						function (_p9) {
+							return _elm_lang$core$Task$succeed(
+								resultToMessage(
+									_elm_lang$core$Result$Ok(_p9)));
+						},
+						task))));
+	});
+var _elm_lang$core$Task$cmdMap = F2(
+	function (tagger, _p10) {
+		var _p11 = _p10;
+		return _elm_lang$core$Task$Perform(
+			A2(_elm_lang$core$Task$map, tagger, _p11._0));
+	});
+_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
+
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			var spawnRest = function (id) {
+				return A3(
+					_elm_lang$core$Time$spawnHelp,
+					router,
+					_p0._1,
+					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+			};
+			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
+				A2(
+					_elm_lang$core$Time$setInterval,
+					_p1,
+					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
+			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{
+					ctor: '::',
+					_0: _p6,
+					_1: {ctor: '[]'}
+				},
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{ctor: '::', _0: _p6, _1: _p4._0},
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var tellTaggers = function (time) {
+				return _elm_lang$core$Task$sequence(
+					A2(
+						_elm_lang$core$List$map,
+						function (tagger) {
+							return A2(
+								_elm_lang$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						_p7._0));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p8) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						function (_p14) {
+							return _p13._2;
+						},
+						_elm_lang$core$Native_Scheduler.kill(id))
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: {ctor: '::', _0: interval, _1: _p18._0},
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (newProcesses) {
+				return _elm_lang$core$Task$succeed(
+					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p20) {
+					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
+var _elm_lang$http$Http_Internal$map = F2(
+	function (func, request) {
+		return _elm_lang$core$Native_Utils.update(
+			request,
+			{
+				expect: A2(_elm_lang$http$Native_Http.mapExpect, func, request.expect)
+			});
+	});
+var _elm_lang$http$Http_Internal$RawRequest = F7(
+	function (a, b, c, d, e, f, g) {
+		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g};
+	});
+var _elm_lang$http$Http_Internal$Request = function (a) {
+	return {ctor: 'Request', _0: a};
+};
+var _elm_lang$http$Http_Internal$Expect = {ctor: 'Expect'};
+var _elm_lang$http$Http_Internal$FormDataBody = {ctor: 'FormDataBody'};
+var _elm_lang$http$Http_Internal$StringBody = F2(
+	function (a, b) {
+		return {ctor: 'StringBody', _0: a, _1: b};
+	});
+var _elm_lang$http$Http_Internal$EmptyBody = {ctor: 'EmptyBody'};
+var _elm_lang$http$Http_Internal$Header = F2(
+	function (a, b) {
+		return {ctor: 'Header', _0: a, _1: b};
+	});
+
+var _elm_lang$http$Http$decodeUri = _elm_lang$http$Native_Http.decodeUri;
+var _elm_lang$http$Http$encodeUri = _elm_lang$http$Native_Http.encodeUri;
+var _elm_lang$http$Http$expectStringResponse = _elm_lang$http$Native_Http.expectStringResponse;
+var _elm_lang$http$Http$expectJson = function (decoder) {
+	return _elm_lang$http$Http$expectStringResponse(
+		function (response) {
+			return A2(_elm_lang$core$Json_Decode$decodeString, decoder, response.body);
+		});
+};
+var _elm_lang$http$Http$expectString = _elm_lang$http$Http$expectStringResponse(
+	function (response) {
+		return _elm_lang$core$Result$Ok(response.body);
+	});
+var _elm_lang$http$Http$multipartBody = _elm_lang$http$Native_Http.multipart;
+var _elm_lang$http$Http$stringBody = _elm_lang$http$Http_Internal$StringBody;
+var _elm_lang$http$Http$jsonBody = function (value) {
+	return A2(
+		_elm_lang$http$Http_Internal$StringBody,
+		'application/json',
+		A2(_elm_lang$core$Json_Encode$encode, 0, value));
+};
+var _elm_lang$http$Http$emptyBody = _elm_lang$http$Http_Internal$EmptyBody;
+var _elm_lang$http$Http$header = _elm_lang$http$Http_Internal$Header;
+var _elm_lang$http$Http$request = _elm_lang$http$Http_Internal$Request;
+var _elm_lang$http$Http$post = F3(
+	function (url, body, decoder) {
+		return _elm_lang$http$Http$request(
+			{
+				method: 'POST',
+				headers: {ctor: '[]'},
+				url: url,
+				body: body,
+				expect: _elm_lang$http$Http$expectJson(decoder),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
+var _elm_lang$http$Http$get = F2(
+	function (url, decoder) {
+		return _elm_lang$http$Http$request(
+			{
+				method: 'GET',
+				headers: {ctor: '[]'},
+				url: url,
+				body: _elm_lang$http$Http$emptyBody,
+				expect: _elm_lang$http$Http$expectJson(decoder),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
+var _elm_lang$http$Http$getString = function (url) {
+	return _elm_lang$http$Http$request(
+		{
+			method: 'GET',
+			headers: {ctor: '[]'},
+			url: url,
+			body: _elm_lang$http$Http$emptyBody,
+			expect: _elm_lang$http$Http$expectString,
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		});
+};
+var _elm_lang$http$Http$toTask = function (_p0) {
+	var _p1 = _p0;
+	return A2(_elm_lang$http$Native_Http.toTask, _p1._0, _elm_lang$core$Maybe$Nothing);
+};
+var _elm_lang$http$Http$send = F2(
+	function (resultToMessage, request) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			resultToMessage,
+			_elm_lang$http$Http$toTask(request));
+	});
+var _elm_lang$http$Http$Response = F4(
+	function (a, b, c, d) {
+		return {url: a, status: b, headers: c, body: d};
+	});
+var _elm_lang$http$Http$BadPayload = F2(
+	function (a, b) {
+		return {ctor: 'BadPayload', _0: a, _1: b};
+	});
+var _elm_lang$http$Http$BadStatus = function (a) {
+	return {ctor: 'BadStatus', _0: a};
+};
+var _elm_lang$http$Http$NetworkError = {ctor: 'NetworkError'};
+var _elm_lang$http$Http$Timeout = {ctor: 'Timeout'};
+var _elm_lang$http$Http$BadUrl = function (a) {
+	return {ctor: 'BadUrl', _0: a};
+};
+var _elm_lang$http$Http$StringPart = F2(
+	function (a, b) {
+		return {ctor: 'StringPart', _0: a, _1: b};
+	});
+var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
+
+var _krisajenkins$remotedata$RemoteData$isNotAsked = function (data) {
+	var _p0 = data;
+	if (_p0.ctor === 'NotAsked') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isLoading = function (data) {
+	var _p1 = data;
+	if (_p1.ctor === 'Loading') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isFailure = function (data) {
+	var _p2 = data;
+	if (_p2.ctor === 'Failure') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$isSuccess = function (data) {
+	var _p3 = data;
+	if (_p3.ctor === 'Success') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _krisajenkins$remotedata$RemoteData$withDefault = F2(
+	function ($default, data) {
+		var _p4 = data;
+		if (_p4.ctor === 'Success') {
+			return _p4._0;
+		} else {
+			return $default;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$Success = function (a) {
+	return {ctor: 'Success', _0: a};
+};
+var _krisajenkins$remotedata$RemoteData$succeed = _krisajenkins$remotedata$RemoteData$Success;
+var _krisajenkins$remotedata$RemoteData$prism = {
+	reverseGet: _krisajenkins$remotedata$RemoteData$Success,
+	getOption: function (data) {
+		var _p5 = data;
+		if (_p5.ctor === 'Success') {
+			return _elm_lang$core$Maybe$Just(_p5._0);
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	}
+};
+var _krisajenkins$remotedata$RemoteData$Failure = function (a) {
+	return {ctor: 'Failure', _0: a};
+};
+var _krisajenkins$remotedata$RemoteData$fromMaybe = F2(
+	function (error, maybe) {
+		var _p6 = maybe;
+		if (_p6.ctor === 'Nothing') {
+			return _krisajenkins$remotedata$RemoteData$Failure(error);
+		} else {
+			return _krisajenkins$remotedata$RemoteData$Success(_p6._0);
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$fromResult = function (result) {
+	var _p7 = result;
+	if (_p7.ctor === 'Err') {
+		return _krisajenkins$remotedata$RemoteData$Failure(_p7._0);
+	} else {
+		return _krisajenkins$remotedata$RemoteData$Success(_p7._0);
+	}
+};
+var _krisajenkins$remotedata$RemoteData$asCmd = _elm_lang$core$Task$attempt(_krisajenkins$remotedata$RemoteData$fromResult);
+var _krisajenkins$remotedata$RemoteData$sendRequest = _elm_lang$http$Http$send(_krisajenkins$remotedata$RemoteData$fromResult);
+var _krisajenkins$remotedata$RemoteData$fromTask = function (_p8) {
+	return A2(
+		_elm_lang$core$Task$onError,
+		function (_p9) {
+			return _elm_lang$core$Task$succeed(
+				_krisajenkins$remotedata$RemoteData$Failure(_p9));
+		},
+		A2(_elm_lang$core$Task$map, _krisajenkins$remotedata$RemoteData$Success, _p8));
+};
+var _krisajenkins$remotedata$RemoteData$Loading = {ctor: 'Loading'};
+var _krisajenkins$remotedata$RemoteData$NotAsked = {ctor: 'NotAsked'};
+var _krisajenkins$remotedata$RemoteData$map = F2(
+	function (f, data) {
+		var _p10 = data;
+		switch (_p10.ctor) {
+			case 'Success':
+				return _krisajenkins$remotedata$RemoteData$Success(
+					f(_p10._0));
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			case 'NotAsked':
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+			default:
+				return _krisajenkins$remotedata$RemoteData$Failure(_p10._0);
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$toMaybe = function (_p11) {
+	return A2(
+		_krisajenkins$remotedata$RemoteData$withDefault,
+		_elm_lang$core$Maybe$Nothing,
+		A2(_krisajenkins$remotedata$RemoteData$map, _elm_lang$core$Maybe$Just, _p11));
+};
+var _krisajenkins$remotedata$RemoteData$mapError = F2(
+	function (f, data) {
+		var _p12 = data;
+		switch (_p12.ctor) {
+			case 'Success':
+				return _krisajenkins$remotedata$RemoteData$Success(_p12._0);
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(
+					f(_p12._0));
+			case 'Loading':
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			default:
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$mapBoth = F2(
+	function (successFn, errorFn) {
+		return function (_p13) {
+			return A2(
+				_krisajenkins$remotedata$RemoteData$mapError,
+				errorFn,
+				A2(_krisajenkins$remotedata$RemoteData$map, successFn, _p13));
+		};
+	});
+var _krisajenkins$remotedata$RemoteData$andThen = F2(
+	function (f, data) {
+		var _p14 = data;
+		switch (_p14.ctor) {
+			case 'Success':
+				return f(_p14._0);
+			case 'Failure':
+				return _krisajenkins$remotedata$RemoteData$Failure(_p14._0);
+			case 'NotAsked':
+				return _krisajenkins$remotedata$RemoteData$NotAsked;
+			default:
+				return _krisajenkins$remotedata$RemoteData$Loading;
+		}
+	});
+var _krisajenkins$remotedata$RemoteData$andMap = F2(
+	function (wrappedValue, wrappedFunction) {
+		var _p15 = {ctor: '_Tuple2', _0: wrappedFunction, _1: wrappedValue};
+		_v11_5:
+		do {
+			_v11_4:
+			do {
+				_v11_3:
+				do {
+					_v11_2:
+					do {
+						switch (_p15._0.ctor) {
+							case 'Success':
+								switch (_p15._1.ctor) {
+									case 'Success':
+										return _krisajenkins$remotedata$RemoteData$Success(
+											_p15._0._0(_p15._1._0));
+									case 'Failure':
+										break _v11_2;
+									case 'Loading':
+										break _v11_4;
+									default:
+										return _krisajenkins$remotedata$RemoteData$NotAsked;
+								}
+							case 'Failure':
+								return _krisajenkins$remotedata$RemoteData$Failure(_p15._0._0);
+							case 'Loading':
+								switch (_p15._1.ctor) {
+									case 'Failure':
+										break _v11_2;
+									case 'Loading':
+										break _v11_3;
+									case 'NotAsked':
+										break _v11_3;
+									default:
+										break _v11_3;
+								}
+							default:
+								switch (_p15._1.ctor) {
+									case 'Failure':
+										break _v11_2;
+									case 'Loading':
+										break _v11_4;
+									case 'NotAsked':
+										break _v11_5;
+									default:
+										break _v11_5;
+								}
+						}
+					} while(false);
+					return _krisajenkins$remotedata$RemoteData$Failure(_p15._1._0);
+				} while(false);
+				return _krisajenkins$remotedata$RemoteData$Loading;
+			} while(false);
+			return _krisajenkins$remotedata$RemoteData$Loading;
+		} while(false);
+		return _krisajenkins$remotedata$RemoteData$NotAsked;
+	});
+var _krisajenkins$remotedata$RemoteData$map2 = F3(
+	function (f, a, b) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			b,
+			A2(_krisajenkins$remotedata$RemoteData$map, f, a));
+	});
+var _krisajenkins$remotedata$RemoteData$fromList = A2(
+	_elm_lang$core$List$foldr,
+	_krisajenkins$remotedata$RemoteData$map2(
+		F2(
+			function (x, y) {
+				return {ctor: '::', _0: x, _1: y};
+			})),
+	_krisajenkins$remotedata$RemoteData$Success(
+		{ctor: '[]'}));
+var _krisajenkins$remotedata$RemoteData$map3 = F4(
+	function (f, a, b, c) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			c,
+			A2(
+				_krisajenkins$remotedata$RemoteData$andMap,
+				b,
+				A2(_krisajenkins$remotedata$RemoteData$map, f, a)));
+	});
+var _krisajenkins$remotedata$RemoteData$append = F2(
+	function (a, b) {
+		return A2(
+			_krisajenkins$remotedata$RemoteData$andMap,
+			b,
+			A2(
+				_krisajenkins$remotedata$RemoteData$map,
+				F2(
+					function (v0, v1) {
+						return {ctor: '_Tuple2', _0: v0, _1: v1};
+					}),
+				a));
+	});
+var _krisajenkins$remotedata$RemoteData$update = F2(
+	function (f, remoteData) {
+		var _p16 = remoteData;
+		switch (_p16.ctor) {
+			case 'Success':
+				var _p17 = f(_p16._0);
+				var first = _p17._0;
+				var second = _p17._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _krisajenkins$remotedata$RemoteData$Success(first),
+					_1: second
+				};
+			case 'NotAsked':
+				return {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$NotAsked, _1: _elm_lang$core$Platform_Cmd$none};
+			case 'Loading':
+				return {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _elm_lang$core$Platform_Cmd$none};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _krisajenkins$remotedata$RemoteData$Failure(_p16._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
+
+var _abadi199$pustaka_rs$Msg$GetCategoriesCompleted = function (a) {
+	return {ctor: 'GetCategoriesCompleted', _0: a};
+};
+var _abadi199$pustaka_rs$Msg$NoOp = {ctor: 'NoOp'};
+
+var _ohanhi$remotedata_http$RemoteData_Http$queryEscape = function (string) {
+	return A2(
+		_elm_lang$core$String$join,
+		'+',
+		A2(
+			_elm_lang$core$String$split,
+			'%20',
+			_elm_lang$http$Http$encodeUri(string)));
+};
+var _ohanhi$remotedata_http$RemoteData_Http$queryPair = function (_p0) {
+	var _p1 = _p0;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_ohanhi$remotedata_http$RemoteData_Http$queryEscape(_p1._0),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'=',
+			_ohanhi$remotedata_http$RemoteData_Http$queryEscape(_p1._1)));
+};
+var _ohanhi$remotedata_http$RemoteData_Http$url = F2(
+	function (baseUrl, args) {
+		var _p2 = args;
+		if (_p2.ctor === '[]') {
+			return baseUrl;
+		} else {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				baseUrl,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'?',
+					A2(
+						_elm_lang$core$String$join,
+						'&',
+						A2(_elm_lang$core$List$map, _ohanhi$remotedata_http$RemoteData_Http$queryPair, args))));
+		}
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$request = F5(
+	function (config, method, url, successDecoder, body) {
+		return _elm_lang$http$Http$request(
+			{
+				method: method,
+				headers: config.headers,
+				url: url,
+				body: body,
+				expect: _elm_lang$http$Http$expectJson(successDecoder),
+				timeout: config.timeout,
+				withCredentials: config.withCredentials
+			});
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$getRequest = F3(
+	function (config, url, decoder) {
+		return A5(_ohanhi$remotedata_http$RemoteData_Http$request, config, 'GET', url, decoder, _elm_lang$http$Http$emptyBody);
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$toTask = function (request) {
+	return A2(
+		_elm_lang$core$Task$onError,
+		function (_p3) {
+			return _elm_lang$core$Task$succeed(
+				_krisajenkins$remotedata$RemoteData$Failure(_p3));
+		},
+		A2(
+			_elm_lang$core$Task$map,
+			_krisajenkins$remotedata$RemoteData$Success,
+			_elm_lang$http$Http$toTask(request)));
+};
+var _ohanhi$remotedata_http$RemoteData_Http$getTaskWithConfig = F3(
+	function (config, url, decoder) {
+		return _ohanhi$remotedata_http$RemoteData_Http$toTask(
+			A3(_ohanhi$remotedata_http$RemoteData_Http$getRequest, config, url, decoder));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$postTaskWithConfig = F4(
+	function (config, url, decoder, body) {
+		return _ohanhi$remotedata_http$RemoteData_Http$toTask(
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'POST',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$putTaskWithConfig = F4(
+	function (config, url, decoder, body) {
+		return _ohanhi$remotedata_http$RemoteData_Http$toTask(
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'PUT',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$patchTaskWithConfig = F4(
+	function (config, url, decoder, body) {
+		return _ohanhi$remotedata_http$RemoteData_Http$toTask(
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'PATCH',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$deleteTaskWithConfig = F3(
+	function (config, url, body) {
+		return _ohanhi$remotedata_http$RemoteData_Http$toTask(
+			_elm_lang$http$Http$request(
+				{
+					method: 'DELETE',
+					headers: config.headers,
+					url: url,
+					body: _elm_lang$http$Http$jsonBody(body),
+					expect: _elm_lang$http$Http$expectString,
+					timeout: config.timeout,
+					withCredentials: config.withCredentials
+				}));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$toCmd = function (tagger) {
+	return _elm_lang$http$Http$send(
+		function (_p4) {
+			return tagger(
+				_krisajenkins$remotedata$RemoteData$fromResult(_p4));
+		});
+};
+var _ohanhi$remotedata_http$RemoteData_Http$getWithConfig = F4(
+	function (config, url, tagger, decoder) {
+		return A2(
+			_ohanhi$remotedata_http$RemoteData_Http$toCmd,
+			tagger,
+			A3(_ohanhi$remotedata_http$RemoteData_Http$getRequest, config, url, decoder));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$postWithConfig = F5(
+	function (config, url, tagger, decoder, body) {
+		return A2(
+			_ohanhi$remotedata_http$RemoteData_Http$toCmd,
+			tagger,
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'POST',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$putWithConfig = F5(
+	function (config, url, tagger, decoder, body) {
+		return A2(
+			_ohanhi$remotedata_http$RemoteData_Http$toCmd,
+			tagger,
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'PUT',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$patchWithConfig = F5(
+	function (config, url, tagger, decoder, body) {
+		return A2(
+			_ohanhi$remotedata_http$RemoteData_Http$toCmd,
+			tagger,
+			A5(
+				_ohanhi$remotedata_http$RemoteData_Http$request,
+				config,
+				'PATCH',
+				url,
+				decoder,
+				_elm_lang$http$Http$jsonBody(body)));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$deleteWithConfig = F4(
+	function (config, url, tagger, body) {
+		return A2(
+			_ohanhi$remotedata_http$RemoteData_Http$toCmd,
+			tagger,
+			_elm_lang$http$Http$request(
+				{
+					method: 'DELETE',
+					headers: config.headers,
+					url: url,
+					body: _elm_lang$http$Http$jsonBody(body),
+					expect: _elm_lang$http$Http$expectString,
+					timeout: config.timeout,
+					withCredentials: config.withCredentials
+				}));
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$acceptJson = A2(_elm_lang$http$Http$header, 'Accept', 'application/json');
+var _ohanhi$remotedata_http$RemoteData_Http$defaultConfig = {
+	headers: {
+		ctor: '::',
+		_0: _ohanhi$remotedata_http$RemoteData_Http$acceptJson,
+		_1: {ctor: '[]'}
+	},
+	withCredentials: false,
+	timeout: _elm_lang$core$Maybe$Nothing
+};
+var _ohanhi$remotedata_http$RemoteData_Http$postTask = _ohanhi$remotedata_http$RemoteData_Http$postTaskWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$post = _ohanhi$remotedata_http$RemoteData_Http$postWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$putTask = _ohanhi$remotedata_http$RemoteData_Http$putTaskWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$put = _ohanhi$remotedata_http$RemoteData_Http$putWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$patchTask = _ohanhi$remotedata_http$RemoteData_Http$patchTaskWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$patch = _ohanhi$remotedata_http$RemoteData_Http$patchWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$deleteTask = _ohanhi$remotedata_http$RemoteData_Http$deleteTaskWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$delete = _ohanhi$remotedata_http$RemoteData_Http$deleteWithConfig(_ohanhi$remotedata_http$RemoteData_Http$defaultConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$noCache = A2(_elm_lang$http$Http$header, 'Cache-Control', 'no-store, must-revalidate, no-cache, max-age=0');
+var _ohanhi$remotedata_http$RemoteData_Http$noCacheConfig = _elm_lang$core$Native_Utils.update(
+	_ohanhi$remotedata_http$RemoteData_Http$defaultConfig,
+	{
+		headers: {ctor: '::', _0: _ohanhi$remotedata_http$RemoteData_Http$noCache, _1: _ohanhi$remotedata_http$RemoteData_Http$defaultConfig.headers}
+	});
+var _ohanhi$remotedata_http$RemoteData_Http$getTask = _ohanhi$remotedata_http$RemoteData_Http$getTaskWithConfig(_ohanhi$remotedata_http$RemoteData_Http$noCacheConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$get = _ohanhi$remotedata_http$RemoteData_Http$getWithConfig(_ohanhi$remotedata_http$RemoteData_Http$noCacheConfig);
+var _ohanhi$remotedata_http$RemoteData_Http$Config = F3(
+	function (a, b, c) {
+		return {headers: a, withCredentials: b, timeout: c};
+	});
+
+var _abadi199$pustaka_rs$Api$getCategories = A3(
+	_ohanhi$remotedata_http$RemoteData_Http$get,
+	'/api/category',
+	_abadi199$pustaka_rs$Msg$GetCategoriesCompleted,
+	_elm_lang$core$Json_Decode$list(_abadi199$pustaka_rs$Entity_Category$decoder));
+
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrap;
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrapWithFlags;
 
@@ -7931,816 +9081,210 @@ var _elm_lang$html$Html$summary = _elm_lang$html$Html$node('summary');
 var _elm_lang$html$Html$menuitem = _elm_lang$html$Html$node('menuitem');
 var _elm_lang$html$Html$menu = _elm_lang$html$Html$node('menu');
 
-var _elm_lang$html$Html_Attributes$map = _elm_lang$virtual_dom$VirtualDom$mapProperty;
-var _elm_lang$html$Html_Attributes$attribute = _elm_lang$virtual_dom$VirtualDom$attribute;
-var _elm_lang$html$Html_Attributes$contextmenu = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'contextmenu', value);
-};
-var _elm_lang$html$Html_Attributes$draggable = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'draggable', value);
-};
-var _elm_lang$html$Html_Attributes$itemprop = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'itemprop', value);
-};
-var _elm_lang$html$Html_Attributes$tabindex = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'tabIndex',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$charset = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'charset', value);
-};
-var _elm_lang$html$Html_Attributes$height = function (value) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'height',
-		_elm_lang$core$Basics$toString(value));
-};
-var _elm_lang$html$Html_Attributes$width = function (value) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'width',
-		_elm_lang$core$Basics$toString(value));
-};
-var _elm_lang$html$Html_Attributes$formaction = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'formAction', value);
-};
-var _elm_lang$html$Html_Attributes$list = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'list', value);
-};
-var _elm_lang$html$Html_Attributes$minlength = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'minLength',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$maxlength = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'maxlength',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$size = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'size',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$form = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'form', value);
-};
-var _elm_lang$html$Html_Attributes$cols = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'cols',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$rows = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'rows',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$challenge = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'challenge', value);
-};
-var _elm_lang$html$Html_Attributes$media = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'media', value);
-};
-var _elm_lang$html$Html_Attributes$rel = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'rel', value);
-};
-var _elm_lang$html$Html_Attributes$datetime = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'datetime', value);
-};
-var _elm_lang$html$Html_Attributes$pubdate = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'pubdate', value);
-};
-var _elm_lang$html$Html_Attributes$colspan = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'colspan',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$rowspan = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$attribute,
-		'rowspan',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$manifest = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$attribute, 'manifest', value);
-};
-var _elm_lang$html$Html_Attributes$property = _elm_lang$virtual_dom$VirtualDom$property;
-var _elm_lang$html$Html_Attributes$stringProperty = F2(
-	function (name, string) {
-		return A2(
-			_elm_lang$html$Html_Attributes$property,
-			name,
-			_elm_lang$core$Json_Encode$string(string));
-	});
-var _elm_lang$html$Html_Attributes$class = function (name) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'className', name);
-};
-var _elm_lang$html$Html_Attributes$id = function (name) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'id', name);
-};
-var _elm_lang$html$Html_Attributes$title = function (name) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'title', name);
-};
-var _elm_lang$html$Html_Attributes$accesskey = function ($char) {
-	return A2(
-		_elm_lang$html$Html_Attributes$stringProperty,
-		'accessKey',
-		_elm_lang$core$String$fromChar($char));
-};
-var _elm_lang$html$Html_Attributes$dir = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'dir', value);
-};
-var _elm_lang$html$Html_Attributes$dropzone = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'dropzone', value);
-};
-var _elm_lang$html$Html_Attributes$lang = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'lang', value);
-};
-var _elm_lang$html$Html_Attributes$content = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'content', value);
-};
-var _elm_lang$html$Html_Attributes$httpEquiv = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'httpEquiv', value);
-};
-var _elm_lang$html$Html_Attributes$language = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'language', value);
-};
-var _elm_lang$html$Html_Attributes$src = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'src', value);
-};
-var _elm_lang$html$Html_Attributes$alt = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'alt', value);
-};
-var _elm_lang$html$Html_Attributes$preload = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'preload', value);
-};
-var _elm_lang$html$Html_Attributes$poster = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'poster', value);
-};
-var _elm_lang$html$Html_Attributes$kind = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'kind', value);
-};
-var _elm_lang$html$Html_Attributes$srclang = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'srclang', value);
-};
-var _elm_lang$html$Html_Attributes$sandbox = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'sandbox', value);
-};
-var _elm_lang$html$Html_Attributes$srcdoc = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'srcdoc', value);
-};
-var _elm_lang$html$Html_Attributes$type_ = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'type', value);
-};
-var _elm_lang$html$Html_Attributes$value = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'value', value);
-};
-var _elm_lang$html$Html_Attributes$defaultValue = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'defaultValue', value);
-};
-var _elm_lang$html$Html_Attributes$placeholder = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'placeholder', value);
-};
-var _elm_lang$html$Html_Attributes$accept = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'accept', value);
-};
-var _elm_lang$html$Html_Attributes$acceptCharset = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'acceptCharset', value);
-};
-var _elm_lang$html$Html_Attributes$action = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'action', value);
-};
-var _elm_lang$html$Html_Attributes$autocomplete = function (bool) {
-	return A2(
-		_elm_lang$html$Html_Attributes$stringProperty,
-		'autocomplete',
-		bool ? 'on' : 'off');
-};
-var _elm_lang$html$Html_Attributes$enctype = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'enctype', value);
-};
-var _elm_lang$html$Html_Attributes$method = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'method', value);
-};
-var _elm_lang$html$Html_Attributes$name = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'name', value);
-};
-var _elm_lang$html$Html_Attributes$pattern = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'pattern', value);
-};
-var _elm_lang$html$Html_Attributes$for = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'htmlFor', value);
-};
-var _elm_lang$html$Html_Attributes$max = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'max', value);
-};
-var _elm_lang$html$Html_Attributes$min = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'min', value);
-};
-var _elm_lang$html$Html_Attributes$step = function (n) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'step', n);
-};
-var _elm_lang$html$Html_Attributes$wrap = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'wrap', value);
-};
-var _elm_lang$html$Html_Attributes$usemap = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'useMap', value);
-};
-var _elm_lang$html$Html_Attributes$shape = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'shape', value);
-};
-var _elm_lang$html$Html_Attributes$coords = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'coords', value);
-};
-var _elm_lang$html$Html_Attributes$keytype = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'keytype', value);
-};
-var _elm_lang$html$Html_Attributes$align = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'align', value);
-};
-var _elm_lang$html$Html_Attributes$cite = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'cite', value);
-};
-var _elm_lang$html$Html_Attributes$href = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'href', value);
-};
-var _elm_lang$html$Html_Attributes$target = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'target', value);
-};
-var _elm_lang$html$Html_Attributes$downloadAs = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'download', value);
-};
-var _elm_lang$html$Html_Attributes$hreflang = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'hreflang', value);
-};
-var _elm_lang$html$Html_Attributes$ping = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'ping', value);
-};
-var _elm_lang$html$Html_Attributes$start = function (n) {
-	return A2(
-		_elm_lang$html$Html_Attributes$stringProperty,
-		'start',
-		_elm_lang$core$Basics$toString(n));
-};
-var _elm_lang$html$Html_Attributes$headers = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'headers', value);
-};
-var _elm_lang$html$Html_Attributes$scope = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$stringProperty, 'scope', value);
-};
-var _elm_lang$html$Html_Attributes$boolProperty = F2(
-	function (name, bool) {
-		return A2(
-			_elm_lang$html$Html_Attributes$property,
-			name,
-			_elm_lang$core$Json_Encode$bool(bool));
-	});
-var _elm_lang$html$Html_Attributes$hidden = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'hidden', bool);
-};
-var _elm_lang$html$Html_Attributes$contenteditable = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'contentEditable', bool);
-};
-var _elm_lang$html$Html_Attributes$spellcheck = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'spellcheck', bool);
-};
-var _elm_lang$html$Html_Attributes$async = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'async', bool);
-};
-var _elm_lang$html$Html_Attributes$defer = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'defer', bool);
-};
-var _elm_lang$html$Html_Attributes$scoped = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'scoped', bool);
-};
-var _elm_lang$html$Html_Attributes$autoplay = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'autoplay', bool);
-};
-var _elm_lang$html$Html_Attributes$controls = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'controls', bool);
-};
-var _elm_lang$html$Html_Attributes$loop = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'loop', bool);
-};
-var _elm_lang$html$Html_Attributes$default = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'default', bool);
-};
-var _elm_lang$html$Html_Attributes$seamless = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'seamless', bool);
-};
-var _elm_lang$html$Html_Attributes$checked = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'checked', bool);
-};
-var _elm_lang$html$Html_Attributes$selected = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'selected', bool);
-};
-var _elm_lang$html$Html_Attributes$autofocus = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'autofocus', bool);
-};
-var _elm_lang$html$Html_Attributes$disabled = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'disabled', bool);
-};
-var _elm_lang$html$Html_Attributes$multiple = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'multiple', bool);
-};
-var _elm_lang$html$Html_Attributes$novalidate = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'noValidate', bool);
-};
-var _elm_lang$html$Html_Attributes$readonly = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'readOnly', bool);
-};
-var _elm_lang$html$Html_Attributes$required = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'required', bool);
-};
-var _elm_lang$html$Html_Attributes$ismap = function (value) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'isMap', value);
-};
-var _elm_lang$html$Html_Attributes$download = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'download', bool);
-};
-var _elm_lang$html$Html_Attributes$reversed = function (bool) {
-	return A2(_elm_lang$html$Html_Attributes$boolProperty, 'reversed', bool);
-};
-var _elm_lang$html$Html_Attributes$classList = function (list) {
-	return _elm_lang$html$Html_Attributes$class(
-		A2(
-			_elm_lang$core$String$join,
-			' ',
-			A2(
-				_elm_lang$core$List$map,
-				_elm_lang$core$Tuple$first,
-				A2(_elm_lang$core$List$filter, _elm_lang$core$Tuple$second, list))));
-};
-var _elm_lang$html$Html_Attributes$style = _elm_lang$virtual_dom$VirtualDom$style;
-
-var _elm_lang$html$Html_Events$keyCode = A2(_elm_lang$core$Json_Decode$field, 'keyCode', _elm_lang$core$Json_Decode$int);
-var _elm_lang$html$Html_Events$targetChecked = A2(
-	_elm_lang$core$Json_Decode$at,
-	{
-		ctor: '::',
-		_0: 'target',
-		_1: {
-			ctor: '::',
-			_0: 'checked',
-			_1: {ctor: '[]'}
-		}
-	},
-	_elm_lang$core$Json_Decode$bool);
-var _elm_lang$html$Html_Events$targetValue = A2(
-	_elm_lang$core$Json_Decode$at,
-	{
-		ctor: '::',
-		_0: 'target',
-		_1: {
-			ctor: '::',
-			_0: 'value',
-			_1: {ctor: '[]'}
-		}
-	},
-	_elm_lang$core$Json_Decode$string);
-var _elm_lang$html$Html_Events$defaultOptions = _elm_lang$virtual_dom$VirtualDom$defaultOptions;
-var _elm_lang$html$Html_Events$onWithOptions = _elm_lang$virtual_dom$VirtualDom$onWithOptions;
-var _elm_lang$html$Html_Events$on = _elm_lang$virtual_dom$VirtualDom$on;
-var _elm_lang$html$Html_Events$onFocus = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'focus',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onBlur = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'blur',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onSubmitOptions = _elm_lang$core$Native_Utils.update(
-	_elm_lang$html$Html_Events$defaultOptions,
-	{preventDefault: true});
-var _elm_lang$html$Html_Events$onSubmit = function (msg) {
-	return A3(
-		_elm_lang$html$Html_Events$onWithOptions,
-		'submit',
-		_elm_lang$html$Html_Events$onSubmitOptions,
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onCheck = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'change',
-		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetChecked));
-};
-var _elm_lang$html$Html_Events$onInput = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'input',
-		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
-};
-var _elm_lang$html$Html_Events$onMouseOut = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseout',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseOver = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseover',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseLeave = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseleave',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseEnter = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseenter',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseUp = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseup',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseDown = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mousedown',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onDoubleClick = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'dblclick',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onClick = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'click',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$Options = F2(
-	function (a, b) {
-		return {stopPropagation: a, preventDefault: b};
-	});
-
-var _abadi199$pustaka_rs$UI_Validator_Internal$ValidationOk = function (a) {
-	return {ctor: 'ValidationOk', _0: a};
-};
-var _abadi199$pustaka_rs$UI_Validator_Internal$ValidationError = function (a) {
-	return {ctor: 'ValidationError', _0: a};
-};
-
-var _abadi199$pustaka_rs$UI_Validator$errorView = function (errorMessage) {
-	return A2(
-		_elm_lang$html$Html$li,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text(errorMessage),
-			_1: {ctor: '[]'}
-		});
-};
-var _abadi199$pustaka_rs$UI_Validator$getErrorMessage = function (validationResult) {
-	var _p0 = validationResult;
-	if (_p0.ctor === 'ValidationError') {
-		return _elm_lang$core$Maybe$Just(_p0._0);
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
+var _abadi199$pustaka_rs$ReloadableData$toMaybe = function (reloadableData) {
+	var _p0 = reloadableData;
+	switch (_p0.ctor) {
+		case 'Success':
+			return _elm_lang$core$Maybe$Just(_p0._0);
+		case 'Reloading':
+			return _elm_lang$core$Maybe$Just(_p0._0);
+		case 'FailureWithData':
+			return _elm_lang$core$Maybe$Just(_p0._1);
+		case 'NotAsked':
+			return _elm_lang$core$Maybe$Nothing;
+		case 'Loading':
+			return _elm_lang$core$Maybe$Nothing;
+		default:
+			return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _abadi199$pustaka_rs$UI_Validator$validate = F2(
-	function (validators, value) {
-		var errors = A2(
-			_elm_lang$core$List$filterMap,
-			_abadi199$pustaka_rs$UI_Validator$getErrorMessage,
-			A2(
-				_elm_lang$core$List$map,
-				function (f) {
-					return f(value);
-				},
-				validators));
-		return _elm_lang$core$List$isEmpty(errors) ? _elm_lang$core$Result$Ok(value) : _elm_lang$core$Result$Err(errors);
+var _abadi199$pustaka_rs$ReloadableData$FailureWithData = F2(
+	function (a, b) {
+		return {ctor: 'FailureWithData', _0: a, _1: b};
 	});
-var _abadi199$pustaka_rs$UI_Validator$view = F2(
-	function (validators, value) {
-		var _p1 = A2(_abadi199$pustaka_rs$UI_Validator$validate, validators, value);
-		if (_p1.ctor === 'Err') {
-			return A2(
-				_elm_lang$html$Html$div,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$ul,
-						{ctor: '[]'},
-						A2(_elm_lang$core$List$map, _abadi199$pustaka_rs$UI_Validator$errorView, _p1._0)),
-					_1: {ctor: '[]'}
-				});
+var _abadi199$pustaka_rs$ReloadableData$Failure = function (a) {
+	return {ctor: 'Failure', _0: a};
+};
+var _abadi199$pustaka_rs$ReloadableData$Success = function (a) {
+	return {ctor: 'Success', _0: a};
+};
+var _abadi199$pustaka_rs$ReloadableData$Reloading = function (a) {
+	return {ctor: 'Reloading', _0: a};
+};
+var _abadi199$pustaka_rs$ReloadableData$Loading = {ctor: 'Loading'};
+var _abadi199$pustaka_rs$ReloadableData$NotAsked = {ctor: 'NotAsked'};
+var _abadi199$pustaka_rs$ReloadableData$fromRemoteData = function (remoteData) {
+	var _p1 = remoteData;
+	switch (_p1.ctor) {
+		case 'NotAsked':
+			return _abadi199$pustaka_rs$ReloadableData$NotAsked;
+		case 'Loading':
+			return _abadi199$pustaka_rs$ReloadableData$Loading;
+		case 'Success':
+			return _abadi199$pustaka_rs$ReloadableData$Success(_p1._0);
+		default:
+			return _abadi199$pustaka_rs$ReloadableData$Failure(_p1._0);
+	}
+};
+var _abadi199$pustaka_rs$ReloadableData$refresh = F2(
+	function (remoteData, reloadableData) {
+		var _p2 = _abadi199$pustaka_rs$ReloadableData$toMaybe(reloadableData);
+		if (_p2.ctor === 'Just') {
+			var _p4 = _p2._0;
+			var _p3 = remoteData;
+			switch (_p3.ctor) {
+				case 'NotAsked':
+					return _abadi199$pustaka_rs$ReloadableData$NotAsked;
+				case 'Loading':
+					return _abadi199$pustaka_rs$ReloadableData$Reloading(_p4);
+				case 'Success':
+					return _abadi199$pustaka_rs$ReloadableData$Success(_p3._0);
+				default:
+					return A2(_abadi199$pustaka_rs$ReloadableData$FailureWithData, _p3._0, _p4);
+			}
 		} else {
-			return _elm_lang$html$Html$text('');
+			return _abadi199$pustaka_rs$ReloadableData$fromRemoteData(remoteData);
 		}
 	});
-var _abadi199$pustaka_rs$UI_Validator$isError = function (validationResult) {
-	var _p2 = validationResult;
-	if (_p2.ctor === 'ValidationError') {
-		return true;
-	} else {
-		return false;
-	}
-};
 
-var _abadi199$pustaka_rs$UI_Input_Text_Internal$State = function (a) {
-	return {ctor: 'State', _0: a};
+var _abadi199$pustaka_rs$Model$initialModel = {categories: _abadi199$pustaka_rs$ReloadableData$Loading};
+var _abadi199$pustaka_rs$Model$Model = function (a) {
+	return {categories: a};
 };
-var _abadi199$pustaka_rs$UI_Input_Text_Internal$initialState = _abadi199$pustaka_rs$UI_Input_Text_Internal$State(
-	{value: '', shouldValidate: false});
-var _abadi199$pustaka_rs$UI_Input_Text_Internal$Config = function (a) {
-	return {ctor: 'Config', _0: a};
-};
-
-var _abadi199$pustaka_rs$UI_Input_Text$value = function (_p0) {
-	var _p1 = _p0;
-	return _elm_lang$core$Result$Ok(_p1._0.value);
-};
-var _abadi199$pustaka_rs$UI_Input_Text$emptyConfig = _abadi199$pustaka_rs$UI_Input_Text_Internal$Config(
-	{onUpdate: _elm_lang$core$Maybe$Nothing, labelText: _elm_lang$core$Maybe$Nothing, validators: _elm_lang$core$Maybe$Nothing});
-var _abadi199$pustaka_rs$UI_Input_Text$configure = function (configurations) {
-	return A3(
-		_elm_lang$core$List$foldl,
-		F2(
-			function (f, config) {
-				return f(config);
-			}),
-		_abadi199$pustaka_rs$UI_Input_Text$emptyConfig,
-		configurations);
-};
-var _abadi199$pustaka_rs$UI_Input_Text$initialState = _abadi199$pustaka_rs$UI_Input_Text_Internal$initialState;
-var _abadi199$pustaka_rs$UI_Input_Text$seed = 95858;
-var _abadi199$pustaka_rs$UI_Input_Text$generateDomId = function (_p2) {
-	var _p3 = _p2;
-	return _elm_lang$core$Basics$toString(
-		A2(
-			_Skinney$murmur3$Murmur3$hashString,
-			_abadi199$pustaka_rs$UI_Input_Text$seed,
-			_elm_lang$core$Basics$toString(_p3._0)));
-};
-var _abadi199$pustaka_rs$UI_Input_Text$view = F2(
-	function (configurations, _p4) {
-		var _p5 = _p4;
-		var _p7 = _p5._0;
-		var _p6 = _abadi199$pustaka_rs$UI_Input_Text$configure(configurations);
-		var internalConfig = _p6;
-		var config = _p6._0;
-		var domId = _abadi199$pustaka_rs$UI_Input_Text$generateDomId(internalConfig);
-		return A2(
-			_elm_lang$html$Html$div,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$core$Maybe$withDefault,
-					_elm_lang$html$Html$text(''),
-					A2(
-						_elm_lang$core$Maybe$map,
-						function (labelText) {
-							return A2(
-								_elm_lang$html$Html$label,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$for(domId),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(labelText),
-									_1: {ctor: '[]'}
-								});
-						},
-						config.labelText)),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$input,
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$core$Maybe$withDefault,
-								_elm_lang$html$Html_Attributes$id(domId),
-								A2(
-									_elm_lang$core$Maybe$map,
-									function (onUpdate) {
-										return _elm_lang$html$Html_Events$onInput(
-											function (value) {
-												return onUpdate(
-													_abadi199$pustaka_rs$UI_Input_Text_Internal$State(
-														_elm_lang$core$Native_Utils.update(
-															_p7,
-															{value: value, shouldValidate: true})));
-											});
-									},
-									config.onUpdate)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$id(domId),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$value(_p7.value),
-									_1: {ctor: '[]'}
-								}
-							}
-						},
-						{ctor: '[]'}),
-					_1: {
-						ctor: '::',
-						_0: _p7.shouldValidate ? A2(
-							_elm_lang$core$Maybe$withDefault,
-							_elm_lang$html$Html$text(''),
-							A2(
-								_elm_lang$core$Maybe$map,
-								function (validators) {
-									return A2(_abadi199$pustaka_rs$UI_Validator$view, validators, _p7.value);
-								},
-								config.validators)) : _elm_lang$html$Html$text(''),
-						_1: {ctor: '[]'}
-					}
-				}
-			});
-	});
-
-var _abadi199$pustaka_rs$Model$initialModel = {firstName: _abadi199$pustaka_rs$UI_Input_Text$initialState, lastName: _abadi199$pustaka_rs$UI_Input_Text$initialState};
-var _abadi199$pustaka_rs$Model$Model = F2(
-	function (a, b) {
-		return {firstName: a, lastName: b};
-	});
-
-var _abadi199$pustaka_rs$Msg$LastNameUpdated = function (a) {
-	return {ctor: 'LastNameUpdated', _0: a};
-};
-var _abadi199$pustaka_rs$Msg$FirstNameUpdated = function (a) {
-	return {ctor: 'FirstNameUpdated', _0: a};
-};
-var _abadi199$pustaka_rs$Msg$NoOp = {ctor: 'NoOp'};
 
 var _abadi199$pustaka_rs$Update$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
-		switch (_p0.ctor) {
-			case 'NoOp':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'FirstNameUpdated':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{firstName: _p0._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			default:
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{lastName: _p0._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+		if (_p0.ctor === 'NoOp') {
+			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		} else {
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						categories: A2(_abadi199$pustaka_rs$ReloadableData$refresh, _p0._0, model.categories)
+					}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
 		}
 	});
 
-var _abadi199$pustaka_rs$UI_Input_Text_Configs$validators = F2(
-	function (validatorList, _p0) {
-		var _p1 = _p0;
-		return _abadi199$pustaka_rs$UI_Input_Text_Internal$Config(
-			_elm_lang$core$Native_Utils.update(
-				_p1._0,
-				{
-					validators: _elm_lang$core$Maybe$Just(validatorList)
-				}));
-	});
-var _abadi199$pustaka_rs$UI_Input_Text_Configs$label = F2(
-	function (labelText, _p2) {
-		var _p3 = _p2;
-		return _abadi199$pustaka_rs$UI_Input_Text_Internal$Config(
-			_elm_lang$core$Native_Utils.update(
-				_p3._0,
-				{
-					labelText: _elm_lang$core$Maybe$Just(labelText)
-				}));
-	});
-var _abadi199$pustaka_rs$UI_Input_Text_Configs$onUpdate = F2(
-	function (onUpdate, _p4) {
-		var _p5 = _p4;
-		return _abadi199$pustaka_rs$UI_Input_Text_Internal$Config(
-			_elm_lang$core$Native_Utils.update(
-				_p5._0,
-				{
-					onUpdate: _elm_lang$core$Maybe$Just(onUpdate)
-				}));
-	});
+var _abadi199$pustaka_rs$UI_Error$view = function (error) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(error),
+			_1: {ctor: '[]'}
+		});
+};
 
-var _abadi199$pustaka_rs$UI_Validator_String$maxLength = F3(
-	function (length, errorMessage, value) {
-		return (_elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$String$length(value),
-			length) > 0) ? _abadi199$pustaka_rs$UI_Validator_Internal$ValidationError(errorMessage) : _abadi199$pustaka_rs$UI_Validator_Internal$ValidationOk(value);
-	});
-var _abadi199$pustaka_rs$UI_Validator_String$minLength = F3(
-	function (length, errorMessage, value) {
-		return (_elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$String$length(value),
-			length) < 0) ? _abadi199$pustaka_rs$UI_Validator_Internal$ValidationError(errorMessage) : _abadi199$pustaka_rs$UI_Validator_Internal$ValidationOk(value);
-	});
-var _abadi199$pustaka_rs$UI_Validator_String$required = F2(
-	function (errorMessage, value) {
-		return _elm_lang$core$String$isEmpty(value) ? _abadi199$pustaka_rs$UI_Validator_Internal$ValidationError(errorMessage) : _abadi199$pustaka_rs$UI_Validator_Internal$ValidationOk(value);
-	});
+var _abadi199$pustaka_rs$UI_Loading$view = _elm_lang$html$Html$text('Loading...');
 
+var _abadi199$pustaka_rs$UI_Menu$view = function (items) {
+	return A2(
+		_elm_lang$html$Html$nav,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$ul,
+				{ctor: '[]'},
+				A2(
+					_elm_lang$core$List$map,
+					function (_p0) {
+						var _p1 = _p0;
+						return A2(
+							_elm_lang$html$Html$li,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(_p1._0),
+								_1: {ctor: '[]'}
+							});
+					},
+					items)),
+			_1: {ctor: '[]'}
+		});
+};
+
+var _abadi199$pustaka_rs$View$sideNav = function (data) {
+	var viewCategories = function (categories) {
+		return _abadi199$pustaka_rs$UI_Menu$view(
+			A2(
+				_elm_lang$core$List$map,
+				function (_p0) {
+					var _p1 = _p0;
+					var _p2 = _p1._0;
+					return {ctor: '_Tuple2', _0: _p2.name, _1: _p2.name};
+				},
+				categories));
+	};
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		function () {
+			var _p3 = data;
+			switch (_p3.ctor) {
+				case 'NotAsked':
+					return {ctor: '[]'};
+				case 'Loading':
+					return {
+						ctor: '::',
+						_0: _abadi199$pustaka_rs$UI_Loading$view,
+						_1: {ctor: '[]'}
+					};
+				case 'Reloading':
+					return {
+						ctor: '::',
+						_0: _abadi199$pustaka_rs$UI_Loading$view,
+						_1: {
+							ctor: '::',
+							_0: viewCategories(_p3._0),
+							_1: {ctor: '[]'}
+						}
+					};
+				case 'Success':
+					return {
+						ctor: '::',
+						_0: viewCategories(_p3._0),
+						_1: {ctor: '[]'}
+					};
+				case 'Failure':
+					return {
+						ctor: '::',
+						_0: _abadi199$pustaka_rs$UI_Error$view(
+							_elm_lang$core$Basics$toString(_p3._0)),
+						_1: {ctor: '[]'}
+					};
+				default:
+					return {
+						ctor: '::',
+						_0: viewCategories(_p3._1),
+						_1: {
+							ctor: '::',
+							_0: _abadi199$pustaka_rs$UI_Error$view(
+								_elm_lang$core$Basics$toString(_p3._0)),
+							_1: {ctor: '[]'}
+						}
+					};
+			}
+		}());
+};
 var _abadi199$pustaka_rs$View$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: A2(
-				_abadi199$pustaka_rs$UI_Input_Text$view,
-				{
-					ctor: '::',
-					_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$onUpdate(_abadi199$pustaka_rs$Msg$FirstNameUpdated),
-					_1: {
-						ctor: '::',
-						_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$label('First Name'),
-						_1: {
-							ctor: '::',
-							_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$validators(
-								{
-									ctor: '::',
-									_0: _abadi199$pustaka_rs$UI_Validator_String$required('First Name is required.'),
-									_1: {
-										ctor: '::',
-										_0: A2(_abadi199$pustaka_rs$UI_Validator_String$minLength, 5, 'First Name must be longer than 5 characters.'),
-										_1: {
-											ctor: '::',
-											_0: A2(_abadi199$pustaka_rs$UI_Validator_String$maxLength, 10, 'First Name must be shorter than 10 characters.'),
-											_1: {ctor: '[]'}
-										}
-									}
-								}),
-							_1: {ctor: '[]'}
-						}
-					}
-				},
-				model.firstName),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$core$Result$withDefault,
-					_elm_lang$html$Html$text(''),
-					A2(
-						_elm_lang$core$Result$map,
-						_elm_lang$html$Html$text,
-						_abadi199$pustaka_rs$UI_Input_Text$value(model.firstName))),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_abadi199$pustaka_rs$UI_Input_Text$view,
-						{
-							ctor: '::',
-							_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$onUpdate(_abadi199$pustaka_rs$Msg$LastNameUpdated),
-							_1: {
-								ctor: '::',
-								_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$label('Last Name'),
-								_1: {
-									ctor: '::',
-									_0: _abadi199$pustaka_rs$UI_Input_Text_Configs$validators(
-										{
-											ctor: '::',
-											_0: _abadi199$pustaka_rs$UI_Validator_String$required('Last Name is required'),
-											_1: {ctor: '[]'}
-										}),
-									_1: {ctor: '[]'}
-								}
-							}
-						},
-						model.lastName),
-					_1: {ctor: '[]'}
-				}
-			}
+			_0: _abadi199$pustaka_rs$View$sideNav(model.categories),
+			_1: {ctor: '[]'}
 		});
 };
 
-var _abadi199$pustaka_rs$Main$init = {ctor: '_Tuple2', _0: _abadi199$pustaka_rs$Model$initialModel, _1: _elm_lang$core$Platform_Cmd$none};
+var _abadi199$pustaka_rs$Main$init = {ctor: '_Tuple2', _0: _abadi199$pustaka_rs$Model$initialModel, _1: _abadi199$pustaka_rs$Api$getCategories};
 var _abadi199$pustaka_rs$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };

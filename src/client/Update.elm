@@ -2,6 +2,7 @@ module Update exposing (update)
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
+import ReloadableData
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -10,8 +11,5 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        FirstNameUpdated state ->
-            ( { model | firstName = state }, Cmd.none )
-
-        LastNameUpdated state ->
-            ( { model | lastName = state }, Cmd.none )
+        GetCategoriesCompleted webData ->
+            ( { model | categories = ReloadableData.refresh webData model.categories }, Cmd.none )

@@ -1,17 +1,17 @@
 extern crate diesel;
 
 use db::DbConn;
-use models::*;
 use diesel::prelude::*;
-use schema::category::dsl::*;
-use rocket_contrib::Json;
+use models::*;
 use rocket::Route;
+use rocket_contrib::Json;
+use schema::category::dsl::*;
 
 #[get("/")]
 fn list(connection: DbConn) -> Json<Vec<Category>> {
-    let categories = category.load::<Category>(&*connection).expect(
-        "Error loading categories",
-    );
+    let categories = category
+        .load::<Category>(&*connection)
+        .expect("Error loading categories");
     Json(categories)
 }
 
@@ -42,12 +42,10 @@ fn get(category_id: i32, connection: DbConn) -> Json<Category> {
         .expect(&format!("Error loading category with id {}", category_id));
 
     match row.is_empty() {
-        true => {
-            panic!(format!(
-                "category with id of {} can't be found",
-                category_id
-            ))
-        }
+        true => panic!(format!(
+            "category with id of {} can't be found",
+            category_id
+        )),
         false => Json(row.remove(0)),
     }
 }

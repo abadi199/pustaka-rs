@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Api
 import Html exposing (..)
 import Model exposing (Model)
 import Msg exposing (Msg)
@@ -24,4 +25,4 @@ subscriptions model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model.initialModel, Cmd.none )
+    ( Model.initialModel, Api.getCategories )
