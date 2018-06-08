@@ -1,9 +1,9 @@
 module Main exposing (main)
 
-import Api
+import Entity.Category
 import Html exposing (..)
 import Model exposing (Model)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 import Update exposing (update)
 import View exposing (view)
 
@@ -25,4 +25,6 @@ subscriptions model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model.initialModel, Api.getCategories )
+    ( Model.initialModel
+    , Entity.Category.list GetCategoriesCompleted
+    )

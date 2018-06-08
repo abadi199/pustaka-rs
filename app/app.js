@@ -5757,19 +5757,6 @@ var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive
 var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 
-var _abadi199$pustaka_rs$Entity_Category$Category = function (a) {
-	return {ctor: 'Category', _0: a};
-};
-var _abadi199$pustaka_rs$Entity_Category$decoder = A3(
-	_elm_lang$core$Json_Decode$map2,
-	F2(
-		function (id, name) {
-			return _abadi199$pustaka_rs$Entity_Category$Category(
-				{id: id, name: name, parent: _elm_lang$core$Maybe$Nothing});
-		}),
-	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
-	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
-
 var _elm_lang$http$Native_Http = function() {
 
 
@@ -6814,11 +6801,6 @@ var _krisajenkins$remotedata$RemoteData$update = F2(
 		}
 	});
 
-var _abadi199$pustaka_rs$Msg$GetCategoriesCompleted = function (a) {
-	return {ctor: 'GetCategoriesCompleted', _0: a};
-};
-var _abadi199$pustaka_rs$Msg$NoOp = {ctor: 'NoOp'};
-
 var _ohanhi$remotedata_http$RemoteData_Http$queryEscape = function (string) {
 	return A2(
 		_elm_lang$core$String$join,
@@ -7037,11 +7019,141 @@ var _ohanhi$remotedata_http$RemoteData_Http$Config = F3(
 		return {headers: a, withCredentials: b, timeout: c};
 	});
 
-var _abadi199$pustaka_rs$Api$getCategories = A3(
-	_ohanhi$remotedata_http$RemoteData_Http$get,
-	'/api/category',
-	_abadi199$pustaka_rs$Msg$GetCategoriesCompleted,
-	_elm_lang$core$Json_Decode$list(_abadi199$pustaka_rs$Entity_Category$decoder));
+var _abadi199$pustaka_rs$Entity_Category$delete = F2(
+	function (msg, id) {
+		return A3(
+			_ohanhi$remotedata_http$RemoteData_Http$delete,
+			'/api/category',
+			function (_p0) {
+				return msg(
+					A2(
+						_krisajenkins$remotedata$RemoteData$map,
+						_elm_lang$core$Basics$always(
+							{ctor: '_Tuple0'}),
+						_p0));
+			},
+			_elm_lang$core$Json_Encode$int(id));
+	});
+var _abadi199$pustaka_rs$Entity_Category$NewCategory = F2(
+	function (a, b) {
+		return {name: a, parent: b};
+	});
+var _abadi199$pustaka_rs$Entity_Category$Category = function (a) {
+	return {ctor: 'Category', _0: a};
+};
+var _abadi199$pustaka_rs$Entity_Category$decoder = A3(
+	_elm_lang$core$Json_Decode$map2,
+	F2(
+		function (id, name) {
+			return _abadi199$pustaka_rs$Entity_Category$Category(
+				{id: id, name: name, parent: _elm_lang$core$Maybe$Nothing});
+		}),
+	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
+var _abadi199$pustaka_rs$Entity_Category$list = function (msg) {
+	return A3(
+		_ohanhi$remotedata_http$RemoteData_Http$get,
+		'/api/category',
+		msg,
+		_elm_lang$core$Json_Decode$list(_abadi199$pustaka_rs$Entity_Category$decoder));
+};
+var _abadi199$pustaka_rs$Entity_Category$get = F2(
+	function (msg, id) {
+		return A3(
+			_ohanhi$remotedata_http$RemoteData_Http$get,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/api/category/',
+				_elm_lang$core$Basics$toString(id)),
+			msg,
+			_abadi199$pustaka_rs$Entity_Category$decoder);
+	});
+var _abadi199$pustaka_rs$Entity_Category$create = F2(
+	function (msg, newCategory) {
+		return A4(
+			_ohanhi$remotedata_http$RemoteData_Http$post,
+			'/api/category/',
+			msg,
+			_abadi199$pustaka_rs$Entity_Category$decoder,
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'name',
+						_1: _elm_lang$core$Json_Encode$string(newCategory.name)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'parent_id',
+							_1: A2(
+								_elm_lang$core$Maybe$withDefault,
+								_elm_lang$core$Json_Encode$null,
+								A2(
+									_elm_lang$core$Maybe$map,
+									_elm_lang$core$Json_Encode$int,
+									A2(
+										_elm_lang$core$Maybe$map,
+										function (_p1) {
+											var _p2 = _p1;
+											return _p2._0.id;
+										},
+										newCategory.parent)))
+						},
+						_1: {ctor: '[]'}
+					}
+				}));
+	});
+var _abadi199$pustaka_rs$Entity_Category$update = F2(
+	function (msg, _p3) {
+		var _p4 = _p3;
+		var _p7 = _p4._0;
+		return A4(
+			_ohanhi$remotedata_http$RemoteData_Http$put,
+			'/api/category',
+			msg,
+			_abadi199$pustaka_rs$Entity_Category$decoder,
+			_elm_lang$core$Json_Encode$object(
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'id',
+						_1: _elm_lang$core$Json_Encode$int(_p7.id)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'name',
+							_1: _elm_lang$core$Json_Encode$string(_p7.name)
+						},
+						_1: {
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'parent_id',
+								_1: A2(
+									_elm_lang$core$Maybe$withDefault,
+									_elm_lang$core$Json_Encode$null,
+									A2(
+										_elm_lang$core$Maybe$map,
+										_elm_lang$core$Json_Encode$int,
+										A2(
+											_elm_lang$core$Maybe$map,
+											function (_p5) {
+												var _p6 = _p5;
+												return _p6._0.id;
+											},
+											_p7.parent)))
+							},
+							_1: {ctor: '[]'}
+						}
+					}
+				}));
+	});
 
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrap;
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrapWithFlags;
@@ -9152,6 +9264,11 @@ var _abadi199$pustaka_rs$Model$Model = function (a) {
 	return {categories: a};
 };
 
+var _abadi199$pustaka_rs$Msg$GetCategoriesCompleted = function (a) {
+	return {ctor: 'GetCategoriesCompleted', _0: a};
+};
+var _abadi199$pustaka_rs$Msg$NoOp = {ctor: 'NoOp'};
+
 var _abadi199$pustaka_rs$Update$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
@@ -9284,7 +9401,11 @@ var _abadi199$pustaka_rs$View$view = function (model) {
 		});
 };
 
-var _abadi199$pustaka_rs$Main$init = {ctor: '_Tuple2', _0: _abadi199$pustaka_rs$Model$initialModel, _1: _abadi199$pustaka_rs$Api$getCategories};
+var _abadi199$pustaka_rs$Main$init = {
+	ctor: '_Tuple2',
+	_0: _abadi199$pustaka_rs$Model$initialModel,
+	_1: _abadi199$pustaka_rs$Entity_Category$list(_abadi199$pustaka_rs$Msg$GetCategoriesCompleted)
+};
 var _abadi199$pustaka_rs$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };

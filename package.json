@@ -12,7 +12,10 @@
     "elm": "^0.18.0"
   },
   "scripts": {
-    "watch": "chokidar 'src/client/**/*.elm' -c 'elm make src/client/Main.elm --output app/app.js' --initial"
+    "watch": "chokidar 'src/client/**/*.elm' -c 'elm make src/client/Main.elm --output app/app.js' --initial",
+    "build": "elm make src/client/Main.elm --output app/app.js",
+    "start": "cargo run --bin pustaka",
+    "seed": "cargo run --bin seed"
   },
   "author": "",
   "license": "ISC"
