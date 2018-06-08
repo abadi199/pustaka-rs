@@ -21,7 +21,8 @@ pub struct NewMediaType {
     pub name: String,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[table_name = "media_type"]
 pub struct MediaType {
     pub id: i32,
     pub name: String,

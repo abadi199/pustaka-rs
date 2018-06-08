@@ -15,18 +15,20 @@ fn list(connection: DbConn) -> Json<Vec<Category>> {
     Json(categories)
 }
 
-#[post("/", data = "<new_category>")]
-fn create(new_category: Json<NewCategory>, connection: DbConn) {
+#[post("/", data = "<json>")]
+fn create(json: Json<NewCategory>, connection: DbConn) {
+    let new_category = &json.0;
     diesel::insert_into(category)
-        .values(&new_category.0)
+        .values(new_category)
         .execute(&*connection)
         .expect("Error inserting category");
 }
 
-#[put("/", data = "<the_category>")]
-fn update(the_category: Json<Category>, connection: DbConn) {
-    diesel::update(category.filter(id.eq(&the_category.0.id)))
-        .set(&the_category.0)
+#[put("/", data = "<json>")]
+fn update(json: Json<Category>, connection: DbConn) {
+    let the_category = &json.0;
+    diesel::update(category.filter(id.eq(the_category.id)))
+        .set(the_category)
         .execute(&*connection)
         .expect("Error updating category");
 }
