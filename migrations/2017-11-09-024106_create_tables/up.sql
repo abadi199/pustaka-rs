@@ -30,15 +30,6 @@ CREATE TABLE publication_category (
   category_id INTEGER NOT NULL,
   PRIMARY KEY (publication_id, category_id),
   FOREIGN KEY(publication_id) REFERENCES publication(id),
-  FOREIGN KEY(category_id) REFERENCES category(id)
+  FOREIGN KEY(category_id) REFERENCES category(id),
 );
-/*
-INSERT INTO category(name) VALUES('Fiction');
-INSERT INTO category(name) VALUES('Non-Fiction');
-INSERT INTO category(name, parent_id) VALUES('Science Fiction', (SELECT id FROM category WHERE name = 'Fiction'));
 
-INSERT INTO media_type(name) VALUES('book');
-INSERT INTO media_type(name) VALUES('magazine');
-INSERT INTO media_type(name) VALUES('comic');
-INSERT INTO media_type(name) VALUES('audiobook');
-*/

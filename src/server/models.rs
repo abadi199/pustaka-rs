@@ -1,4 +1,4 @@
-use schema::{author, category, media_type, publication};
+use schema::{author, category, media_type, publication, tag};
 
 #[derive(Debug, Insertable, Deserialize)]
 #[table_name = "category"]
@@ -34,7 +34,8 @@ pub struct NewAuthor {
     pub name: String,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[table_name = "author"]
 pub struct Author {
     pub id: i32,
     pub name: String,
@@ -49,11 +50,25 @@ pub struct NewPublication {
     pub author: i32,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[table_name = "publication"]
 pub struct Publication {
     pub id: i32,
     pub isbn: String,
     pub title: String,
     pub media_type: i32,
     pub author: i32,
+}
+
+#[derive(Debug, Insertable, Deserialize)]
+#[table_name = "tag"]
+pub struct NewTag {
+    pub name: String,
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[table_name = "tag"]
+pub struct Tag {
+    pub id: i32,
+    pub name: String,
 }

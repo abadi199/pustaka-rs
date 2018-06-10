@@ -37,10 +37,26 @@ table! {
     }
 }
 
+table! {
+    publication_tag (publication_id, tag_id) {
+        publication_id -> Integer,
+        tag_id -> Integer,
+    }
+}
+
+table! {
+    tag (id) {
+        id -> Integer,
+        name -> Text,
+    }
+}
+
 joinable!(publication -> author (author));
 joinable!(publication -> media_type (media_type));
 joinable!(publication_category -> category (category_id));
 joinable!(publication_category -> publication (publication_id));
+joinable!(publication_tag -> publication (publication_id));
+joinable!(publication_tag -> tag (tag_id));
 
 allow_tables_to_appear_in_same_query!(
     author,
@@ -48,4 +64,6 @@ allow_tables_to_appear_in_same_query!(
     media_type,
     publication,
     publication_category,
+    publication_tag,
+    tag,
 );

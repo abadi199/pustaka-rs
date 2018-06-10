@@ -1,14 +1,14 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
-extern crate rocket;
 extern crate diesel;
-extern crate rocket_contrib;
 extern crate pustaka;
+extern crate rocket;
+extern crate rocket_contrib;
 
-use std::path::{Path, PathBuf};
 use rocket::response::NamedFile;
 use rocket::response::Redirect;
+use std::path::{Path, PathBuf};
 
 #[get("/<file..>")]
 fn files(file: PathBuf) -> Option<NamedFile> {
@@ -33,6 +33,7 @@ fn main() {
         .mount("/api/category", pustaka::api::category::routes())
         .mount("/api/media_type", pustaka::api::media_type::routes())
         .mount("/api/author", pustaka::api::author::routes())
+        .mount("/api/tag", pustaka::api::tag::routes())
         .mount("/", routes![redirect_to_app])
         .launch();
 }
