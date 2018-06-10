@@ -3,20 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "dependencies": {
-    "chokidar-cli": "^1.2.0",
-    "elm": "^0.18.0"
-  },
-  "devDependencies": {
-    "chokidar-cli": "^1.2.0",
-    "elm": "^0.18.0"
-  },
   "scripts": {
-    "watch": "chokidar 'src/client/**/*.elm' -c 'elm make src/client/Main.elm --output app/app.js' --initial",
-    "build": "elm make src/client/Main.elm --output app/app.js",
+    "build": "tput reset && ./bin/elm make src/client/Main.elm --output app/app.js",
     "start": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "elm-format": "^0.8.0-alpha-elm019rc1-rc2"
+  }
 }

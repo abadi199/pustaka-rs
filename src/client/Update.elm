@@ -12,4 +12,4 @@ update msg model =
             ( model, Cmd.none )
 
         GetCategoriesCompleted webData ->
-            ( { model | categories = ReloadableData.refresh webData model.categories }, Cmd.none )
+            ( { model | categories = ReloadableData.refresh model.categories webData }, Cmd.none )

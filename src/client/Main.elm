@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Browser
 import Entity.Category
 import Html exposing (..)
 import Model exposing (Model)
@@ -8,10 +9,11 @@ import Update exposing (update)
 import View exposing (view)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.fullscreen
         { init = init
+        , onNavigation = Nothing
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -23,8 +25,8 @@ subscriptions model =
     Sub.none
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Browser.Env () -> ( Model, Cmd Msg )
+init value =
     ( Model.initialModel
     , Entity.Category.list GetCategoriesCompleted
     )

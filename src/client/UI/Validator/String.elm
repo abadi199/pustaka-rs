@@ -15,6 +15,7 @@ required errorMessage =
     \value ->
         if String.isEmpty value then
             Internal.ValidationError errorMessage
+
         else
             Internal.ValidationOk value
 
@@ -24,6 +25,7 @@ minLength length errorMessage =
     \value ->
         if String.length value < length then
             Internal.ValidationError errorMessage
+
         else
             Internal.ValidationOk value
 
@@ -33,5 +35,6 @@ maxLength length errorMessage =
     \value ->
         if String.length value > length then
             Internal.ValidationError errorMessage
+
         else
             Internal.ValidationOk value

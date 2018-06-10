@@ -48,6 +48,7 @@ validate validators value =
     in
     if List.isEmpty errors then
         Result.Ok value
+
     else
         Result.Err errors
 

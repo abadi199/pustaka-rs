@@ -3,6 +3,7 @@ module ReloadableData
         ( ReloadableData(..)
         , ReloadableWebData
         , fromRemoteData
+        , map
         , refresh
         , toMaybe
         )
@@ -62,22 +63,50 @@ toMaybe reloadableData =
             Nothing
 
 
-refresh : RemoteData e a -> ReloadableData e a -> ReloadableData e a
-refresh remoteData reloadableData =
-    case toMaybe reloadableData of
-        Just old ->
-            case remoteData of
-                RemoteData.NotAsked ->
+refresh : ReloadableData e a -> ReloadableData e a -> ReloadableData e a
+refresh prev next =
+    case toMaybe prev of
+        Just prevData ->
+            case next of
+                NotAsked ->
                     NotAsked
 
-                RemoteData.Loading ->
-                    Reloading old
+                Reloading a ->
+                    Reloading a
 
-                RemoteData.Success a ->
+                Loading ->
+                    Reloading prevData
+
+                Success a ->
                     Success a
 
-                RemoteData.Failure e ->
-                    FailureWithData e old
+                Failure e ->
+                    FailureWithData e prevData
+
+                FailureWithData e a ->
+                    FailureWithData e a
 
         Nothing ->
-            fromRemoteData remoteData
+            next
+
+
+map : (a -> b) -> ReloadableData e a -> ReloadableData e b
+map f reloadableData =
+    case reloadableData of
+        Success a ->
+            Success (f a)
+
+        Reloading a ->
+            Reloading (f a)
+
+        FailureWithData e a ->
+            FailureWithData e (f a)
+
+        NotAsked ->
+            NotAsked
+
+        Loading ->
+            Loading
+
+        Failure e ->
+            Failure e

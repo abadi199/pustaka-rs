@@ -85,6 +85,7 @@ view configurations (Internal.State state) =
             config.validators
                 |> Maybe.map (\validators -> Validator.view validators state.value)
                 |> Maybe.withDefault (Html.text "")
+
           else
             Html.text ""
         ]

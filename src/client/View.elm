@@ -1,5 +1,6 @@
 module View exposing (view)
 
+import Browser
 import Entity.Category exposing (Category(..))
 import Html exposing (..)
 import Model exposing (Model)
@@ -10,10 +11,11 @@ import UI.Loading
 import UI.Menu
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Page Msg
 view model =
-    div []
-        [ sideNav model.categories ]
+    { title = "Pustaka"
+    , body = [ sideNav model.categories ]
+    }
 
 
 sideNav : ReloadableWebData (List Category) -> Html msg
@@ -39,8 +41,8 @@ sideNav data =
                 [ viewCategories categories ]
 
             Failure error ->
-                [ UI.Error.view <| toString error ]
+                [ UI.Error.view <| Debug.toString error ]
 
             FailureWithData error categories ->
-                [ viewCategories categories, UI.Error.view <| toString error ]
+                [ viewCategories categories, UI.Error.view <| Debug.toString error ]
         )

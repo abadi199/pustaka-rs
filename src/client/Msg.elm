@@ -1,9 +1,9 @@
 module Msg exposing (Msg(..))
 
 import Entity.Category exposing (Category)
-import RemoteData exposing (WebData)
+import ReloadableData exposing (ReloadableWebData)
 
 
 type Msg
     = NoOp
-    | GetCategoriesCompleted (WebData (List Category))
+    | GetCategoriesCompleted (ReloadableWebData (List Category))

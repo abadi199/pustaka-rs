@@ -11,8 +11,8 @@ module Entity.Category
 
 import Json.Decode as JD
 import Json.Encode as JE
-import RemoteData exposing (WebData)
-import RemoteData.Http
+import ReloadableData exposing (ReloadableWebData)
+import ReloadableData.Http
 
 
 type Category
@@ -34,23 +34,23 @@ decoder =
         (JD.field "name" JD.string)
 
 
-list : (WebData (List Category) -> msg) -> Cmd msg
+list : (ReloadableWebData (List Category) -> msg) -> Cmd msg
 list msg =
-    RemoteData.Http.get "/api/category"
+    ReloadableData.Http.get "/api/category"
         msg
         (JD.list decoder)
 
 
-get : (WebData Category -> msg) -> Int -> Cmd msg
+get : (ReloadableWebData Category -> msg) -> Int -> Cmd msg
 get msg id =
-    RemoteData.Http.get ("/api/category/" ++ toString id)
+    ReloadableData.Http.get ("/api/category/" ++ String.fromInt id)
         msg
         decoder
 
 
-create : (WebData Category -> msg) -> NewCategory -> Cmd msg
+create : (ReloadableWebData Category -> msg) -> NewCategory -> Cmd msg
 create msg newCategory =
-    RemoteData.Http.post "/api/category/"
+    ReloadableData.Http.post "/api/category/"
         msg
         decoder
         (JE.object
@@ -65,16 +65,16 @@ create msg newCategory =
         )
 
 
-delete : (WebData () -> msg) -> Int -> Cmd msg
+delete : (ReloadableWebData () -> msg) -> Int -> Cmd msg
 delete msg id =
-    RemoteData.Http.delete "/api/category"
-        (RemoteData.map (always ()) >> msg)
+    ReloadableData.Http.delete "/api/category"
+        (ReloadableData.map (always ()) >> msg)
         (JE.int id)
 
 
-update : (WebData Category -> msg) -> Category -> Cmd msg
+update : (ReloadableWebData Category -> msg) -> Category -> Cmd msg
 update msg (Category category) =
-    RemoteData.Http.put "/api/category"
+    ReloadableData.Http.put "/api/category"
         msg
         decoder
         (JE.object
