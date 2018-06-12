@@ -28,6 +28,6 @@ fromUrl url =
 parser : Parser (Route -> a) a
 parser =
     Parser.oneOf
-        [ Parser.map Home <| top
+        [ Parser.map Home <| s "app"
         , Parser.map Category <| s "category" </> int
         ]

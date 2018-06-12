@@ -41,7 +41,7 @@ update msg model =
 view : Model -> Browser.Page msg
 view model =
     { title = "Pustaka - Main"
-    , body = [ sideNav model.categories ]
+    , body = [ text "Welcome to Pustaka", sideNav model.categories ]
     }
 
 

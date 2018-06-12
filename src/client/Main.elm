@@ -31,9 +31,9 @@ type alias Model =
     }
 
 
-initialModel : Model
-initialModel =
-    { route = Route.Home
+initialModel : Route.Route -> Model
+initialModel route =
+    { route = route
     , page = Main Page.Main.initialModel
     }
 
@@ -54,10 +54,8 @@ subscriptions model =
 
 
 init : Browser.Env () -> ( Model, Cmd Msg )
-init value =
-    ( initialModel
-    , Cmd.none
-    )
+init env =
+    check (initialModel (Route.fromUrl env.url))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

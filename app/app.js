@@ -4141,13 +4141,11 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 });var author$project$Main$Main = function (a) {
 	return {$: 'Main', a: a};
 };
+var author$project$Main$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
 var author$project$ReloadableData$NotAsked = {$: 'NotAsked'};
 var author$project$Page$Main$initialModel = {categories: author$project$ReloadableData$NotAsked};
-var author$project$Route$Home = {$: 'Home'};
-var author$project$Main$initialModel = {
-	page: author$project$Main$Main(author$project$Page$Main$initialModel),
-	route: author$project$Route$Home
-};
 var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$True = {$: 'True'};
 var elm$core$Result$isOk = function (result) {
@@ -4435,11 +4433,42 @@ var elm$json$Json$Decode$OneOf = function (a) {
 };
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var author$project$Main$init = function (value) {
-	return _Utils_Tuple2(author$project$Main$initialModel, elm$core$Platform$Cmd$none);
+var author$project$Main$check = function (model) {
+	var _n0 = model.route;
+	switch (_n0.$) {
+		case 'Home':
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						page: author$project$Main$Main(author$project$Page$Main$initialModel)
+					}),
+				elm$core$Platform$Cmd$none);
+		case 'Category':
+			var categoryId = _n0.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						page: author$project$Main$Problem('Category Page not implemented yet')
+					}),
+				elm$core$Platform$Cmd$none);
+		default:
+			var text = _n0.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						page: author$project$Main$Problem('404')
+					}),
+				elm$core$Platform$Cmd$none);
+	}
 };
-var author$project$Main$RouteChanged = function (a) {
-	return {$: 'RouteChanged', a: a};
+var author$project$Main$initialModel = function (route) {
+	return {
+		page: author$project$Main$Main(author$project$Page$Main$initialModel),
+		route: route
+	};
 };
 var author$project$Route$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
@@ -4447,6 +4476,7 @@ var author$project$Route$NotFound = function (a) {
 var author$project$Route$Category = function (a) {
 	return {$: 'Category', a: a};
 };
+var author$project$Route$Home = {$: 'Home'};
 var elm$core$String$toInt = _String_toInt;
 var elm$core$Basics$identity = function (x) {
 	return x;
@@ -4659,15 +4689,13 @@ var elm$url$Url$Parser$slash = F2(
 					parseBefore(state));
 			});
 	});
-var elm$url$Url$Parser$top = elm$url$Url$Parser$Parser(
-	function (state) {
-		return _List_fromArray(
-			[state]);
-	});
 var author$project$Route$parser = elm$url$Url$Parser$oneOf(
 	_List_fromArray(
 		[
-			A2(elm$url$Url$Parser$map, author$project$Route$Home, elm$url$Url$Parser$top),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Route$Home,
+			elm$url$Url$Parser$s('app')),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Route$Category,
@@ -5367,6 +5395,14 @@ var author$project$Route$fromUrl = function (url) {
 		return route;
 	}
 };
+var author$project$Main$init = function (env) {
+	return author$project$Main$check(
+		author$project$Main$initialModel(
+			author$project$Route$fromUrl(env.url)));
+};
+var author$project$Main$RouteChanged = function (a) {
+	return {$: 'RouteChanged', a: a};
+};
 var author$project$Main$onNavigation = function (url) {
 	return author$project$Main$RouteChanged(
 		author$project$Route$fromUrl(url));
@@ -5375,40 +5411,6 @@ var elm$core$Platform$Sub$batch = _Platform_batch;
 var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$Main$subscriptions = function (model) {
 	return elm$core$Platform$Sub$none;
-};
-var author$project$Main$Problem = function (a) {
-	return {$: 'Problem', a: a};
-};
-var author$project$Main$check = function (model) {
-	var _n0 = model.route;
-	switch (_n0.$) {
-		case 'Home':
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Main(author$project$Page$Main$initialModel)
-					}),
-				elm$core$Platform$Cmd$none);
-		case 'Category':
-			var categoryId = _n0.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Problem('Category Page not implemented yet')
-					}),
-				elm$core$Platform$Cmd$none);
-		default:
-			var text = _n0.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Problem('404')
-					}),
-				elm$core$Platform$Cmd$none);
-	}
 };
 var elm$core$Debug$log = _Debug_log;
 var author$project$Main$update = F2(
@@ -5545,6 +5547,7 @@ var author$project$Page$Main$view = function (model) {
 	return {
 		body: _List_fromArray(
 			[
+				elm$html$Html$text('Welcome to Pustaka'),
 				author$project$Page$Main$sideNav(model.categories)
 			]),
 		title: 'Pustaka - Main'
