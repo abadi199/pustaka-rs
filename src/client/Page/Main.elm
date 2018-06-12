@@ -1,19 +1,46 @@
-module View exposing (view)
+module Page.Main
+    exposing
+        ( Model
+        , Msg
+        , initialModel
+        , update
+        , view
+        )
 
 import Browser
 import Entity.Category exposing (Category(..))
 import Html exposing (..)
-import Model exposing (Model)
-import Msg exposing (Msg(..))
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import UI.Error
 import UI.Loading
 import UI.Menu
 
 
-view : Model -> Browser.Page Msg
+type alias Model =
+    { categories : ReloadableWebData (List Category) }
+
+
+initialModel : Model
+initialModel =
+    { categories = ReloadableData.NotAsked }
+
+
+type Msg
+    = GetCategoriesCompleted (ReloadableWebData (List Category))
+
+
+update : Msg -> Model -> ( Model, Cmd msg )
+update msg model =
+    case msg of
+        GetCategoriesCompleted webData ->
+            ( { model | categories = ReloadableData.refresh model.categories webData }
+            , Cmd.none
+            )
+
+
+view : Model -> Browser.Page msg
 view model =
-    { title = "Pustaka"
+    { title = "Pustaka - Main"
     , body = [ sideNav model.categories ]
     }
 

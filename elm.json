@@ -11,12 +11,12 @@
         "elm/html": "1.0.0",
         "elm/http": "1.0.0",
         "elm/json": "1.0.0",
+        "elm/url": "1.0.0",
         "krisajenkins/remotedata": "5.0.0"
     },
     "test-dependencies": {},
     "do-not-edit-this-by-hand": {
         "transitive-dependencies": {
-            "elm/url": "1.0.0",
             "elm/virtual-dom": "1.0.0"
         }
     }

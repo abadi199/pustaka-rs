@@ -17,6 +17,7 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 }
 
 #[get("/")]
+#[error(404)]
 fn index() -> Option<NamedFile> {
     NamedFile::open(Path::new("app/index.html")).ok()
 }
@@ -35,5 +36,6 @@ fn main() {
         .mount("/api/author", pustaka::api::author::routes())
         .mount("/api/tag", pustaka::api::tag::routes())
         .mount("/", routes![redirect_to_app])
+        .catch(errors![index])
         .launch();
 }
