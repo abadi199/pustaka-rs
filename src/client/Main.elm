@@ -46,6 +46,7 @@ type Page
 type Msg
     = NoOp
     | RouteChanged Route
+    | MainMsg Page.Main.Msg
 
 
 subscriptions : Model -> Sub Msg
@@ -60,10 +61,6 @@ init env =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "" msg
-    in
     case msg of
         NoOp ->
             ( model, Cmd.none )
@@ -71,12 +68,30 @@ update msg model =
         RouteChanged route ->
             check { model | route = route }
 
+        MainMsg mainMsg ->
+            case model.page of
+                Main mainModel ->
+                    let
+                        ( newMainModel, cmds ) =
+                            Page.Main.update mainMsg mainModel
+                    in
+                    ( { model | page = Main newMainModel }, cmds |> Cmd.map MainMsg )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 check : Model -> ( Model, Cmd Msg )
 check model =
     case model.route of
         Route.Home ->
-            ( { model | page = Main Page.Main.initialModel }, Cmd.none )
+            let
+                ( initialMainModel, initialMainCmd ) =
+                    Page.Main.init
+            in
+            ( { model | page = Main initialMainModel }
+            , initialMainCmd |> Cmd.map MainMsg
+            )
 
         Category categoryId ->
             ( { model | page = Problem "Category Page not implemented yet" }, Cmd.none )
@@ -90,6 +105,14 @@ view model =
     case model.page of
         Main mainModel ->
             Page.Main.view mainModel
+                |> mapPage MainMsg
 
         Problem text ->
             Page.Problem.view text
+
+
+mapPage : (a -> b) -> Browser.Page a -> Browser.Page b
+mapPage f page =
+    { title = page.title
+    , body = List.map (Html.map f) page.body
+    }

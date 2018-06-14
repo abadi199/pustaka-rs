@@ -1,6 +1,7 @@
 module Route
     exposing
         ( Route(..)
+        , categoryUrl
         , fromUrl
         )
 
@@ -31,3 +32,8 @@ parser =
         [ Parser.map Home <| s "app"
         , Parser.map Category <| s "category" </> int
         ]
+
+
+categoryUrl : Int -> String
+categoryUrl id =
+    "/category/" ++ String.fromInt id

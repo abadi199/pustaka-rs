@@ -20,6 +20,7 @@ type Category
         { id : Int
         , name : String
         , parent : Maybe Category
+        , selected : Bool
         }
 
 
@@ -29,7 +30,7 @@ type alias NewCategory =
 
 decoder : JD.Decoder Category
 decoder =
-    JD.map2 (\id name -> Category { id = id, name = name, parent = Nothing })
+    JD.map2 (\id name -> Category { id = id, name = name, parent = Nothing, selected = False })
         (JD.field "id" JD.int)
         (JD.field "name" JD.string)
 
