@@ -2495,23 +2495,6 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 }
 
 
-function _Url_percentEncode(string)
-{
-	return encodeURIComponent(string);
-}
-
-function _Url_percentDecode(string)
-{
-	try
-	{
-		return elm$core$Maybe$Just(decodeURIComponent(string));
-	}
-	catch (e)
-	{
-		return elm$core$Maybe$Nothing;
-	}
-}
-
 
 
 // HELPERS
@@ -4369,16 +4352,24 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 	return elm$core$Result$isOk(result)
 		? (result.a.b && event.preventDefault(), elm$core$Maybe$Just(result.a.a))
 		: elm$core$Maybe$Nothing
-});var author$project$Main$Main = function (a) {
-	return {$: 'Main', a: a};
-};
-var author$project$Main$MainMsg = function (a) {
-	return {$: 'MainMsg', a: a};
-};
-var author$project$Main$Problem = function (a) {
-	return {$: 'Problem', a: a};
-};
-var author$project$Entity$Category$Category = function (a) {
+});
+
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return elm$core$Maybe$Nothing;
+	}
+}var author$project$Entity$Category$Category = function (a) {
 	return {$: 'Category', a: a};
 };
 var elm$core$Basics$False = {$: 'False'};
@@ -5679,458 +5670,161 @@ var author$project$Entity$Category$list = function (msg) {
 		msg,
 		elm$json$Json$Decode$list(author$project$Entity$Category$decoder));
 };
-var author$project$Page$Main$GetCategoriesCompleted = function (a) {
+var author$project$Main$GetCategoriesCompleted = function (a) {
 	return {$: 'GetCategoriesCompleted', a: a};
-};
-var author$project$ReloadableData$NotAsked = {$: 'NotAsked'};
-var author$project$Page$Main$initialModel = {categories: author$project$ReloadableData$NotAsked};
-var author$project$Page$Main$init = _Utils_Tuple2(
-	author$project$Page$Main$initialModel,
-	author$project$Entity$Category$list(author$project$Page$Main$GetCategoriesCompleted));
-var elm$core$Platform$Cmd$map = _Platform_map;
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var author$project$Main$check = function (model) {
-	var _n0 = model.route;
-	switch (_n0.$) {
-		case 'Home':
-			var _n1 = author$project$Page$Main$init;
-			var initialMainModel = _n1.a;
-			var initialMainCmd = _n1.b;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Main(initialMainModel)
-					}),
-				A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd));
-		case 'Category':
-			var categoryId = _n0.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Problem('Category Page not implemented yet')
-					}),
-				elm$core$Platform$Cmd$none);
-		default:
-			var text = _n0.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						page: author$project$Main$Problem('404')
-					}),
-				elm$core$Platform$Cmd$none);
-	}
-};
-var author$project$Main$initialModel = function (route) {
-	return {
-		page: author$project$Main$Main(author$project$Page$Main$initialModel),
-		route: route
-	};
-};
-var author$project$Route$NotFound = function (a) {
-	return {$: 'NotFound', a: a};
-};
-var author$project$Route$Category = function (a) {
-	return {$: 'Category', a: a};
-};
-var author$project$Route$Home = {$: 'Home'};
-var elm$core$String$toInt = _String_toInt;
-var elm$url$Url$Parser$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var elm$url$Url$Parser$State = F5(
-	function (visited, unvisited, params, frag, value) {
-		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
-	});
-var elm$url$Url$Parser$custom = F2(
-	function (tipe, stringToSomething) {
-		return elm$url$Url$Parser$Parser(
-			function (_n0) {
-				var visited = _n0.visited;
-				var unvisited = _n0.unvisited;
-				var params = _n0.params;
-				var frag = _n0.frag;
-				var value = _n0.value;
-				if (!unvisited.b) {
-					return _List_Nil;
-				} else {
-					var next = unvisited.a;
-					var rest = unvisited.b;
-					var _n2 = stringToSomething(next);
-					if (_n2.$ === 'Just') {
-						var nextValue = _n2.a;
-						return _List_fromArray(
-							[
-								A5(
-								elm$url$Url$Parser$State,
-								A2(elm$core$List$cons, next, visited),
-								rest,
-								params,
-								frag,
-								value(nextValue))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}
-			});
-	});
-var elm$url$Url$Parser$int = A2(elm$url$Url$Parser$custom, 'NUMBER', elm$core$String$toInt);
-var elm$url$Url$Parser$mapState = F2(
-	function (func, _n0) {
-		var visited = _n0.visited;
-		var unvisited = _n0.unvisited;
-		var params = _n0.params;
-		var frag = _n0.frag;
-		var value = _n0.value;
-		return A5(
-			elm$url$Url$Parser$State,
-			visited,
-			unvisited,
-			params,
-			frag,
-			func(value));
-	});
-var elm$url$Url$Parser$map = F2(
-	function (subValue, _n0) {
-		var parseArg = _n0.a;
-		return elm$url$Url$Parser$Parser(
-			function (_n1) {
-				var visited = _n1.visited;
-				var unvisited = _n1.unvisited;
-				var params = _n1.params;
-				var frag = _n1.frag;
-				var value = _n1.value;
-				return A2(
-					elm$core$List$map,
-					elm$url$Url$Parser$mapState(value),
-					parseArg(
-						A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
-			});
-	});
-var elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
-		}
-	});
-var elm$core$List$concat = function (lists) {
-	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
-};
-var elm$core$List$concatMap = F2(
-	function (f, list) {
-		return elm$core$List$concat(
-			A2(elm$core$List$map, f, list));
-	});
-var elm$url$Url$Parser$oneOf = function (parsers) {
-	return elm$url$Url$Parser$Parser(
-		function (state) {
-			return A2(
-				elm$core$List$concatMap,
-				function (_n0) {
-					var parser = _n0.a;
-					return parser(state);
-				},
-				parsers);
-		});
-};
-var elm$url$Url$Parser$s = function (str) {
-	return elm$url$Url$Parser$Parser(
-		function (_n0) {
-			var visited = _n0.visited;
-			var unvisited = _n0.unvisited;
-			var params = _n0.params;
-			var frag = _n0.frag;
-			var value = _n0.value;
-			if (!unvisited.b) {
-				return _List_Nil;
-			} else {
-				var next = unvisited.a;
-				var rest = unvisited.b;
-				return _Utils_eq(next, str) ? _List_fromArray(
-					[
-						A5(
-						elm$url$Url$Parser$State,
-						A2(elm$core$List$cons, next, visited),
-						rest,
-						params,
-						frag,
-						value)
-					]) : _List_Nil;
-			}
-		});
-};
-var elm$url$Url$Parser$slash = F2(
-	function (_n0, _n1) {
-		var parseBefore = _n0.a;
-		var parseAfter = _n1.a;
-		return elm$url$Url$Parser$Parser(
-			function (state) {
-				return A2(
-					elm$core$List$concatMap,
-					parseAfter,
-					parseBefore(state));
-			});
-	});
-var author$project$Route$parser = elm$url$Url$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Route$Home,
-			elm$url$Url$Parser$s('app')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Route$Category,
-			A2(
-				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('category'),
-				elm$url$Url$Parser$int))
-		]));
-var elm$url$Url$addPort = F2(
-	function (maybePort, starter) {
-		if (maybePort.$ === 'Nothing') {
-			return starter;
-		} else {
-			var port_ = maybePort.a;
-			return starter + (':' + elm$core$String$fromInt(port_));
-		}
-	});
-var elm$url$Url$addPrefixed = F3(
-	function (prefix, maybeSegment, starter) {
-		if (maybeSegment.$ === 'Nothing') {
-			return starter;
-		} else {
-			var segment = maybeSegment.a;
-			return _Utils_ap(
-				starter,
-				_Utils_ap(prefix, segment));
-		}
-	});
-var elm$url$Url$toString = function (url) {
-	var http = function () {
-		var _n0 = url.protocol;
-		if (_n0.$ === 'Http') {
-			return 'http://';
-		} else {
-			return 'https://';
-		}
-	}();
-	return A3(
-		elm$url$Url$addPrefixed,
-		'#',
-		url.fragment,
-		A3(
-			elm$url$Url$addPrefixed,
-			'?',
-			url.query,
-			_Utils_ap(
-				A2(
-					elm$url$Url$addPort,
-					url.port_,
-					_Utils_ap(http, url.host)),
-				url.path)));
-};
-var elm$url$Url$Parser$getFirstMatch = function (states) {
-	getFirstMatch:
-	while (true) {
-		if (!states.b) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var state = states.a;
-			var rest = states.b;
-			var _n1 = state.unvisited;
-			if (!_n1.b) {
-				return elm$core$Maybe$Just(state.value);
-			} else {
-				if ((_n1.a === '') && (!_n1.b.b)) {
-					return elm$core$Maybe$Just(state.value);
-				} else {
-					var $temp$states = rest;
-					states = $temp$states;
-					continue getFirstMatch;
-				}
-			}
-		}
-	}
-};
-var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
-	if (!segments.b) {
-		return _List_Nil;
-	} else {
-		if ((segments.a === '') && (!segments.b.b)) {
-			return _List_Nil;
-		} else {
-			var segment = segments.a;
-			var rest = segments.b;
-			return A2(
-				elm$core$List$cons,
-				segment,
-				elm$url$Url$Parser$removeFinalEmpty(rest));
-		}
-	}
-};
-var elm$url$Url$Parser$preparePath = function (path) {
-	var _n0 = A2(elm$core$String$split, '/', path);
-	if (_n0.b && (_n0.a === '')) {
-		var segments = _n0.b;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	} else {
-		var segments = _n0;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	}
-};
-var elm$url$Url$percentDecode = _Url_percentDecode;
-var elm$url$Url$Parser$addToParametersHelp = F2(
-	function (value, maybeList) {
-		if (maybeList.$ === 'Nothing') {
-			return elm$core$Maybe$Just(
-				_List_fromArray(
-					[value]));
-		} else {
-			var list = maybeList.a;
-			return elm$core$Maybe$Just(
-				A2(elm$core$List$cons, value, list));
-		}
-	});
-var elm$url$Url$Parser$addParam = F2(
-	function (segment, dict) {
-		var _n0 = A2(elm$core$String$split, '=', segment);
-		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
-			var rawKey = _n0.a;
-			var _n1 = _n0.b;
-			var rawValue = _n1.a;
-			var _n2 = elm$url$Url$percentDecode(rawKey);
-			if (_n2.$ === 'Nothing') {
-				return dict;
-			} else {
-				var key = _n2.a;
-				var _n3 = elm$url$Url$percentDecode(rawValue);
-				if (_n3.$ === 'Nothing') {
-					return dict;
-				} else {
-					var value = _n3.a;
-					return A3(
-						elm$core$Dict$update,
-						key,
-						elm$url$Url$Parser$addToParametersHelp(value),
-						dict);
-				}
-			}
-		} else {
-			return dict;
-		}
-	});
-var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
-	if (maybeQuery.$ === 'Nothing') {
-		return elm$core$Dict$empty;
-	} else {
-		var qry = maybeQuery.a;
-		return A3(
-			elm$core$List$foldr,
-			elm$url$Url$Parser$addParam,
-			elm$core$Dict$empty,
-			A2(elm$core$String$split, '&', qry));
-	}
-};
-var elm$url$Url$Parser$parse = F2(
-	function (_n0, url) {
-		var parser = _n0.a;
-		return elm$url$Url$Parser$getFirstMatch(
-			parser(
-				A5(
-					elm$url$Url$Parser$State,
-					_List_Nil,
-					elm$url$Url$Parser$preparePath(url.path),
-					elm$url$Url$Parser$prepareQuery(url.query),
-					url.fragment,
-					elm$core$Basics$identity)));
-	});
-var author$project$Route$fromUrl = function (url) {
-	var _n0 = A2(elm$url$Url$Parser$parse, author$project$Route$parser, url);
-	if (_n0.$ === 'Nothing') {
-		return author$project$Route$NotFound(
-			elm$url$Url$toString(url));
-	} else {
-		var route = _n0.a;
-		return route;
-	}
-};
-var author$project$Main$init = function (env) {
-	return author$project$Main$check(
-		author$project$Main$initialModel(
-			author$project$Route$fromUrl(env.url)));
 };
 var author$project$Main$RouteChanged = function (a) {
 	return {$: 'RouteChanged', a: a};
 };
-var author$project$Main$onNavigation = function (url) {
-	return author$project$Main$RouteChanged(
-		author$project$Route$fromUrl(url));
+var author$project$Main$Main = function (a) {
+	return {$: 'Main', a: a};
 };
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
-var author$project$Main$subscriptions = function (model) {
-	return elm$core$Platform$Sub$none;
+var author$project$Page$Main$initialModel = {};
+var author$project$ReloadableData$Loading = {$: 'Loading'};
+var author$project$Route$Home = {$: 'Home'};
+var author$project$Main$initialModel = {
+	categories: author$project$ReloadableData$Loading,
+	page: author$project$Main$Main(author$project$Page$Main$initialModel),
+	route: author$project$Route$Home
 };
+var author$project$Main$MainMsg = function (a) {
+	return {$: 'MainMsg', a: a};
+};
+var author$project$Main$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var elm$core$Set$empty = elm$core$Set$Set_elm_builtin(elm$core$Dict$empty);
+var elm$core$Set$insert = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return elm$core$Set$Set_elm_builtin(
+			A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var elm$core$Set$fromList = function (list) {
+	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
+};
+var elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _n0 = A2(elm$core$Dict$get, key, dict);
+		if (_n0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var author$project$Main$selectCategory = F2(
+	function (categoryIds, categories) {
+		var categoryDict = elm$core$Set$fromList(categoryIds);
+		return A2(
+			elm$core$List$map,
+			function (_n0) {
+				var category = _n0.a;
+				return author$project$Entity$Category$Category(
+					_Utils_update(
+						category,
+						{
+							selected: A2(elm$core$Set$member, category.id, categoryDict)
+						}));
+			},
+			categories);
+	});
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var author$project$Page$Main$init = _Utils_Tuple2(author$project$Page$Main$initialModel, elm$core$Platform$Cmd$none);
 var author$project$ReloadableData$FailureWithData = F2(
 	function (a, b) {
 		return {$: 'FailureWithData', a: a, b: b};
 	});
+var author$project$ReloadableData$NotAsked = {$: 'NotAsked'};
 var author$project$ReloadableData$Reloading = function (a) {
 	return {$: 'Reloading', a: a};
 };
-var author$project$ReloadableData$toMaybe = function (reloadableData) {
-	switch (reloadableData.$) {
-		case 'Success':
-			var a = reloadableData.a;
-			return elm$core$Maybe$Just(a);
-		case 'Reloading':
-			var a = reloadableData.a;
-			return elm$core$Maybe$Just(a);
-		case 'FailureWithData':
-			var e = reloadableData.a;
-			var a = reloadableData.b;
-			return elm$core$Maybe$Just(a);
-		case 'NotAsked':
-			return elm$core$Maybe$Nothing;
-		case 'Loading':
-			return elm$core$Maybe$Nothing;
-		default:
-			return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$ReloadableData$refresh = F2(
-	function (prev, next) {
-		var _n0 = author$project$ReloadableData$toMaybe(prev);
-		if (_n0.$ === 'Just') {
-			var prevData = _n0.a;
-			switch (next.$) {
-				case 'NotAsked':
-					return author$project$ReloadableData$NotAsked;
-				case 'Reloading':
-					var a = next.a;
-					return author$project$ReloadableData$Reloading(a);
-				case 'Loading':
-					return author$project$ReloadableData$Reloading(prevData);
-				case 'Success':
-					var a = next.a;
-					return author$project$ReloadableData$Success(a);
-				case 'Failure':
-					var e = next.a;
-					return A2(author$project$ReloadableData$FailureWithData, e, prevData);
-				default:
-					var e = next.a;
-					var a = next.b;
-					return A2(author$project$ReloadableData$FailureWithData, e, a);
-			}
-		} else {
-			return next;
+var author$project$ReloadableData$map = F2(
+	function (f, reloadableData) {
+		switch (reloadableData.$) {
+			case 'Success':
+				var a = reloadableData.a;
+				return author$project$ReloadableData$Success(
+					f(a));
+			case 'Reloading':
+				var a = reloadableData.a;
+				return author$project$ReloadableData$Reloading(
+					f(a));
+			case 'FailureWithData':
+				var e = reloadableData.a;
+				var a = reloadableData.b;
+				return A2(
+					author$project$ReloadableData$FailureWithData,
+					e,
+					f(a));
+			case 'NotAsked':
+				return author$project$ReloadableData$NotAsked;
+			case 'Loading':
+				return author$project$ReloadableData$Loading;
+			default:
+				var e = reloadableData.a;
+				return author$project$ReloadableData$Failure(e);
+		}
+	});
+var elm$core$Platform$Cmd$map = _Platform_map;
+var author$project$Main$check = F2(
+	function (model, cmd) {
+		var _n0 = model.route;
+		switch (_n0.$) {
+			case 'Home':
+				var _n1 = author$project$Page$Main$init;
+				var initialMainModel = _n1.a;
+				var initialMainCmd = _n1.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							page: author$project$Main$Main(initialMainModel)
+						}),
+					elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd),
+								cmd
+							])));
+			case 'Category':
+				var categoryIds = _n0.a;
+				var _n2 = author$project$Page$Main$init;
+				var initialMainModel = _n2.a;
+				var initialMainCmd = _n2.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							categories: A2(
+								author$project$ReloadableData$map,
+								author$project$Main$selectCategory(categoryIds),
+								model.categories),
+							page: author$project$Main$Main(initialMainModel)
+						}),
+					elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd),
+								cmd
+							])));
+			default:
+				var text = _n0.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							page: author$project$Main$Problem('404')
+						}),
+					cmd);
 		}
 	});
 var author$project$Route$categoryUrl = function (id) {
@@ -6362,34 +6056,33 @@ var elm$browser$Browser$Navigation$Manager$pushUrl = function (url) {
 var elm$browser$Browser$Navigation$pushUrl = elm$browser$Browser$Navigation$Manager$pushUrl;
 var author$project$Page$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'GetCategoriesCompleted') {
-			var webData = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						categories: A2(author$project$ReloadableData$refresh, model.categories, webData)
-					}),
-				elm$core$Platform$Cmd$none);
-		} else {
-			var id = msg.a;
-			return _Utils_Tuple2(
-				model,
-				elm$browser$Browser$Navigation$pushUrl(
-					author$project$Route$categoryUrl(id)));
-		}
+		var id = msg.a;
+		return _Utils_Tuple2(
+			model,
+			elm$browser$Browser$Navigation$pushUrl(
+				author$project$Route$categoryUrl(id)));
 	});
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'NoOp':
-				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-			case 'RouteChanged':
-				var route = msg.a;
-				return author$project$Main$check(
+				return A2(author$project$Main$check, model, elm$core$Platform$Cmd$none);
+			case 'GetCategoriesCompleted':
+				var data = msg.a;
+				return A2(
+					author$project$Main$check,
 					_Utils_update(
 						model,
-						{route: route}));
+						{categories: data}),
+					elm$core$Platform$Cmd$none);
+			case 'RouteChanged':
+				var route = msg.a;
+				return A2(
+					author$project$Main$check,
+					_Utils_update(
+						model,
+						{route: route}),
+					elm$core$Platform$Cmd$none);
 			default:
 				var mainMsg = msg.a;
 				var _n1 = model.page;
@@ -6410,6 +6103,369 @@ var author$project$Main$update = F2(
 				}
 		}
 	});
+var author$project$Route$NotFound = function (a) {
+	return {$: 'NotFound', a: a};
+};
+var author$project$Route$Category = function (a) {
+	return {$: 'Category', a: a};
+};
+var elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
+var elm$core$String$toInt = _String_toInt;
+var elm$url$Url$Parser$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
+	});
+var elm$url$Url$Parser$custom = F2(
+	function (tipe, stringToSomething) {
+		return elm$url$Url$Parser$Parser(
+			function (_n0) {
+				var visited = _n0.visited;
+				var unvisited = _n0.unvisited;
+				var params = _n0.params;
+				var frag = _n0.frag;
+				var value = _n0.value;
+				if (!unvisited.b) {
+					return _List_Nil;
+				} else {
+					var next = unvisited.a;
+					var rest = unvisited.b;
+					var _n2 = stringToSomething(next);
+					if (_n2.$ === 'Just') {
+						var nextValue = _n2.a;
+						return _List_fromArray(
+							[
+								A5(
+								elm$url$Url$Parser$State,
+								A2(elm$core$List$cons, next, visited),
+								rest,
+								params,
+								frag,
+								value(nextValue))
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}
+			});
+	});
+var elm$url$Url$Parser$int = A2(elm$url$Url$Parser$custom, 'NUMBER', elm$core$String$toInt);
+var elm$url$Url$Parser$mapState = F2(
+	function (func, _n0) {
+		var visited = _n0.visited;
+		var unvisited = _n0.unvisited;
+		var params = _n0.params;
+		var frag = _n0.frag;
+		var value = _n0.value;
+		return A5(
+			elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var elm$url$Url$Parser$map = F2(
+	function (subValue, _n0) {
+		var parseArg = _n0.a;
+		return elm$url$Url$Parser$Parser(
+			function (_n1) {
+				var visited = _n1.visited;
+				var unvisited = _n1.unvisited;
+				var params = _n1.params;
+				var frag = _n1.frag;
+				var value = _n1.value;
+				return A2(
+					elm$core$List$map,
+					elm$url$Url$Parser$mapState(value),
+					parseArg(
+						A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+			});
+	});
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
+	});
+var elm$core$List$concat = function (lists) {
+	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
+};
+var elm$core$List$concatMap = F2(
+	function (f, list) {
+		return elm$core$List$concat(
+			A2(elm$core$List$map, f, list));
+	});
+var elm$url$Url$Parser$oneOf = function (parsers) {
+	return elm$url$Url$Parser$Parser(
+		function (state) {
+			return A2(
+				elm$core$List$concatMap,
+				function (_n0) {
+					var parser = _n0.a;
+					return parser(state);
+				},
+				parsers);
+		});
+};
+var elm$url$Url$Parser$s = function (str) {
+	return elm$url$Url$Parser$Parser(
+		function (_n0) {
+			var visited = _n0.visited;
+			var unvisited = _n0.unvisited;
+			var params = _n0.params;
+			var frag = _n0.frag;
+			var value = _n0.value;
+			if (!unvisited.b) {
+				return _List_Nil;
+			} else {
+				var next = unvisited.a;
+				var rest = unvisited.b;
+				return _Utils_eq(next, str) ? _List_fromArray(
+					[
+						A5(
+						elm$url$Url$Parser$State,
+						A2(elm$core$List$cons, next, visited),
+						rest,
+						params,
+						frag,
+						value)
+					]) : _List_Nil;
+			}
+		});
+};
+var elm$url$Url$Parser$slash = F2(
+	function (_n0, _n1) {
+		var parseBefore = _n0.a;
+		var parseAfter = _n1.a;
+		return elm$url$Url$Parser$Parser(
+			function (state) {
+				return A2(
+					elm$core$List$concatMap,
+					parseAfter,
+					parseBefore(state));
+			});
+	});
+var author$project$Route$parser = elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Route$Home,
+			elm$url$Url$Parser$s('app')),
+			A2(
+			elm$url$Url$Parser$map,
+			function ($) {
+				return author$project$Route$Category(
+					elm$core$List$singleton($));
+			},
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('category'),
+				elm$url$Url$Parser$int))
+		]));
+var elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + elm$core$String$fromInt(port_));
+		}
+	});
+var elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _n0 = url.protocol;
+		if (_n0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
+};
+var elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _n1 = state.unvisited;
+			if (!_n1.b) {
+				return elm$core$Maybe$Just(state.value);
+			} else {
+				if ((_n1.a === '') && (!_n1.b.b)) {
+					return elm$core$Maybe$Just(state.value);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
+	}
+};
+var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				elm$core$List$cons,
+				segment,
+				elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
+};
+var elm$url$Url$Parser$preparePath = function (path) {
+	var _n0 = A2(elm$core$String$split, '/', path);
+	if (_n0.b && (_n0.a === '')) {
+		var segments = _n0.b;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _n0;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var elm$url$Url$percentDecode = _Url_percentDecode;
+var elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 'Nothing') {
+			return elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return elm$core$Maybe$Just(
+				A2(elm$core$List$cons, value, list));
+		}
+	});
+var elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _n0 = A2(elm$core$String$split, '=', segment);
+		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
+			var rawKey = _n0.a;
+			var _n1 = _n0.b;
+			var rawValue = _n1.a;
+			var _n2 = elm$url$Url$percentDecode(rawKey);
+			if (_n2.$ === 'Nothing') {
+				return dict;
+			} else {
+				var key = _n2.a;
+				var _n3 = elm$url$Url$percentDecode(rawValue);
+				if (_n3.$ === 'Nothing') {
+					return dict;
+				} else {
+					var value = _n3.a;
+					return A3(
+						elm$core$Dict$update,
+						key,
+						elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 'Nothing') {
+		return elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			elm$core$List$foldr,
+			elm$url$Url$Parser$addParam,
+			elm$core$Dict$empty,
+			A2(elm$core$String$split, '&', qry));
+	}
+};
+var elm$url$Url$Parser$parse = F2(
+	function (_n0, url) {
+		var parser = _n0.a;
+		return elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					elm$url$Url$Parser$State,
+					_List_Nil,
+					elm$url$Url$Parser$preparePath(url.path),
+					elm$url$Url$Parser$prepareQuery(url.query),
+					url.fragment,
+					elm$core$Basics$identity)));
+	});
+var author$project$Route$fromUrl = function (url) {
+	var _n0 = A2(elm$url$Url$Parser$parse, author$project$Route$parser, url);
+	if (_n0.$ === 'Nothing') {
+		return author$project$Route$NotFound(
+			elm$url$Url$toString(url));
+	} else {
+		var route = _n0.a;
+		return route;
+	}
+};
+var author$project$Main$init = function (env) {
+	var _n0 = A2(
+		author$project$Main$update,
+		author$project$Main$RouteChanged(
+			author$project$Route$fromUrl(env.url)),
+		author$project$Main$initialModel);
+	var model = _n0.a;
+	var cmds = _n0.b;
+	return _Utils_Tuple2(
+		model,
+		elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					cmds,
+					author$project$Entity$Category$list(author$project$Main$GetCategoriesCompleted)
+				])));
+};
+var author$project$Main$onNavigation = function (url) {
+	return author$project$Main$RouteChanged(
+		author$project$Route$fromUrl(url));
+};
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
+var author$project$Main$subscriptions = function (model) {
+	return elm$core$Platform$Sub$none;
+};
 var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
 var author$project$Main$mapPage = F2(
@@ -6451,6 +6507,8 @@ var elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6483,14 +6541,21 @@ var author$project$UI$Menu$view = function (items) {
 				_List_Nil,
 				A2(
 					elm$core$List$map,
-					function (_n0) {
-						var item = _n0.a;
-						var action = _n0.b;
-						if (action.$ === 'Link') {
-							var url = action.a;
+					function (item) {
+						var itemStyles = item.selected ? _List_fromArray(
+							[
+								A2(elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+								A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
+							]) : _List_fromArray(
+							[
+								A2(elm$html$Html$Attributes$style, 'cursor', 'pointer')
+							]);
+						var _n0 = item.action;
+						if (_n0.$ === 'Link') {
+							var url = _n0.a;
 							return A2(
 								elm$html$Html$li,
-								_List_Nil,
+								itemStyles,
 								_List_fromArray(
 									[
 										A2(
@@ -6501,20 +6566,20 @@ var author$project$UI$Menu$view = function (items) {
 											]),
 										_List_fromArray(
 											[
-												elm$html$Html$text(item)
+												elm$html$Html$text(item.text)
 											]))
 									]));
 						} else {
-							var msg = action.a;
+							var msg = _n0.a;
 							return A2(
 								elm$html$Html$li,
+								A2(
+									elm$core$List$cons,
+									elm$html$Html$Events$onClick(msg),
+									itemStyles),
 								_List_fromArray(
 									[
-										elm$html$Html$Events$onClick(msg)
-									]),
-								_List_fromArray(
-									[
-										elm$html$Html$text(item)
+										elm$html$Html$text(item.text)
 									]));
 						}
 					},
@@ -6527,10 +6592,12 @@ var author$project$Page$Main$viewCategories = function (categories) {
 			elm$core$List$map,
 			function (_n0) {
 				var category = _n0.a;
-				return _Utils_Tuple2(
-					category.name,
-					author$project$UI$Menu$click(
-						author$project$Page$Main$CategoryClicked(category.id)));
+				return {
+					action: author$project$UI$Menu$click(
+						author$project$Page$Main$CategoryClicked(category.id)),
+					selected: category.selected,
+					text: category.name
+				};
 			},
 			categories));
 };
@@ -6589,16 +6656,17 @@ var author$project$Page$Main$sideNav = function (data) {
 			}
 		}());
 };
-var author$project$Page$Main$view = function (model) {
-	return {
-		body: _List_fromArray(
-			[
-				elm$html$Html$text('Welcome to Pustaka'),
-				author$project$Page$Main$sideNav(model.categories)
-			]),
-		title: 'Pustaka - Main'
-	};
-};
+var author$project$Page$Main$view = F2(
+	function (categories, model) {
+		return {
+			body: _List_fromArray(
+				[
+					elm$html$Html$text('Welcome to Pustaka'),
+					author$project$Page$Main$sideNav(categories)
+				]),
+			title: 'Pustaka - Main'
+		};
+	});
 var author$project$Page$Problem$view = function (text) {
 	return {
 		body: _List_fromArray(
@@ -6615,7 +6683,7 @@ var author$project$Main$view = function (model) {
 		return A2(
 			author$project$Main$mapPage,
 			author$project$Main$MainMsg,
-			author$project$Page$Main$view(mainModel));
+			A2(author$project$Page$Main$view, model.categories, mainModel));
 	} else {
 		var text = _n0.a;
 		return author$project$Page$Problem$view(text);

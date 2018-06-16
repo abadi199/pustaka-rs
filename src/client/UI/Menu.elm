@@ -11,20 +11,32 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 
-view : List ( String, Action msg ) -> Html msg
+view : List { text : String, action : Action msg, selected : Bool } -> Html msg
 view items =
     nav []
         [ ul []
             (items
                 |> List.map
-                    (\( item, action ) ->
-                        case action of
+                    (\item ->
+                        let
+                            itemStyles =
+                                if item.selected then
+                                    [ style "font-weight" "bold"
+                                    , style "cursor" "pointer"
+                                    ]
+
+                                else
+                                    [ style "cursor" "pointer" ]
+                        in
+                        case item.action of
                             Link url ->
-                                li []
-                                    [ a [ href url ] [ text item ] ]
+                                li itemStyles
+                                    [ a [ href url ] [ text item.text ] ]
 
                             Click msg ->
-                                li [ onClick msg ] [ text item ]
+                                li
+                                    (onClick msg :: itemStyles)
+                                    [ text item.text ]
                     )
             )
         ]

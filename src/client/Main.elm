@@ -1,11 +1,13 @@
 module Main exposing (main)
 
 import Browser
-import Entity.Category
+import Entity.Category exposing (Category(..))
 import Html exposing (..)
 import Page.Main
 import Page.Problem
-import Route exposing (Route(..))
+import ReloadableData exposing (ReloadableWebData)
+import Route exposing (Route)
+import Set
 import Url
 
 
@@ -28,13 +30,15 @@ onNavigation url =
 type alias Model =
     { route : Route.Route
     , page : Page
+    , categories : ReloadableWebData (List Category)
     }
 
 
-initialModel : Route.Route -> Model
-initialModel route =
-    { route = route
+initialModel : Model
+initialModel =
+    { route = Route.Home
     , page = Main Page.Main.initialModel
+    , categories = ReloadableData.Loading
     }
 
 
@@ -45,6 +49,7 @@ type Page
 
 type Msg
     = NoOp
+    | GetCategoriesCompleted (ReloadableWebData (List Category))
     | RouteChanged Route
     | MainMsg Page.Main.Msg
 
@@ -56,17 +61,29 @@ subscriptions model =
 
 init : Browser.Env () -> ( Model, Cmd Msg )
 init env =
-    check (initialModel (Route.fromUrl env.url))
+    let
+        ( model, cmds ) =
+            update (RouteChanged (Route.fromUrl env.url)) initialModel
+    in
+    ( model
+    , Cmd.batch
+        [ cmds
+        , Entity.Category.list GetCategoriesCompleted
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            check model Cmd.none
+
+        GetCategoriesCompleted data ->
+            check { model | categories = data } Cmd.none
 
         RouteChanged route ->
-            check { model | route = route }
+            check { model | route = route } Cmd.none
 
         MainMsg mainMsg ->
             case model.page of
@@ -81,8 +98,8 @@ update msg model =
                     ( model, Cmd.none )
 
 
-check : Model -> ( Model, Cmd Msg )
-check model =
+check : Model -> Cmd Msg -> ( Model, Cmd Msg )
+check model cmd =
     case model.route of
         Route.Home ->
             let
@@ -90,21 +107,45 @@ check model =
                     Page.Main.init
             in
             ( { model | page = Main initialMainModel }
-            , initialMainCmd |> Cmd.map MainMsg
+            , Cmd.batch [ initialMainCmd |> Cmd.map MainMsg, cmd ]
             )
 
-        Category categoryId ->
-            ( { model | page = Problem "Category Page not implemented yet" }, Cmd.none )
+        Route.Category categoryIds ->
+            let
+                ( initialMainModel, initialMainCmd ) =
+                    Page.Main.init
+            in
+            ( { model
+                | page = Main initialMainModel
+                , categories =
+                    model.categories
+                        |> ReloadableData.map (selectCategory categoryIds)
+              }
+            , Cmd.batch [ initialMainCmd |> Cmd.map MainMsg, cmd ]
+            )
 
-        NotFound text ->
-            ( { model | page = Problem "404" }, Cmd.none )
+        Route.NotFound text ->
+            ( { model | page = Problem "404" }, cmd )
+
+
+selectCategory : List Int -> List Category -> List Category
+selectCategory categoryIds categories =
+    let
+        categoryDict =
+            Set.fromList categoryIds
+    in
+    categories
+        |> List.map
+            (\(Category category) ->
+                Category { category | selected = Set.member category.id categoryDict }
+            )
 
 
 view : Model -> Browser.Page Msg
 view model =
     case model.page of
         Main mainModel ->
-            Page.Main.view mainModel
+            Page.Main.view model.categories mainModel
                 |> mapPage MainMsg
 
         Problem text ->

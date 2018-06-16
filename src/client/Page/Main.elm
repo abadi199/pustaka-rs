@@ -20,42 +20,36 @@ import UI.Menu
 
 
 type alias Model =
-    { categories : ReloadableWebData (List Category) }
+    {}
 
 
 init : ( Model, Cmd Msg )
 init =
     ( initialModel
-    , Entity.Category.list GetCategoriesCompleted
+    , Cmd.none
     )
 
 
 initialModel : Model
 initialModel =
-    { categories = ReloadableData.NotAsked }
+    {}
 
 
 type Msg
-    = GetCategoriesCompleted (ReloadableWebData (List Category))
-    | CategoryClicked Int
+    = CategoryClicked Int
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        GetCategoriesCompleted webData ->
-            ( { model | categories = ReloadableData.refresh model.categories webData }
-            , Cmd.none
-            )
-
         CategoryClicked id ->
             ( model, Navigation.pushUrl <| Route.categoryUrl id )
 
 
-view : Model -> Browser.Page Msg
-view model =
+view : ReloadableWebData (List Category) -> Model -> Browser.Page Msg
+view categories model =
     { title = "Pustaka - Main"
-    , body = [ text "Welcome to Pustaka", sideNav model.categories ]
+    , body = [ text "Welcome to Pustaka", sideNav categories ]
     }
 
 
@@ -86,5 +80,11 @@ sideNav data =
 viewCategories : List Category -> Html Msg
 viewCategories categories =
     categories
-        |> List.map (\(Category category) -> ( category.name, UI.Menu.click <| CategoryClicked category.id ))
+        |> List.map
+            (\(Category category) ->
+                { text = category.name
+                , selected = category.selected
+                , action = UI.Menu.click <| CategoryClicked category.id
+                }
+            )
         |> UI.Menu.view

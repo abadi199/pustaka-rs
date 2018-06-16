@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tput reset && ./bin/elm make src/client/Main.elm --output app/app.js",
+    "postinstall": "cargo install watchexec",
+    "watch": "watchexec -w src/client './bin/elm make src/client/Main.elm --output app/app.js'",
+    "build": "tput reset && ./bin/elm make src/client/Main.elm --optimize --output app/app.js",
     "start": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed"
   },
