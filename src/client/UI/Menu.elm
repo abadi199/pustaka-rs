@@ -9,37 +9,41 @@ module UI.Menu
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Tree exposing (Tree)
 
 
-view : List { text : String, action : Action msg, selected : Bool } -> Html msg
+view : Tree { text : String, action : Action msg, selected : Bool } -> Html msg
 view items =
     nav []
-        [ ul []
-            (items
-                |> List.map
-                    (\item ->
-                        let
-                            itemStyles =
-                                if item.selected then
-                                    [ style "font-weight" "bold"
-                                    , style "cursor" "pointer"
-                                    ]
+        (items
+            |> Tree.map viewItem
+            |> Tree.flatten (\n c -> ul [] (n ++ c))
+        )
 
-                                else
-                                    [ style "cursor" "pointer" ]
-                        in
-                        case item.action of
-                            Link url ->
-                                li itemStyles
-                                    [ a [ href url ] [ text item.text ] ]
 
-                            Click msg ->
-                                li
-                                    (onClick msg :: itemStyles)
-                                    [ text item.text ]
-                    )
-            )
-        ]
+viewItem : { text : String, action : Action msg, selected : Bool } -> List (Html msg)
+viewItem item =
+    let
+        itemStyles =
+            if item.selected then
+                [ style "font-weight" "bold"
+                , style "cursor" "pointer"
+                ]
+
+            else
+                [ style "cursor" "pointer" ]
+    in
+    case item.action of
+        Link url ->
+            [ li itemStyles
+                [ a [ href url ] [ text item.text ] ]
+            ]
+
+        Click msg ->
+            [ li
+                (onClick msg :: itemStyles)
+                [ text item.text ]
+            ]
 
 
 link : String -> Action msg

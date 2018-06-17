@@ -8,6 +8,7 @@ import Page.Problem
 import ReloadableData exposing (ReloadableWebData)
 import Route exposing (Route)
 import Set
+import Tree exposing (Tree)
 import Url
 
 
@@ -30,7 +31,7 @@ onNavigation url =
 type alias Model =
     { route : Route.Route
     , page : Page
-    , categories : ReloadableWebData (List Category)
+    , categories : ReloadableWebData (Tree Category)
     }
 
 
@@ -49,7 +50,7 @@ type Page
 
 type Msg
     = NoOp
-    | GetCategoriesCompleted (ReloadableWebData (List Category))
+    | GetCategoriesCompleted (ReloadableWebData (Tree Category))
     | RouteChanged Route
     | MainMsg Page.Main.Msg
 
@@ -128,14 +129,14 @@ check model cmd =
             ( { model | page = Problem "404" }, cmd )
 
 
-selectCategory : List Int -> List Category -> List Category
+selectCategory : List Int -> Tree Category -> Tree Category
 selectCategory categoryIds categories =
     let
         categoryDict =
             Set.fromList categoryIds
     in
     categories
-        |> List.map
+        |> Tree.map
             (\(Category category) ->
                 Category { category | selected = Set.member category.id categoryDict }
             )

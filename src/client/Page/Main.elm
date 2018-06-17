@@ -14,6 +14,7 @@ import Entity.Category exposing (Category(..))
 import Html exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
+import Tree exposing (Tree)
 import UI.Error
 import UI.Loading
 import UI.Menu
@@ -46,14 +47,14 @@ update msg model =
             ( model, Navigation.pushUrl <| Route.categoryUrl id )
 
 
-view : ReloadableWebData (List Category) -> Model -> Browser.Page Msg
+view : ReloadableWebData (Tree Category) -> Model -> Browser.Page Msg
 view categories model =
     { title = "Pustaka - Main"
     , body = [ text "Welcome to Pustaka", sideNav categories ]
     }
 
 
-sideNav : ReloadableWebData (List Category) -> Html Msg
+sideNav : ReloadableWebData (Tree Category) -> Html Msg
 sideNav data =
     div []
         (case data of
@@ -77,10 +78,10 @@ sideNav data =
         )
 
 
-viewCategories : List Category -> Html Msg
+viewCategories : Tree Category -> Html Msg
 viewCategories categories =
     categories
-        |> List.map
+        |> Tree.map
             (\(Category category) ->
                 { text = category.name
                 , selected = category.selected

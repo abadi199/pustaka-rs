@@ -39,6 +39,13 @@ fn category(connection: &SqliteConnection) {
         .expect("Error finding Fiction id")
         .remove(0);
 
+    let non_fiction: Category = category
+        .filter(name.eq("Non Fiction"))
+        .limit(1)
+        .load(connection)
+        .expect("Error finding Non Fiction id")
+        .remove(0);
+
     let fictions = vec![
         "Classic".to_string(),
         "Comics/Graphic novel".to_string(),
@@ -92,7 +99,7 @@ fn category(connection: &SqliteConnection) {
         diesel::insert_into(category)
             .values(&NewCategory {
                 name: category_name,
-                parent_id: Some(fiction.id),
+                parent_id: Some(non_fiction.id),
             })
             .execute(connection)
             .expect("Error inserting category");

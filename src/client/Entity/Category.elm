@@ -13,15 +13,20 @@ import Json.Decode as JD
 import Json.Encode as JE
 import ReloadableData exposing (ReloadableWebData)
 import ReloadableData.Http
+import Set exposing (Set)
+import Tree exposing (Node, Tree)
 
 
 type Category
-    = Category
-        { id : Int
-        , name : String
-        , parent : Maybe Category
-        , selected : Bool
-        }
+    = Category CategoryValue
+
+
+type alias CategoryValue =
+    { id : Int
+    , name : String
+    , parentId : Maybe Int
+    , selected : Bool
+    }
 
 
 type alias NewCategory =
@@ -30,16 +35,50 @@ type alias NewCategory =
 
 decoder : JD.Decoder Category
 decoder =
-    JD.map2 (\id name -> Category { id = id, name = name, parent = Nothing, selected = False })
+    JD.map3 (\id name parentId -> Category { id = id, name = name, parentId = parentId, selected = False })
         (JD.field "id" JD.int)
         (JD.field "name" JD.string)
+        (JD.field "parent_id" (JD.nullable JD.int))
 
 
-list : (ReloadableWebData (List Category) -> msg) -> Cmd msg
+list : (ReloadableWebData (Tree Category) -> msg) -> Cmd msg
 list msg =
     ReloadableData.Http.get "/api/category"
         msg
-        (JD.list decoder)
+        (JD.list decoder |> JD.map toTree)
+
+
+toTree : List Category -> Tree Category
+toTree categories =
+    let
+        set =
+            categories |> List.map (\(Category category) -> category.id) |> Set.fromList
+
+        roots =
+            categories
+                |> List.filter
+                    (\(Category category) ->
+                        category.parentId
+                            == Nothing
+                            || (parentExists category set |> not)
+                    )
+
+        toTreeHelper (Category root) =
+            let
+                children =
+                    categories |> List.filter (\(Category category) -> category.parentId == Just root.id)
+            in
+            Tree.node (Category root) (toTree children)
+    in
+    roots
+        |> List.map toTreeHelper
+
+
+parentExists : CategoryValue -> Set Int -> Bool
+parentExists category set =
+    category.parentId
+        |> Maybe.map (\parentId -> Set.member parentId set)
+        |> Maybe.withDefault False
 
 
 get : (ReloadableWebData Category -> msg) -> Int -> Cmd msg
@@ -82,8 +121,7 @@ update msg (Category category) =
             [ ( "id", JE.int category.id )
             , ( "name", JE.string category.name )
             , ( "parent_id"
-              , category.parent
-                    |> Maybe.map (\(Category parent) -> parent.id)
+              , category.parentId
                     |> Maybe.map JE.int
                     |> Maybe.withDefault JE.null
               )
