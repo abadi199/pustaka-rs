@@ -1,7 +1,7 @@
 module Page.Main
     exposing
         ( Model
-        , Msg
+        , Msg(..)
         , init
         , initialModel
         , update
@@ -10,10 +10,13 @@ module Page.Main
 
 import Browser
 import Browser.Navigation as Navigation
-import Entity.Category exposing (Category(..))
+import Entity.Category exposing (Category)
+import Entity.Publication exposing (Publication)
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
+import Set exposing (Set)
 import Tree exposing (Tree)
 import UI.Error
 import UI.Loading
@@ -21,7 +24,9 @@ import UI.Menu
 
 
 type alias Model =
-    {}
+    { selectedCategoryIds : Set Int
+    , publications : ReloadableWebData (List Publication)
+    }
 
 
 init : ( Model, Cmd Msg )
@@ -33,29 +38,94 @@ init =
 
 initialModel : Model
 initialModel =
-    {}
+    { selectedCategoryIds = Set.empty
+    , publications = ReloadableData.NotAsked
+    }
 
 
 type Msg
     = CategoryClicked Int
+    | CategorySelected (List Int)
+    | GetPublicationCompleted (ReloadableWebData (List Publication))
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CategoryClicked id ->
             ( model, Navigation.pushUrl <| Route.categoryUrl id )
 
+        CategorySelected ids ->
+            let
+                selectedCategoryIds =
+                    Set.fromList ids
+            in
+            ( { model
+                | selectedCategoryIds = selectedCategoryIds
+                , publications = ReloadableData.loading model.publications
+              }
+            , selectedCategoryIds
+                |> Set.toList
+                |> List.head
+                |> Maybe.map (\id -> Entity.Publication.listByCategory id GetPublicationCompleted)
+                |> Maybe.withDefault Cmd.none
+            )
+
+        GetPublicationCompleted publications ->
+            ( { model | publications = publications }
+            , Cmd.none
+            )
+
 
 view : ReloadableWebData (Tree Category) -> Model -> Browser.Page Msg
 view categories model =
     { title = "Pustaka - Main"
-    , body = [ text "Welcome to Pustaka", sideNav categories ]
+    , body =
+        [ div [ style "display" "grid", style "grid-template-columns" "300px auto" ]
+            [ sideNav model.selectedCategoryIds categories
+            , mainSection model.publications
+            ]
+        ]
     }
 
 
-sideNav : ReloadableWebData (Tree Category) -> Html Msg
-sideNav data =
+mainSection : ReloadableWebData (List Publication) -> Html Msg
+mainSection data =
+    div []
+        (case data of
+            NotAsked ->
+                []
+
+            Loading ->
+                [ UI.Loading.view ]
+
+            Reloading publications ->
+                [ UI.Loading.view, publicationsView publications ]
+
+            Success publications ->
+                [ publicationsView publications ]
+
+            Failure error ->
+                [ UI.Error.view <| Debug.toString error ]
+
+            FailureWithData error publications ->
+                [ publicationsView publications, UI.Error.view <| Debug.toString error ]
+        )
+
+
+publicationsView : List Publication -> Html Msg
+publicationsView publications =
+    div []
+        (publications |> List.map publicationView)
+
+
+publicationView : Publication -> Html Msg
+publicationView publication =
+    div [] [ text publication.title ]
+
+
+sideNav : Set Int -> ReloadableWebData (Tree Category) -> Html Msg
+sideNav selectedCategoryIds data =
     div []
         (case data of
             NotAsked ->
@@ -65,26 +135,26 @@ sideNav data =
                 [ UI.Loading.view ]
 
             Reloading categories ->
-                [ UI.Loading.view, viewCategories categories ]
+                [ UI.Loading.view, categoriesView selectedCategoryIds categories ]
 
             Success categories ->
-                [ viewCategories categories ]
+                [ categoriesView selectedCategoryIds categories ]
 
             Failure error ->
                 [ UI.Error.view <| Debug.toString error ]
 
             FailureWithData error categories ->
-                [ viewCategories categories, UI.Error.view <| Debug.toString error ]
+                [ categoriesView selectedCategoryIds categories, UI.Error.view <| Debug.toString error ]
         )
 
 
-viewCategories : Tree Category -> Html Msg
-viewCategories categories =
+categoriesView : Set Int -> Tree Category -> Html Msg
+categoriesView selectedCategoryIds categories =
     categories
         |> Tree.map
-            (\(Category category) ->
+            (\category ->
                 { text = category.name
-                , selected = category.selected
+                , selected = Set.member category.id selectedCategoryIds
                 , action = UI.Menu.click <| CategoryClicked category.id
                 }
             )

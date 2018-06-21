@@ -1,4 +1,4 @@
-use schema::{author, category, media_type, publication, tag};
+use schema::{author, category, media_type, publication, publication_category, tag};
 
 #[derive(Debug, Insertable, Deserialize)]
 #[table_name = "category"]
@@ -7,7 +7,7 @@ pub struct NewCategory {
     pub parent_id: Option<i32>,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "category"]
 pub struct Category {
     pub id: i32,
@@ -21,7 +21,7 @@ pub struct NewMediaType {
     pub name: String,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "media_type"]
 pub struct MediaType {
     pub id: i32,
@@ -34,7 +34,7 @@ pub struct NewAuthor {
     pub name: String,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "author"]
 pub struct Author {
     pub id: i32,
@@ -46,18 +46,28 @@ pub struct Author {
 pub struct NewPublication {
     pub isbn: String,
     pub title: String,
-    pub media_type: i32,
-    pub author: i32,
+    pub media_type_id: i32,
+    pub author_id: i32,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations)]
+#[belongs_to(MediaType, Author)]
 #[table_name = "publication"]
 pub struct Publication {
     pub id: i32,
     pub isbn: String,
     pub title: String,
-    pub media_type: i32,
-    pub author: i32,
+    pub media_type_id: i32,
+    pub author_id: i32,
+}
+
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations, Insertable)]
+#[belongs_to(Category, foreign_key = "category_id")]
+#[table_name = "publication_category"]
+#[primary_key(publication_id, category_id)]
+pub struct PublicationCategory {
+    pub publication_id: i32,
+    pub category_id: i32,
 }
 
 #[derive(Debug, Insertable, Deserialize)]
@@ -66,7 +76,7 @@ pub struct NewTag {
     pub name: String,
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "tag"]
 pub struct Tag {
     pub id: i32,

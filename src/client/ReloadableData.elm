@@ -3,6 +3,7 @@ module ReloadableData
         ( ReloadableData(..)
         , ReloadableWebData
         , fromRemoteData
+        , loading
         , map
         , refresh
         , toMaybe
@@ -23,6 +24,14 @@ type ReloadableData e a
     | Success a
     | Failure e
     | FailureWithData e a
+
+
+loading : ReloadableData e a -> ReloadableData e a
+loading remoteData =
+    remoteData
+        |> toMaybe
+        |> Maybe.map Reloading
+        |> Maybe.withDefault Loading
 
 
 fromRemoteData : RemoteData e a -> ReloadableData e a

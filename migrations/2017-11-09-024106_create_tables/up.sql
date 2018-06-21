@@ -19,10 +19,10 @@ CREATE TABLE publication (
   id INTEGER NOT NULL PRIMARY KEY,
   isbn VARCHAR NOT NULL,
   title VARCHAR NOT NULL,
-  media_type INTEGER NULL,
-  author INTEGER NOT NULL,
-  FOREIGN KEY(media_type) REFERENCES media_type(id),
-  FOREIGN KEY(author) REFERENCES author(id)
+  media_type_id INTEGER NOT NULL,
+  author_id INTEGER NOT NULL,
+  FOREIGN KEY(media_type_id) REFERENCES media_type(id),
+  FOREIGN KEY(author_id) REFERENCES author(id)
 );
 
 CREATE TABLE publication_category (
@@ -30,6 +30,5 @@ CREATE TABLE publication_category (
   category_id INTEGER NOT NULL,
   PRIMARY KEY (publication_id, category_id),
   FOREIGN KEY(publication_id) REFERENCES publication(id),
-  FOREIGN KEY(category_id) REFERENCES category(id),
+  FOREIGN KEY(category_id) REFERENCES category(id)
 );
-

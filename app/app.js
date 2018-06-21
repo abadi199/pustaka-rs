@@ -4369,13 +4369,10 @@ function _Url_percentDecode(string)
 	{
 		return elm$core$Maybe$Nothing;
 	}
-}var author$project$Entity$Category$Category = function (a) {
-	return {$: 'Category', a: a};
-};
-var elm$core$Basics$False = {$: 'False'};
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
+}var author$project$Entity$Category$Category = F3(
+	function (id, name, parentId) {
+		return {id: id, name: name, parentId: parentId};
+	});
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
 	function (a, b, c, d) {
@@ -4585,6 +4582,7 @@ var elm$core$Array$builderToArray = F2(
 				builder.tail);
 		}
 	});
+var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -4677,11 +4675,7 @@ var elm$json$Json$Decode$nullable = function (decoder) {
 var elm$json$Json$Decode$string = _Json_decodeString;
 var author$project$Entity$Category$decoder = A4(
 	elm$json$Json$Decode$map3,
-	F3(
-		function (id, name, parentId) {
-			return author$project$Entity$Category$Category(
-				{id: id, name: name, parentId: parentId, selected: false});
-		}),
+	author$project$Entity$Category$Category,
 	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
 	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
 	A2(
@@ -4855,6 +4849,9 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
 var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
 var elm$core$Set$Set_elm_builtin = function (a) {
@@ -4979,12 +4976,10 @@ var elm$core$Set$fromList = function (list) {
 	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
 };
 var author$project$Entity$Category$toTree = function (categories) {
-	var toTreeHelper = function (_n3) {
-		var root = _n3.a;
+	var toTreeHelper = function (root) {
 		var children = A2(
 			elm$core$List$filter,
-			function (_n2) {
-				var category = _n2.a;
+			function (category) {
 				return _Utils_eq(
 					category.parentId,
 					elm$core$Maybe$Just(root.id));
@@ -4992,21 +4987,19 @@ var author$project$Entity$Category$toTree = function (categories) {
 			categories);
 		return A2(
 			author$project$Tree$node,
-			author$project$Entity$Category$Category(root),
+			root,
 			author$project$Entity$Category$toTree(children));
 	};
 	var set = elm$core$Set$fromList(
 		A2(
 			elm$core$List$map,
-			function (_n1) {
-				var category = _n1.a;
+			function (category) {
 				return category.id;
 			},
 			categories));
 	var roots = A2(
 		elm$core$List$filter,
-		function (_n0) {
-			var category = _n0.a;
+		function (category) {
 			return _Utils_eq(category.parentId, elm$core$Maybe$Nothing) || (!A2(author$project$Entity$Category$parentExists, category, set));
 		},
 		categories);
@@ -5809,7 +5802,8 @@ var author$project$Main$RouteChanged = function (a) {
 var author$project$Main$Main = function (a) {
 	return {$: 'Main', a: a};
 };
-var author$project$Page$Main$initialModel = {};
+var author$project$ReloadableData$NotAsked = {$: 'NotAsked'};
+var author$project$Page$Main$initialModel = {publications: author$project$ReloadableData$NotAsked, selectedCategoryIds: elm$core$Set$empty};
 var author$project$ReloadableData$Loading = {$: 'Loading'};
 var author$project$Route$Home = {$: 'Home'};
 var author$project$Main$initialModel = {
@@ -5823,127 +5817,65 @@ var author$project$Main$MainMsg = function (a) {
 var author$project$Main$Problem = function (a) {
 	return {$: 'Problem', a: a};
 };
-var author$project$Tree$map = F2(
-	function (f, t) {
-		return A2(
-			elm$core$List$map,
-			function (_n0) {
-				var n = _n0.a;
-				var c = _n0.b;
-				return A2(
-					author$project$Tree$Node,
-					f(n),
-					A2(author$project$Tree$map, f, c));
-			},
-			t);
-	});
-var author$project$Main$selectCategory = F2(
-	function (categoryIds, categories) {
-		var categoryDict = elm$core$Set$fromList(categoryIds);
-		return A2(
-			author$project$Tree$map,
-			function (_n0) {
-				var category = _n0.a;
-				return author$project$Entity$Category$Category(
-					_Utils_update(
-						category,
-						{
-							selected: A2(elm$core$Set$member, category.id, categoryDict)
-						}));
-			},
-			categories);
-	});
+var author$project$Page$Main$CategorySelected = function (a) {
+	return {$: 'CategorySelected', a: a};
+};
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Page$Main$init = _Utils_Tuple2(author$project$Page$Main$initialModel, elm$core$Platform$Cmd$none);
-var author$project$ReloadableData$FailureWithData = F2(
-	function (a, b) {
-		return {$: 'FailureWithData', a: a, b: b};
+var author$project$Entity$Publication$Publication = F3(
+	function (id, isbn, title) {
+		return {id: id, isbn: isbn, title: title};
 	});
-var author$project$ReloadableData$NotAsked = {$: 'NotAsked'};
+var author$project$Entity$Publication$decoder = A4(
+	elm$json$Json$Decode$map3,
+	author$project$Entity$Publication$Publication,
+	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
+	A2(elm$json$Json$Decode$field, 'isbn', elm$json$Json$Decode$string),
+	A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string));
+var author$project$Entity$Publication$listByCategory = F2(
+	function (categoryId, msg) {
+		return A3(
+			author$project$ReloadableData$Http$get,
+			'/api/publication/category/' + elm$core$String$fromInt(categoryId),
+			msg,
+			elm$json$Json$Decode$list(author$project$Entity$Publication$decoder));
+	});
+var author$project$Page$Main$GetPublicationCompleted = function (a) {
+	return {$: 'GetPublicationCompleted', a: a};
+};
 var author$project$ReloadableData$Reloading = function (a) {
 	return {$: 'Reloading', a: a};
 };
-var author$project$ReloadableData$map = F2(
-	function (f, reloadableData) {
-		switch (reloadableData.$) {
-			case 'Success':
-				var a = reloadableData.a;
-				return author$project$ReloadableData$Success(
-					f(a));
-			case 'Reloading':
-				var a = reloadableData.a;
-				return author$project$ReloadableData$Reloading(
-					f(a));
-			case 'FailureWithData':
-				var e = reloadableData.a;
-				var a = reloadableData.b;
-				return A2(
-					author$project$ReloadableData$FailureWithData,
-					e,
-					f(a));
-			case 'NotAsked':
-				return author$project$ReloadableData$NotAsked;
-			case 'Loading':
-				return author$project$ReloadableData$Loading;
-			default:
-				var e = reloadableData.a;
-				return author$project$ReloadableData$Failure(e);
-		}
-	});
-var elm$core$Platform$Cmd$map = _Platform_map;
-var author$project$Main$check = F2(
-	function (model, cmd) {
-		var _n0 = model.route;
-		switch (_n0.$) {
-			case 'Home':
-				var _n1 = author$project$Page$Main$init;
-				var initialMainModel = _n1.a;
-				var initialMainCmd = _n1.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							page: author$project$Main$Main(initialMainModel)
-						}),
-					elm$core$Platform$Cmd$batch(
-						_List_fromArray(
-							[
-								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd),
-								cmd
-							])));
-			case 'Category':
-				var categoryIds = _n0.a;
-				var _n2 = author$project$Page$Main$init;
-				var initialMainModel = _n2.a;
-				var initialMainCmd = _n2.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							categories: A2(
-								author$project$ReloadableData$map,
-								author$project$Main$selectCategory(categoryIds),
-								model.categories),
-							page: author$project$Main$Main(initialMainModel)
-						}),
-					elm$core$Platform$Cmd$batch(
-						_List_fromArray(
-							[
-								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd),
-								cmd
-							])));
-			default:
-				var text = _n0.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							page: author$project$Main$Problem('404')
-						}),
-					cmd);
-		}
-	});
+var author$project$ReloadableData$toMaybe = function (reloadableData) {
+	switch (reloadableData.$) {
+		case 'Success':
+			var a = reloadableData.a;
+			return elm$core$Maybe$Just(a);
+		case 'Reloading':
+			var a = reloadableData.a;
+			return elm$core$Maybe$Just(a);
+		case 'FailureWithData':
+			var e = reloadableData.a;
+			var a = reloadableData.b;
+			return elm$core$Maybe$Just(a);
+		case 'NotAsked':
+			return elm$core$Maybe$Nothing;
+		case 'Loading':
+			return elm$core$Maybe$Nothing;
+		default:
+			return elm$core$Maybe$Nothing;
+	}
+};
+var author$project$ReloadableData$loading = function (remoteData) {
+	return A2(
+		elm$core$Maybe$withDefault,
+		author$project$ReloadableData$Loading,
+		A2(
+			elm$core$Maybe$map,
+			author$project$ReloadableData$Reloading,
+			author$project$ReloadableData$toMaybe(remoteData)));
+};
 var author$project$Route$categoryUrl = function (id) {
 	return '/category/' + elm$core$String$fromInt(id);
 };
@@ -6171,13 +6103,112 @@ var elm$browser$Browser$Navigation$Manager$pushUrl = function (url) {
 		elm$browser$Browser$Navigation$Manager$Push(url));
 };
 var elm$browser$Browser$Navigation$pushUrl = elm$browser$Browser$Navigation$Manager$pushUrl;
+var elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(x);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
 var author$project$Page$Main$update = F2(
 	function (msg, model) {
-		var id = msg.a;
-		return _Utils_Tuple2(
-			model,
-			elm$browser$Browser$Navigation$pushUrl(
-				author$project$Route$categoryUrl(id)));
+		switch (msg.$) {
+			case 'CategoryClicked':
+				var id = msg.a;
+				return _Utils_Tuple2(
+					model,
+					elm$browser$Browser$Navigation$pushUrl(
+						author$project$Route$categoryUrl(id)));
+			case 'CategorySelected':
+				var ids = msg.a;
+				var selectedCategoryIds = elm$core$Set$fromList(ids);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							publications: author$project$ReloadableData$loading(model.publications),
+							selectedCategoryIds: selectedCategoryIds
+						}),
+					A2(
+						elm$core$Maybe$withDefault,
+						elm$core$Platform$Cmd$none,
+						A2(
+							elm$core$Maybe$map,
+							function (id) {
+								return A2(author$project$Entity$Publication$listByCategory, id, author$project$Page$Main$GetPublicationCompleted);
+							},
+							elm$core$List$head(
+								elm$core$Set$toList(selectedCategoryIds)))));
+			default:
+				var publications = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{publications: publications}),
+					elm$core$Platform$Cmd$none);
+		}
+	});
+var elm$core$Platform$Cmd$map = _Platform_map;
+var author$project$Main$check = F2(
+	function (model, cmd) {
+		var _n0 = model.route;
+		switch (_n0.$) {
+			case 'Home':
+				var _n1 = author$project$Page$Main$init;
+				var initialMainModel = _n1.a;
+				var initialMainCmd = _n1.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							page: author$project$Main$Main(initialMainModel)
+						}),
+					elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, initialMainCmd),
+								cmd
+							])));
+			case 'Category':
+				var categoryIds = _n0.a;
+				var _n2 = function () {
+					var _n3 = model.page;
+					if (_n3.$ === 'Main') {
+						var currentMainModel = _n3.a;
+						return A2(
+							author$project$Page$Main$update,
+							author$project$Page$Main$CategorySelected(categoryIds),
+							currentMainModel);
+					} else {
+						return author$project$Page$Main$init;
+					}
+				}();
+				var mainModel = _n2.a;
+				var mainCmd = _n2.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							page: author$project$Main$Main(mainModel)
+						}),
+					elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2(elm$core$Platform$Cmd$map, author$project$Main$MainMsg, mainCmd),
+								cmd
+							])));
+			default:
+				var text = _n0.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							page: author$project$Main$Problem('404')
+						}),
+					cmd);
+		}
 	});
 var author$project$Main$update = F2(
 	function (msg, model) {
@@ -6595,9 +6626,95 @@ var author$project$Main$mapPage = F2(
 			title: page.title
 		};
 	});
+var elm$html$Html$div = _VirtualDom_node('div');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var author$project$Page$Main$publicationView = function (publication) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$text(publication.title)
+			]));
+};
+var author$project$Page$Main$publicationsView = function (publications) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		A2(elm$core$List$map, author$project$Page$Main$publicationView, publications));
+};
+var author$project$UI$Error$view = function (error) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				elm$html$Html$text(error)
+			]));
+};
+var author$project$UI$Loading$view = elm$html$Html$text('Loading...');
+var elm$core$Debug$toString = _Debug_toString;
+var author$project$Page$Main$mainSection = function (data) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		function () {
+			switch (data.$) {
+				case 'NotAsked':
+					return _List_Nil;
+				case 'Loading':
+					return _List_fromArray(
+						[author$project$UI$Loading$view]);
+				case 'Reloading':
+					var publications = data.a;
+					return _List_fromArray(
+						[
+							author$project$UI$Loading$view,
+							author$project$Page$Main$publicationsView(publications)
+						]);
+				case 'Success':
+					var publications = data.a;
+					return _List_fromArray(
+						[
+							author$project$Page$Main$publicationsView(publications)
+						]);
+				case 'Failure':
+					var error = data.a;
+					return _List_fromArray(
+						[
+							author$project$UI$Error$view(
+							elm$core$Debug$toString(error))
+						]);
+				default:
+					var error = data.a;
+					var publications = data.b;
+					return _List_fromArray(
+						[
+							author$project$Page$Main$publicationsView(publications),
+							author$project$UI$Error$view(
+							elm$core$Debug$toString(error))
+						]);
+			}
+		}());
+};
 var author$project$Page$Main$CategoryClicked = function (a) {
 	return {$: 'CategoryClicked', a: a};
 };
+var author$project$Tree$map = F2(
+	function (f, t) {
+		return A2(
+			elm$core$List$map,
+			function (_n0) {
+				var n = _n0.a;
+				var c = _n0.b;
+				return A2(
+					author$project$Tree$Node,
+					f(n),
+					A2(author$project$Tree$map, f, c));
+			},
+			t);
+	});
 var author$project$UI$Menu$Click = function (a) {
 	return {$: 'Click', a: a};
 };
@@ -6620,8 +6737,6 @@ var author$project$Tree$flatten = F2(
 	});
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$li = _VirtualDom_node('li');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$json$Json$Encode$string = _Json_wrap;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6724,83 +6839,82 @@ var author$project$UI$Menu$view = function (items) {
 				}),
 			A2(author$project$Tree$map, author$project$UI$Menu$viewItem, items)));
 };
-var author$project$Page$Main$viewCategories = function (categories) {
-	return author$project$UI$Menu$view(
-		A2(
-			author$project$Tree$map,
-			function (_n0) {
-				var category = _n0.a;
-				return {
-					action: author$project$UI$Menu$click(
-						author$project$Page$Main$CategoryClicked(category.id)),
-					selected: category.selected,
-					text: category.name
-				};
-			},
-			categories));
-};
-var elm$html$Html$div = _VirtualDom_node('div');
-var author$project$UI$Error$view = function (error) {
-	return A2(
-		elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				elm$html$Html$text(error)
-			]));
-};
-var author$project$UI$Loading$view = elm$html$Html$text('Loading...');
-var elm$core$Debug$toString = _Debug_toString;
-var author$project$Page$Main$sideNav = function (data) {
-	return A2(
-		elm$html$Html$div,
-		_List_Nil,
-		function () {
-			switch (data.$) {
-				case 'NotAsked':
-					return _List_Nil;
-				case 'Loading':
-					return _List_fromArray(
-						[author$project$UI$Loading$view]);
-				case 'Reloading':
-					var categories = data.a;
-					return _List_fromArray(
-						[
-							author$project$UI$Loading$view,
-							author$project$Page$Main$viewCategories(categories)
-						]);
-				case 'Success':
-					var categories = data.a;
-					return _List_fromArray(
-						[
-							author$project$Page$Main$viewCategories(categories)
-						]);
-				case 'Failure':
-					var error = data.a;
-					return _List_fromArray(
-						[
-							author$project$UI$Error$view(
-							elm$core$Debug$toString(error))
-						]);
-				default:
-					var error = data.a;
-					var categories = data.b;
-					return _List_fromArray(
-						[
-							author$project$Page$Main$viewCategories(categories),
-							author$project$UI$Error$view(
-							elm$core$Debug$toString(error))
-						]);
-			}
-		}());
-};
+var author$project$Page$Main$categoriesView = F2(
+	function (selectedCategoryIds, categories) {
+		return author$project$UI$Menu$view(
+			A2(
+				author$project$Tree$map,
+				function (category) {
+					return {
+						action: author$project$UI$Menu$click(
+							author$project$Page$Main$CategoryClicked(category.id)),
+						selected: A2(elm$core$Set$member, category.id, selectedCategoryIds),
+						text: category.name
+					};
+				},
+				categories));
+	});
+var author$project$Page$Main$sideNav = F2(
+	function (selectedCategoryIds, data) {
+		return A2(
+			elm$html$Html$div,
+			_List_Nil,
+			function () {
+				switch (data.$) {
+					case 'NotAsked':
+						return _List_Nil;
+					case 'Loading':
+						return _List_fromArray(
+							[author$project$UI$Loading$view]);
+					case 'Reloading':
+						var categories = data.a;
+						return _List_fromArray(
+							[
+								author$project$UI$Loading$view,
+								A2(author$project$Page$Main$categoriesView, selectedCategoryIds, categories)
+							]);
+					case 'Success':
+						var categories = data.a;
+						return _List_fromArray(
+							[
+								A2(author$project$Page$Main$categoriesView, selectedCategoryIds, categories)
+							]);
+					case 'Failure':
+						var error = data.a;
+						return _List_fromArray(
+							[
+								author$project$UI$Error$view(
+								elm$core$Debug$toString(error))
+							]);
+					default:
+						var error = data.a;
+						var categories = data.b;
+						return _List_fromArray(
+							[
+								A2(author$project$Page$Main$categoriesView, selectedCategoryIds, categories),
+								author$project$UI$Error$view(
+								elm$core$Debug$toString(error))
+							]);
+				}
+			}());
+	});
 var author$project$Page$Main$view = F2(
 	function (categories, model) {
 		return {
 			body: _List_fromArray(
 				[
-					elm$html$Html$text('Welcome to Pustaka'),
-					author$project$Page$Main$sideNav(categories)
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2(elm$html$Html$Attributes$style, 'display', 'grid'),
+							A2(elm$html$Html$Attributes$style, 'grid-template-columns', '300px auto')
+						]),
+					_List_fromArray(
+						[
+							A2(author$project$Page$Main$sideNav, model.selectedCategoryIds, categories),
+							author$project$Page$Main$mainSection(model.publications)
+						]))
 				]),
 			title: 'Pustaka - Main'
 		};

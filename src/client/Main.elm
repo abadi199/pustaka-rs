@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Entity.Category exposing (Category(..))
+import Entity.Category exposing (Category)
 import Html exposing (..)
 import Page.Main
 import Page.Problem
@@ -113,33 +113,20 @@ check model cmd =
 
         Route.Category categoryIds ->
             let
-                ( initialMainModel, initialMainCmd ) =
-                    Page.Main.init
+                ( mainModel, mainCmd ) =
+                    case model.page of
+                        Main currentMainModel ->
+                            Page.Main.update (Page.Main.CategorySelected categoryIds) currentMainModel
+
+                        _ ->
+                            Page.Main.init
             in
-            ( { model
-                | page = Main initialMainModel
-                , categories =
-                    model.categories
-                        |> ReloadableData.map (selectCategory categoryIds)
-              }
-            , Cmd.batch [ initialMainCmd |> Cmd.map MainMsg, cmd ]
+            ( { model | page = Main mainModel }
+            , Cmd.batch [ mainCmd |> Cmd.map MainMsg, cmd ]
             )
 
         Route.NotFound text ->
             ( { model | page = Problem "404" }, cmd )
-
-
-selectCategory : List Int -> Tree Category -> Tree Category
-selectCategory categoryIds categories =
-    let
-        categoryDict =
-            Set.fromList categoryIds
-    in
-    categories
-        |> Tree.map
-            (\(Category category) ->
-                Category { category | selected = Set.member category.id categoryDict }
-            )
 
 
 view : Model -> Browser.Page Msg

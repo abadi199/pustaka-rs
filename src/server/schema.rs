@@ -25,8 +25,8 @@ table! {
         id -> Integer,
         isbn -> Text,
         title -> Text,
-        media_type -> Nullable<Integer>,
-        author -> Integer,
+        media_type_id -> Integer,
+        author_id -> Integer,
     }
 }
 
@@ -51,8 +51,8 @@ table! {
     }
 }
 
-joinable!(publication -> author (author));
-joinable!(publication -> media_type (media_type));
+joinable!(publication -> author (author_id));
+joinable!(publication -> media_type (media_type_id));
 joinable!(publication_category -> category (category_id));
 joinable!(publication_category -> publication (publication_id));
 joinable!(publication_tag -> publication (publication_id));

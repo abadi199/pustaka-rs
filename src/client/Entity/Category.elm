@@ -1,6 +1,6 @@
 module Entity.Category
     exposing
-        ( Category(..)
+        ( Category
         , create
         , decoder
         , delete
@@ -17,25 +17,20 @@ import Set exposing (Set)
 import Tree exposing (Node, Tree)
 
 
-type Category
-    = Category CategoryValue
-
-
-type alias CategoryValue =
+type alias Category =
     { id : Int
     , name : String
     , parentId : Maybe Int
-    , selected : Bool
     }
 
 
 type alias NewCategory =
-    { name : String, parent : Maybe Category }
+    { name : String, parent_id : Maybe Int }
 
 
 decoder : JD.Decoder Category
 decoder =
-    JD.map3 (\id name parentId -> Category { id = id, name = name, parentId = parentId, selected = False })
+    JD.map3 Category
         (JD.field "id" JD.int)
         (JD.field "name" JD.string)
         (JD.field "parent_id" (JD.nullable JD.int))
@@ -52,29 +47,29 @@ toTree : List Category -> Tree Category
 toTree categories =
     let
         set =
-            categories |> List.map (\(Category category) -> category.id) |> Set.fromList
+            categories |> List.map (\category -> category.id) |> Set.fromList
 
         roots =
             categories
                 |> List.filter
-                    (\(Category category) ->
+                    (\category ->
                         category.parentId
                             == Nothing
                             || (parentExists category set |> not)
                     )
 
-        toTreeHelper (Category root) =
+        toTreeHelper root =
             let
                 children =
-                    categories |> List.filter (\(Category category) -> category.parentId == Just root.id)
+                    categories |> List.filter (\category -> category.parentId == Just root.id)
             in
-            Tree.node (Category root) (toTree children)
+            Tree.node root (toTree children)
     in
     roots
         |> List.map toTreeHelper
 
 
-parentExists : CategoryValue -> Set Int -> Bool
+parentExists : Category -> Set Int -> Bool
 parentExists category set =
     category.parentId
         |> Maybe.map (\parentId -> Set.member parentId set)
@@ -96,8 +91,7 @@ create msg newCategory =
         (JE.object
             [ ( "name", JE.string newCategory.name )
             , ( "parent_id"
-              , newCategory.parent
-                    |> Maybe.map (\(Category parent) -> parent.id)
+              , newCategory.parent_id
                     |> Maybe.map JE.int
                     |> Maybe.withDefault JE.null
               )
@@ -113,7 +107,7 @@ delete msg id =
 
 
 update : (ReloadableWebData Category -> msg) -> Category -> Cmd msg
-update msg (Category category) =
+update msg category =
     ReloadableData.Http.put "/api/category"
         msg
         decoder
