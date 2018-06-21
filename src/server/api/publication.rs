@@ -52,14 +52,35 @@ fn get_category_and_descendants(
     category_id: i32,
     connection: &SqliteConnection,
 ) -> QueryResult<Vec<Category>> {
-    use schema::category::dsl as category;
+    let mut categories: Vec<Category> = vec![];
 
     let parent_category = get_category(category_id, connection)?;
+    categories.push(parent_category);
+
+    let mut children = get_descendant(category_id, connection)?;
+    categories.append(&mut children);
+
+    Ok(categories)
+}
+
+fn get_descendant(category_id: i32, connection: &SqliteConnection) -> QueryResult<Vec<Category>> {
+    use schema::category::dsl as category;
     let mut categories = category::category
-        .filter(category::parent_id.eq(&parent_category.id))
+        .filter(category::parent_id.eq(category_id))
         .load::<Category>(connection)?;
 
-    categories.push(parent_category);
+    let mut grandchildren: Vec<Category> = vec![];
+    for c in categories.iter() {
+        let mut result = get_descendant(c.id, connection);
+        match result {
+            Ok(mut d) => {
+                grandchildren.append(&mut d);
+            }
+            Err(_) => {}
+        }
+    }
+
+    categories.append(&mut grandchildren);
     Ok(categories)
 }
 
