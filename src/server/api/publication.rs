@@ -63,7 +63,10 @@ fn get_category_and_descendants(
     Ok(categories)
 }
 
-fn get_descendant(category_id: i32, connection: &SqliteConnection) -> QueryResult<Vec<Category>> {
+fn get_descendant_rec(
+    category_id: i32,
+    connection: &SqliteConnection,
+) -> QueryResult<Vec<Category>> {
     use schema::category::dsl as category;
     let mut categories = category::category
         .filter(category::parent_id.eq(category_id))
@@ -71,7 +74,7 @@ fn get_descendant(category_id: i32, connection: &SqliteConnection) -> QueryResul
 
     let mut grandchildren: Vec<Category> = vec![];
     for c in categories.iter() {
-        let mut result = get_descendant(c.id, connection);
+        let mut result = get_descendant_rec(c.id, connection);
         match result {
             Ok(mut d) => {
                 grandchildren.append(&mut d);
