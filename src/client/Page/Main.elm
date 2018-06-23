@@ -18,6 +18,7 @@ import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
 import Tree exposing (Tree)
+import UI.Card
 import UI.Error
 import UI.Loading
 import UI.Menu
@@ -115,13 +116,13 @@ mainSection data =
 
 publicationsView : List Publication -> Html Msg
 publicationsView publications =
-    div []
+    div [ style "display" "flex", style "flex-wrap" "wrap" ]
         (publications |> List.map publicationView)
 
 
 publicationView : Publication -> Html Msg
 publicationView publication =
-    div [] [ text publication.title ]
+    UI.Card.view [ text publication.title ]
 
 
 sideNav : Set Int -> ReloadableWebData (Tree Category) -> Html Msg

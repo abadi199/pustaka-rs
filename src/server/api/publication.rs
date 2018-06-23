@@ -57,7 +57,7 @@ fn get_category_and_descendants(
     let parent_category = get_category(category_id, connection)?;
     categories.push(parent_category);
 
-    let mut children = get_descendant(category_id, connection)?;
+    let mut children = get_descendant_rec(category_id, connection)?;
     categories.append(&mut children);
 
     Ok(categories)

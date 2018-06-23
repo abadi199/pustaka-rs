@@ -6627,12 +6627,24 @@ var author$project$Main$mapPage = F2(
 		};
 	});
 var elm$html$Html$div = _VirtualDom_node('div');
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
+var author$project$UI$Card$view = function (content) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'box-shadow', '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)'),
+				A2(elm$html$Html$Attributes$style, 'min-height', '10em'),
+				A2(elm$html$Html$Attributes$style, 'margin', '0.5em'),
+				A2(elm$html$Html$Attributes$style, 'padding', '1em')
+			]),
+		content);
+};
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var author$project$Page$Main$publicationView = function (publication) {
-	return A2(
-		elm$html$Html$div,
-		_List_Nil,
+	return author$project$UI$Card$view(
 		_List_fromArray(
 			[
 				elm$html$Html$text(publication.title)
@@ -6641,7 +6653,11 @@ var author$project$Page$Main$publicationView = function (publication) {
 var author$project$Page$Main$publicationsView = function (publications) {
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2(elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
+			]),
 		A2(elm$core$List$map, author$project$Page$Main$publicationView, publications));
 };
 var author$project$UI$Error$view = function (error) {
@@ -6751,8 +6767,6 @@ var elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };

@@ -1,12 +1,20 @@
+#![feature(type_ascription)]
+extern crate csv;
 extern crate diesel;
 extern crate pustaka;
+#[macro_use]
+extern crate serde_derive;
 
 use diesel::prelude::*;
 use pustaka::models::*;
 use pustaka::*;
+use std::env;
 
 fn main() {
     let connection = db::create_db_pool().get().unwrap();
+
+    let path = env::current_dir().unwrap();
+    println!("The current directory is {}", path.display());
 
     insert_category(&*connection);
     insert_media_type(&*connection);
@@ -110,12 +118,13 @@ fn insert_media_type(connection: &SqliteConnection) {
         .execute(&*connection)
         .expect("Error deleting media_types");
     let media_types = vec![
-        "book".to_string(),
+        "ebook".to_string(),
         "comic".to_string(),
         "magazine".to_string(),
         "audiobook".to_string(),
         "manga".to_string(),
-        "hardcopy".to_string(),
+        "paperback".to_string(),
+        "hardcover".to_string(),
     ];
     for name in media_types {
         diesel::insert_into(media_type)
@@ -158,41 +167,8 @@ fn insert_publication(connection: &SqliteConnection) {
         .execute(&*connection)
         .expect("Error deleting publication");
 
-    // Book Types
-    let book_type = get_media_type("book", connection).expect("Error getting Book type");
-
-    // Categories
-    let fiction_category =
-        get_category("Fiction", connection).expect("Error getting Fiction category");
-    let science_fiction_category =
-        get_category("Science fiction", connection).unwrap_or(fiction_category);
-
-    // Authors
-    let unknown_author: Author =
-        get_author("Unknown", connection).expect("Error getting Unknown author");
-    let james_sa_corey = get_author("James S.A. Corey", connection).unwrap_or(unknown_author);
-
     // Publication
-    let publications = vec![
-        (
-            NewPublication {
-                isbn: "978-0-316-12908-4".to_string(),
-                title: "Leviathan Wakes".to_string(),
-                media_type_id: book_type.id,
-                author_id: james_sa_corey.id,
-            },
-            science_fiction_category.id,
-        ),
-        (
-            NewPublication {
-                isbn: "978-1-84149-990-1".to_string(),
-                title: "Caliban's War".to_string(),
-                media_type_id: book_type.id,
-                author_id: james_sa_corey.id,
-            },
-            science_fiction_category.id,
-        ),
-    ];
+    let publications: Vec<(NewPublication, i32)> = read_publication_csv(connection);
 
     for (the_publication, category_id) in publications {
         let the_isbn = &the_publication.isbn.clone();
@@ -212,6 +188,44 @@ fn insert_publication(connection: &SqliteConnection) {
             }
             Err(..) => {}
         }
+    }
+
+    fn read_publication_csv(connection: &SqliteConnection) -> Vec<(NewPublication, i32)> {
+        #[derive(Debug, Deserialize)]
+        struct Record {
+            isbn: String,
+            title: String,
+            media_type: String,
+            author: String,
+            category: String,
+        }
+
+        let mut rdr = csv::Reader::from_path("./data/publication.csv")
+            .expect("Unable to read publication.csv");
+
+        let mut publications: Vec<(NewPublication, i32)> = vec![];
+        for result in rdr.deserialize() {
+            if let Ok(record) = result: Result<Record, _> {
+                let media_type = get_media_type(&record.media_type, connection)
+                    .expect("Error getting media type");
+                let category =
+                    get_category(&record.category, connection).expect("Error getting category");
+                let author: Author =
+                    get_author(&record.author, connection).expect("Error getting author");
+
+                publications.push((
+                    NewPublication {
+                        isbn: record.isbn,
+                        title: record.title,
+                        media_type_id: media_type.id,
+                        author_id: author.id,
+                    },
+                    category.id,
+                ));
+            }
+        }
+
+        publications
     }
 
     fn get_publication(the_isbn: &str, connection: &SqliteConnection) -> QueryResult<Publication> {
