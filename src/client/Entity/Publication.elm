@@ -15,6 +15,7 @@ type alias Publication =
     { id : Int
     , isbn : String
     , title : String
+    , thumbnail : Maybe String
     }
 
 
@@ -28,7 +29,8 @@ listByCategory categoryId msg =
 
 decoder : JD.Decoder Publication
 decoder =
-    JD.map3 Publication
+    JD.map4 Publication
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
+        (JD.field "thumbnail" (JD.maybe JD.string))

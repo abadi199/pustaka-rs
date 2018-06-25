@@ -198,6 +198,7 @@ fn insert_publication(connection: &SqliteConnection) {
             media_type: String,
             author: String,
             category: String,
+            thumbnail: String,
         }
 
         let mut rdr = csv::Reader::from_path("./data/publication.csv")
@@ -206,6 +207,7 @@ fn insert_publication(connection: &SqliteConnection) {
         let mut publications: Vec<(NewPublication, i32)> = vec![];
         for result in rdr.deserialize() {
             if let Ok(record) = result: Result<Record, _> {
+                println!("{:?}", record);
                 let media_type = get_media_type(&record.media_type, connection)
                     .expect("Error getting media type");
                 let category =
@@ -217,6 +219,7 @@ fn insert_publication(connection: &SqliteConnection) {
                     NewPublication {
                         isbn: record.isbn,
                         title: record.title,
+                        thumbnail: Some(record.thumbnail),
                         media_type_id: media_type.id,
                         author_id: author.id,
                     },

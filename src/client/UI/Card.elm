@@ -11,5 +11,7 @@ view content =
         , style "min-height" "10em"
         , style "margin" "0.5em"
         , style "padding" "1em"
+        , style "display" "flex"
+        , style "flex-direction" "column"
         ]
         content

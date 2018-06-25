@@ -48,6 +48,7 @@ pub struct NewPublication {
     pub title: String,
     pub media_type_id: i32,
     pub author_id: i32,
+    pub thumbnail: Option<String>,
 }
 
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations)]
@@ -59,6 +60,7 @@ pub struct Publication {
     pub title: String,
     pub media_type_id: i32,
     pub author_id: i32,
+    pub thumbnail: Option<String>,
 }
 
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations, Insertable)]

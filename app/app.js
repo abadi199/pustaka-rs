@@ -5823,16 +5823,30 @@ var author$project$Page$Main$CategorySelected = function (a) {
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Page$Main$init = _Utils_Tuple2(author$project$Page$Main$initialModel, elm$core$Platform$Cmd$none);
-var author$project$Entity$Publication$Publication = F3(
-	function (id, isbn, title) {
-		return {id: id, isbn: isbn, title: title};
+var author$project$Entity$Publication$Publication = F4(
+	function (id, isbn, title, thumbnail) {
+		return {id: id, isbn: isbn, thumbnail: thumbnail, title: title};
 	});
-var author$project$Entity$Publication$decoder = A4(
-	elm$json$Json$Decode$map3,
+var elm$json$Json$Decode$map4 = _Json_map4;
+var elm$json$Json$Decode$succeed = _Json_succeed;
+var elm$json$Json$Decode$maybe = function (decoder) {
+	return elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2(elm$json$Json$Decode$map, elm$core$Maybe$Just, decoder),
+				elm$json$Json$Decode$succeed(elm$core$Maybe$Nothing)
+			]));
+};
+var author$project$Entity$Publication$decoder = A5(
+	elm$json$Json$Decode$map4,
 	author$project$Entity$Publication$Publication,
 	A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
 	A2(elm$json$Json$Decode$field, 'isbn', elm$json$Json$Decode$string),
-	A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string));
+	A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
+	A2(
+		elm$json$Json$Decode$field,
+		'thumbnail',
+		elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)));
 var author$project$Entity$Publication$listByCategory = F2(
 	function (categoryId, msg) {
 		return A3(
@@ -5892,7 +5906,6 @@ var elm$browser$Browser$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
 };
 var elm$json$Json$Decode$map2 = _Json_map2;
-var elm$json$Json$Decode$succeed = _Json_succeed;
 var elm$virtual_dom$VirtualDom$isSync = function (timed) {
 	if (timed.$ === 'Sync') {
 		return true;
@@ -6637,17 +6650,50 @@ var author$project$UI$Card$view = function (content) {
 				A2(elm$html$Html$Attributes$style, 'box-shadow', '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)'),
 				A2(elm$html$Html$Attributes$style, 'min-height', '10em'),
 				A2(elm$html$Html$Attributes$style, 'margin', '0.5em'),
-				A2(elm$html$Html$Attributes$style, 'padding', '1em')
+				A2(elm$html$Html$Attributes$style, 'padding', '1em'),
+				A2(elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2(elm$html$Html$Attributes$style, 'flex-direction', 'column')
 			]),
 		content);
 };
+var elm$html$Html$img = _VirtualDom_node('img');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$json$Json$Encode$string = _Json_wrap;
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
 var author$project$Page$Main$publicationView = function (publication) {
 	return author$project$UI$Card$view(
 		_List_fromArray(
 			[
-				elm$html$Html$text(publication.title)
+				elm$html$Html$text(publication.title),
+				A2(
+				elm$core$Maybe$withDefault,
+				elm$html$Html$text(''),
+				A2(
+					elm$core$Maybe$map,
+					function (thumbnail) {
+						return A2(
+							elm$html$Html$img,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$src(thumbnail),
+									A2(elm$html$Html$Attributes$style, 'max-width', '100px')
+								]),
+							_List_Nil);
+					},
+					publication.thumbnail))
 			]));
 };
 var author$project$Page$Main$publicationsView = function (publications) {
@@ -6753,14 +6799,6 @@ var author$project$Tree$flatten = F2(
 	});
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$li = _VirtualDom_node('li');
-var elm$json$Json$Encode$string = _Json_wrap;
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,

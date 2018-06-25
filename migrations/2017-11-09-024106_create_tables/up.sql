@@ -21,6 +21,7 @@ CREATE TABLE publication (
   title VARCHAR NOT NULL,
   media_type_id INTEGER NOT NULL,
   author_id INTEGER NOT NULL,
+  thumbnail VARCHAR NULL,
   FOREIGN KEY(media_type_id) REFERENCES media_type(id),
   FOREIGN KEY(author_id) REFERENCES author(id)
 );

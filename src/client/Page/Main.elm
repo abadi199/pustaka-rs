@@ -122,7 +122,12 @@ publicationsView publications =
 
 publicationView : Publication -> Html Msg
 publicationView publication =
-    UI.Card.view [ text publication.title ]
+    UI.Card.view
+        [ text publication.title
+        , publication.thumbnail
+            |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
+            |> Maybe.withDefault (text "")
+        ]
 
 
 sideNav : Set Int -> ReloadableWebData (Tree Category) -> Html Msg
