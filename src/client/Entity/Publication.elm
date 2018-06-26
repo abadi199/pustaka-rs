@@ -33,4 +33,4 @@ decoder =
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
-        (JD.field "thumbnail" (JD.maybe JD.string))
+        (JD.field "thumbnail_url" (JD.maybe JD.string))

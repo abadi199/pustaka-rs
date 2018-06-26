@@ -5845,7 +5845,7 @@ var author$project$Entity$Publication$decoder = A5(
 	A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
 	A2(
 		elm$json$Json$Decode$field,
-		'thumbnail',
+		'thumbnail_url',
 		elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)));
 var author$project$Entity$Publication$listByCategory = F2(
 	function (categoryId, msg) {
@@ -6680,7 +6680,7 @@ var author$project$Page$Main$publicationView = function (publication) {
 				elm$html$Html$text(publication.title),
 				A2(
 				elm$core$Maybe$withDefault,
-				elm$html$Html$text(''),
+				elm$html$Html$text('Test'),
 				A2(
 					elm$core$Maybe$map,
 					function (thumbnail) {

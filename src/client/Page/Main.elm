@@ -126,7 +126,7 @@ publicationView publication =
         [ text publication.title
         , publication.thumbnail
             |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
-            |> Maybe.withDefault (text "")
+            |> Maybe.withDefault (text "Test")
         ]
 
 

@@ -3,6 +3,7 @@ extern crate diesel;
 use db::DbConn;
 use diesel::prelude::*;
 use models::*;
+use rocket::response::NamedFile;
 use rocket::Route;
 use rocket_contrib::Json;
 use schema::publication::dsl::*;
@@ -38,6 +39,19 @@ fn by_category(the_category_id: i32, connection: DbConn) -> Json<Vec<Publication
         .expect("Error getting publications");
 
     Json(publications)
+}
+
+#[get("/thumbnail/<publication_id>")]
+fn get_thumbnail(publication_id: i32, connection: DbConn) -> Option<NamedFile> {
+    use schema::publication::dsl as publication;
+    let the_publication = publication::publication
+        .filter(publication::id.eq(publication_id))
+        .first::<Publication>(&*connection)
+        .expect("Invalid publication");
+
+    the_publication
+        .thumbnail
+        .and_then(|tn| NamedFile::open(tn).ok())
 }
 
 fn get_category(category_id: i32, connection: &SqliteConnection) -> QueryResult<Category> {
@@ -130,5 +144,5 @@ fn get_descendant_rec(
 // }
 
 pub fn routes() -> Vec<Route> {
-    routes![list, by_category] //, create, delete, get, update]
+    routes![list, by_category, get_thumbnail] //, create, delete, get, update]
 }
