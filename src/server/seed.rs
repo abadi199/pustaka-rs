@@ -212,7 +212,7 @@ fn insert_publication(connection: &SqliteConnection) {
                 let category =
                     get_category(&record.category, connection).expect("Error getting category");
                 let author: Author =
-                    get_author(&record.author, connection).expect("Error getting author");
+                    get_or_insert_author(&record.author, connection).expect("Error getting author");
 
                 publications.push((
                     NewPublication {
@@ -255,8 +255,19 @@ fn insert_publication(connection: &SqliteConnection) {
             .first::<MediaType>(connection)
     }
 
-    fn get_author(the_name: &str, connection: &SqliteConnection) -> QueryResult<Author> {
+    fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryResult<Author> {
         use schema::author::dsl::*;
-        author.filter(name.eq(the_name)).first::<Author>(connection)
+        let mut the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
+        if let Err(_e) = the_author {
+            diesel::insert_into(author)
+                .values(&NewAuthor {
+                    name: the_name.to_string(),
+                })
+                .execute(connection)
+                .expect("Error inserting author");
+            the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
+        }
+
+        the_author
     }
 }
