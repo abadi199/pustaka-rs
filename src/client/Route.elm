@@ -15,6 +15,7 @@ import Url.Parser as UrlParser exposing ((</>), Parser, int, s, top)
 type Route
     = Home
     | Category (List Int)
+    | Publication Int
     | NotFound String
 
 
@@ -33,6 +34,7 @@ parser =
     UrlParser.oneOf
         [ UrlParser.map Home <| s "app"
         , UrlParser.map (List.singleton >> Category) <| s "category" </> int
+        , UrlParser.map Publication <| s "pub" </> int
         ]
 
 
