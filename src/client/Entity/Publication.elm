@@ -2,6 +2,7 @@ module Entity.Publication
     exposing
         ( Publication
         , decoder
+        , get
         , listByCategory
         )
 
@@ -19,12 +20,22 @@ type alias Publication =
     }
 
 
-listByCategory : Int -> (ReloadableWebData (List Publication) -> msg) -> Cmd msg
+listByCategory : Int -> (ReloadableWebData () (List Publication) -> msg) -> Cmd msg
 listByCategory categoryId msg =
     ReloadableData.Http.get
+        ()
         ("/api/publication/category/" ++ String.fromInt categoryId)
         msg
         (JD.list decoder)
+
+
+get : Int -> (ReloadableWebData Int Publication -> msg) -> Cmd msg
+get publicationId msg =
+    ReloadableData.Http.get
+        publicationId
+        ("/api/publication/" ++ String.fromInt publicationId)
+        msg
+        decoder
 
 
 decoder : JD.Decoder Publication

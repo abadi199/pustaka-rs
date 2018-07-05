@@ -16,6 +16,18 @@ fn list(connection: DbConn) -> Json<Vec<Publication>> {
     Json(publications)
 }
 
+#[get("/<the_publication_id>")]
+fn get_publication(the_publication_id: i32, connection: DbConn) -> Json<Publication> {
+    use schema::publication::dsl as publication;
+
+    let the_publication = publication::publication
+        .filter(publication::id.eq(the_publication_id))
+        .first::<Publication>(&*connection)
+        .expect("Error getting publication");
+
+    Json(the_publication)
+}
+
 #[get("/category/<the_category_id>")]
 fn by_category(the_category_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
     use schema::publication::dsl as publication;
@@ -144,5 +156,5 @@ fn get_descendant_rec(
 // }
 
 pub fn routes() -> Vec<Route> {
-    routes![list, by_category, get_thumbnail] //, create, delete, get, update]
+    routes![list, by_category, get_thumbnail, get_publication] //, create, delete, get, update]
 }

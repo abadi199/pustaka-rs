@@ -1,4 +1,4 @@
-module Page.Main
+module Page.Home
     exposing
         ( Model
         , Msg(..)
@@ -20,13 +20,14 @@ import Set exposing (Set)
 import Tree exposing (Tree)
 import UI.Card
 import UI.Error
+import UI.Layout.SideNav
 import UI.Loading
 import UI.Menu
 
 
 type alias Model =
     { selectedCategoryIds : Set Int
-    , publications : ReloadableWebData (List Publication)
+    , publications : ReloadableWebData () (List Publication)
     }
 
 
@@ -40,14 +41,14 @@ init =
 initialModel : Model
 initialModel =
     { selectedCategoryIds = Set.empty
-    , publications = ReloadableData.NotAsked
+    , publications = ReloadableData.NotAsked ()
     }
 
 
 type Msg
     = CategoryClicked Int
     | CategorySelected (List Int)
-    | GetPublicationCompleted (ReloadableWebData (List Publication))
+    | GetPublicationCompleted (ReloadableWebData () (List Publication))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -78,26 +79,26 @@ update msg model =
             )
 
 
-view : ReloadableWebData (Tree Category) -> Model -> Browser.Page Msg
+view : ReloadableWebData () (Tree Category) -> Model -> Browser.Page Msg
 view categories model =
     { title = "Pustaka - Main"
     , body =
-        [ div [ style "display" "grid", style "grid-template-columns" "300px auto" ]
-            [ sideNav model.selectedCategoryIds categories
-            , mainSection model.publications
-            ]
+        [ UI.Layout.SideNav.view CategoryClicked
+            model.selectedCategoryIds
+            categories
+            (mainSection model.publications)
         ]
     }
 
 
-mainSection : ReloadableWebData (List Publication) -> Html Msg
+mainSection : ReloadableWebData () (List Publication) -> Html Msg
 mainSection data =
     div []
         (case data of
-            NotAsked ->
+            NotAsked _ ->
                 []
 
-            Loading ->
+            Loading _ ->
                 [ UI.Loading.view ]
 
             Reloading publications ->
@@ -106,7 +107,7 @@ mainSection data =
             Success publications ->
                 [ publicationsView publications ]
 
-            Failure error ->
+            Failure error _ ->
                 [ UI.Error.view <| Debug.toString error ]
 
             FailureWithData error publications ->
@@ -123,45 +124,21 @@ publicationsView publications =
 publicationView : Publication -> Html Msg
 publicationView publication =
     UI.Card.view
-        [ text publication.title
-        , publication.thumbnail
-            |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
-            |> Maybe.withDefault (text "Test")
+        [ a [] [ text publication.title ]
+        , a [ href <| "/pub/" ++ String.fromInt publication.id ]
+            [ publication.thumbnail
+                |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
+                |> Maybe.withDefault emptyThumbnail
+            ]
         ]
 
 
-sideNav : Set Int -> ReloadableWebData (Tree Category) -> Html Msg
-sideNav selectedCategoryIds data =
-    div []
-        (case data of
-            NotAsked ->
-                []
-
-            Loading ->
-                [ UI.Loading.view ]
-
-            Reloading categories ->
-                [ UI.Loading.view, categoriesView selectedCategoryIds categories ]
-
-            Success categories ->
-                [ categoriesView selectedCategoryIds categories ]
-
-            Failure error ->
-                [ UI.Error.view <| Debug.toString error ]
-
-            FailureWithData error categories ->
-                [ categoriesView selectedCategoryIds categories, UI.Error.view <| Debug.toString error ]
-        )
-
-
-categoriesView : Set Int -> Tree Category -> Html Msg
-categoriesView selectedCategoryIds categories =
-    categories
-        |> Tree.map
-            (\category ->
-                { text = category.name
-                , selected = Set.member category.id selectedCategoryIds
-                , action = UI.Menu.click <| CategoryClicked category.id
-                }
-            )
-        |> UI.Menu.view
+emptyThumbnail : Html msg
+emptyThumbnail =
+    div
+        [ style "display" "flex"
+        , style "align-items" "center"
+        , style "justify-content" "center"
+        , style "max-height" "100%"
+        ]
+        [ text "N/A" ]

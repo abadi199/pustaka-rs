@@ -3,54 +3,67 @@ module ReloadableData
         ( ReloadableData(..)
         , ReloadableWebData
         , fromRemoteData
+        , join
         , loading
         , map
         , refresh
         , toMaybe
+        , toResult
         )
 
 import Http
 import RemoteData exposing (RemoteData)
 
 
-type alias ReloadableWebData a =
-    ReloadableData Http.Error a
+type alias ReloadableWebData i a =
+    ReloadableData Http.Error i a
 
 
-type ReloadableData e a
-    = NotAsked
-    | Loading
+type ReloadableData e i a
+    = NotAsked i
+    | Loading i
     | Reloading a
     | Success a
-    | Failure e
+    | Failure e i
     | FailureWithData e a
 
 
-loading : ReloadableData e a -> ReloadableData e a
+loading : ReloadableData e i a -> ReloadableData e i a
 loading remoteData =
     remoteData
-        |> toMaybe
-        |> Maybe.map Reloading
-        |> Maybe.withDefault Loading
+        |> toResult
+        |> Result.map Reloading
+        |> Result.mapError Loading
+        |> join
 
 
-fromRemoteData : RemoteData e a -> ReloadableData e a
-fromRemoteData remoteData =
+join : Result a a -> a
+join result =
+    case result of
+        Ok a ->
+            a
+
+        Err a ->
+            a
+
+
+fromRemoteData : i -> RemoteData e a -> ReloadableData e i a
+fromRemoteData i remoteData =
     case remoteData of
         RemoteData.NotAsked ->
-            NotAsked
+            NotAsked i
 
         RemoteData.Loading ->
-            Loading
+            Loading i
 
         RemoteData.Success a ->
             Success a
 
         RemoteData.Failure e ->
-            Failure e
+            Failure e i
 
 
-toMaybe : ReloadableData e a -> Maybe a
+toMaybe : ReloadableData e i a -> Maybe a
 toMaybe reloadableData =
     case reloadableData of
         Success a ->
@@ -62,34 +75,56 @@ toMaybe reloadableData =
         FailureWithData e a ->
             Just a
 
-        NotAsked ->
+        NotAsked _ ->
             Nothing
 
-        Loading ->
+        Loading _ ->
             Nothing
 
-        Failure _ ->
+        Failure _ _ ->
             Nothing
 
 
-refresh : ReloadableData e a -> ReloadableData e a -> ReloadableData e a
+toResult : ReloadableData e i a -> Result i a
+toResult reloadableData =
+    case reloadableData of
+        Success a ->
+            Ok a
+
+        Reloading a ->
+            Ok a
+
+        FailureWithData e a ->
+            Ok a
+
+        NotAsked i ->
+            Err i
+
+        Loading i ->
+            Err i
+
+        Failure _ i ->
+            Err i
+
+
+refresh : ReloadableData e i a -> ReloadableData e i a -> ReloadableData e i a
 refresh prev next =
     case toMaybe prev of
         Just prevData ->
             case next of
-                NotAsked ->
-                    NotAsked
+                NotAsked i ->
+                    NotAsked i
 
                 Reloading a ->
                     Reloading a
 
-                Loading ->
+                Loading _ ->
                     Reloading prevData
 
                 Success a ->
                     Success a
 
-                Failure e ->
+                Failure e _ ->
                     FailureWithData e prevData
 
                 FailureWithData e a ->
@@ -99,7 +134,7 @@ refresh prev next =
             next
 
 
-map : (a -> b) -> ReloadableData e a -> ReloadableData e b
+map : (a -> b) -> ReloadableData e i a -> ReloadableData e i b
 map f reloadableData =
     case reloadableData of
         Success a ->
@@ -111,11 +146,11 @@ map f reloadableData =
         FailureWithData e a ->
             FailureWithData e (f a)
 
-        NotAsked ->
-            NotAsked
+        NotAsked i ->
+            NotAsked i
 
-        Loading ->
-            Loading
+        Loading i ->
+            Loading i
 
-        Failure e ->
-            Failure e
+        Failure e i ->
+            Failure e i

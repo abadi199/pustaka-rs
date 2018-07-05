@@ -3,8 +3,9 @@ module Main exposing (main)
 import Browser
 import Entity.Category exposing (Category)
 import Html exposing (..)
-import Page.Main
-import Page.Problem
+import Page.Home as HomePage
+import Page.Problem as ProblemPage
+import Page.Publication as PublicationPage
 import ReloadableData exposing (ReloadableWebData)
 import Route exposing (Route)
 import Set
@@ -31,28 +32,30 @@ onNavigation url =
 type alias Model =
     { route : Route.Route
     , page : Page
-    , categories : ReloadableWebData (Tree Category)
+    , categories : ReloadableWebData () (Tree Category)
     }
 
 
 initialModel : Model
 initialModel =
     { route = Route.Home
-    , page = Main Page.Main.initialModel
-    , categories = ReloadableData.Loading
+    , page = Home HomePage.initialModel
+    , categories = ReloadableData.Loading ()
     }
 
 
 type Page
-    = Main Page.Main.Model
+    = Home HomePage.Model
+    | Publication PublicationPage.Model
     | Problem String
 
 
 type Msg
     = NoOp
-    | GetCategoriesCompleted (ReloadableWebData (Tree Category))
+    | GetCategoriesCompleted (ReloadableWebData () (Tree Category))
     | RouteChanged Route
-    | MainMsg Page.Main.Msg
+    | HomeMsg HomePage.Msg
+    | PublicationMsg PublicationPage.Msg
 
 
 subscriptions : Model -> Sub Msg
@@ -86,14 +89,30 @@ update msg model =
         RouteChanged route ->
             check { model | route = route } Cmd.none
 
-        MainMsg mainMsg ->
+        HomeMsg homeMsg ->
             case model.page of
-                Main mainModel ->
+                Home homeModel ->
                     let
-                        ( newMainModel, cmds ) =
-                            Page.Main.update mainMsg mainModel
+                        ( newHomeModel, cmds ) =
+                            HomePage.update homeMsg homeModel
                     in
-                    ( { model | page = Main newMainModel }, cmds |> Cmd.map MainMsg )
+                    ( { model | page = Home newHomeModel }
+                    , cmds |> Cmd.map HomeMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        PublicationMsg pubMsg ->
+            case model.page of
+                Publication pubModel ->
+                    let
+                        ( newPubModel, cmds ) =
+                            PublicationPage.update pubMsg pubModel
+                    in
+                    ( { model | page = Publication newPubModel }
+                    , cmds |> Cmd.map PublicationMsg
+                    )
 
                 _ ->
                     ( model, Cmd.none )
@@ -104,26 +123,33 @@ check model cmd =
     case model.route of
         Route.Home ->
             let
-                ( initialMainModel, initialMainCmd ) =
-                    Page.Main.init
+                ( initialHomeModel, initialHomeCmd ) =
+                    HomePage.init
             in
-            ( { model | page = Main initialMainModel }
-            , Cmd.batch [ initialMainCmd |> Cmd.map MainMsg, cmd ]
+            ( { model | page = Home initialHomeModel }
+            , Cmd.batch [ initialHomeCmd |> Cmd.map HomeMsg, cmd ]
             )
 
         Route.Category categoryIds ->
             let
-                ( mainModel, mainCmd ) =
+                ( homeModel, homeCmd ) =
                     case model.page of
-                        Main currentMainModel ->
-                            Page.Main.update (Page.Main.CategorySelected categoryIds) currentMainModel
+                        Home currentHomeModel ->
+                            HomePage.update (HomePage.CategorySelected categoryIds) currentHomeModel
 
                         _ ->
-                            Page.Main.init
+                            HomePage.update (HomePage.CategorySelected categoryIds) HomePage.initialModel
             in
-            ( { model | page = Main mainModel }
-            , Cmd.batch [ mainCmd |> Cmd.map MainMsg, cmd ]
+            ( { model | page = Home homeModel }
+            , Cmd.batch [ homeCmd |> Cmd.map HomeMsg, cmd ]
             )
+
+        Route.Publication publicationId ->
+            let
+                ( pubModel, pubCmd ) =
+                    PublicationPage.init publicationId
+            in
+            ( { model | page = Publication pubModel }, pubCmd |> Cmd.map PublicationMsg )
 
         Route.NotFound text ->
             ( { model | page = Problem "404" }, cmd )
@@ -132,12 +158,16 @@ check model cmd =
 view : Model -> Browser.Page Msg
 view model =
     case model.page of
-        Main mainModel ->
-            Page.Main.view model.categories mainModel
-                |> mapPage MainMsg
+        Home homeModel ->
+            HomePage.view model.categories homeModel
+                |> mapPage HomeMsg
+
+        Publication publicationModel ->
+            PublicationPage.view model.categories publicationModel
+                |> mapPage PublicationMsg
 
         Problem text ->
-            Page.Problem.view text
+            ProblemPage.view text
 
 
 mapPage : (a -> b) -> Browser.Page a -> Browser.Page b

@@ -36,9 +36,11 @@ decoder =
         (JD.field "parent_id" (JD.nullable JD.int))
 
 
-list : (ReloadableWebData (Tree Category) -> msg) -> Cmd msg
+list : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
 list msg =
-    ReloadableData.Http.get "/api/category"
+    ReloadableData.Http.get
+        ()
+        "/api/category"
         msg
         (JD.list decoder |> JD.map toTree)
 
@@ -76,16 +78,20 @@ parentExists category set =
         |> Maybe.withDefault False
 
 
-get : (ReloadableWebData Category -> msg) -> Int -> Cmd msg
+get : (ReloadableWebData () Category -> msg) -> Int -> Cmd msg
 get msg id =
-    ReloadableData.Http.get ("/api/category/" ++ String.fromInt id)
+    ReloadableData.Http.get
+        ()
+        ("/api/category/" ++ String.fromInt id)
         msg
         decoder
 
 
-create : (ReloadableWebData Category -> msg) -> NewCategory -> Cmd msg
+create : (ReloadableWebData () Category -> msg) -> NewCategory -> Cmd msg
 create msg newCategory =
-    ReloadableData.Http.post "/api/category/"
+    ReloadableData.Http.post
+        ()
+        "/api/category/"
         msg
         decoder
         (JE.object
@@ -99,16 +105,18 @@ create msg newCategory =
         )
 
 
-delete : (ReloadableWebData () -> msg) -> Int -> Cmd msg
+delete : (ReloadableWebData () () -> msg) -> Int -> Cmd msg
 delete msg id =
     ReloadableData.Http.delete "/api/category"
         (ReloadableData.map (always ()) >> msg)
         (JE.int id)
 
 
-update : (ReloadableWebData Category -> msg) -> Category -> Cmd msg
+update : (ReloadableWebData () Category -> msg) -> Category -> Cmd msg
 update msg category =
-    ReloadableData.Http.put "/api/category"
+    ReloadableData.Http.put
+        ()
+        "/api/category"
         msg
         decoder
         (JE.object
