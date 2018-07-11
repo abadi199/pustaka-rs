@@ -3,6 +3,8 @@ extern crate diesel;
 use db::DbConn;
 use diesel::prelude::*;
 use models::*;
+use reader::cbr;
+use reader::models as reader;
 use rocket::response::NamedFile;
 use rocket::Route;
 use rocket_contrib::Json;
@@ -14,6 +16,19 @@ fn list(connection: DbConn) -> Json<Vec<Publication>> {
         .load::<Publication>(&*connection)
         .expect("Error loading publications");
     Json(publications)
+}
+
+#[get("/read/<the_publication_id>")]
+fn read(the_publication_id: i32, connection: DbConn) -> Json<reader::Data> {
+    use schema::publication::dsl as publication;
+
+    let the_publication = publication::publication
+        .filter(publication::id.eq(the_publication_id))
+        .first::<Publication>(&*connection)
+        .expect("Error getting publication");
+    let data = cbr::read(&the_publication).expect("Unable to read publication");
+    println!("Data: {:?}", data);
+    Json(data)
 }
 
 #[get("/<the_publication_id>")]
@@ -156,5 +171,5 @@ fn get_descendant_rec(
 // }
 
 pub fn routes() -> Vec<Route> {
-    routes![list, by_category, get_thumbnail, get_publication] //, create, delete, get, update]
+    routes![read, list, by_category, get_thumbnail, get_publication] //, create, delete, get, update]
 }

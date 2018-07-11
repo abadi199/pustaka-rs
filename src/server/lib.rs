@@ -1,3 +1,4 @@
+#![feature(extern_prelude)]
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
@@ -11,8 +12,10 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rocket;
 extern crate rocket_contrib;
+extern crate unrar;
 
 pub mod api;
 pub mod db;
 pub mod models;
 pub mod schema;
+pub mod reader;

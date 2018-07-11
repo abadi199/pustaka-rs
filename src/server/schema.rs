@@ -28,6 +28,7 @@ table! {
         media_type_id -> Integer,
         author_id -> Integer,
         thumbnail -> Nullable<Text>,
+        file -> Text,
     }
 }
 

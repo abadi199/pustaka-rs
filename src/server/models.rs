@@ -52,6 +52,7 @@ pub struct NewPublication {
     pub media_type_id: i32,
     pub author_id: i32,
     pub thumbnail: Option<String>,
+    pub file: String,
 }
 
 #[derive(Identifiable, Debug, Queryable, Deserialize, Associations)]
@@ -64,6 +65,7 @@ pub struct Publication {
     pub media_type_id: i32,
     pub author_id: i32,
     pub thumbnail: Option<String>,
+    pub file: String,
 }
 
 impl Serialize for Publication {

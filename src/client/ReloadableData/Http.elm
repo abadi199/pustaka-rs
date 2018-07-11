@@ -1,9 +1,17 @@
-module ReloadableData.Http exposing (delete, get, post, put)
+module ReloadableData.Http
+    exposing
+        ( delete
+        , get
+        , getTask
+        , post
+        , put
+        )
 
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
-import ReloadableData exposing (ReloadableWebData)
+import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
+import Task exposing (Task)
 
 
 toReloadableWebData : i -> Result Http.Error a -> ReloadableWebData i a
@@ -18,8 +26,21 @@ toReloadableWebData i result =
 
 get : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> Cmd msg
 get i url msg decoder =
-    Http.get url decoder
+    getRequest url decoder
         |> Http.send (toReloadableWebData i >> msg)
+
+
+getTask : i -> String -> JD.Decoder a -> Task Never (ReloadableWebData i a)
+getTask i url decoder =
+    getRequest url decoder
+        |> Http.toTask
+        |> Task.andThen (\a -> Task.succeed (Success a))
+        |> Task.onError (\err -> Task.succeed (Failure err i))
+
+
+getRequest : String -> JD.Decoder a -> Http.Request a
+getRequest url decoder =
+    Http.get url decoder
 
 
 post : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> JE.Value -> Cmd msg

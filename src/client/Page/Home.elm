@@ -11,7 +11,7 @@ module Page.Home
 import Browser
 import Browser.Navigation as Navigation
 import Entity.Category exposing (Category)
-import Entity.Publication exposing (Publication)
+import Entity.Publication as Publication
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
@@ -27,7 +27,7 @@ import UI.Menu
 
 type alias Model =
     { selectedCategoryIds : Set Int
-    , publications : ReloadableWebData () (List Publication)
+    , publications : ReloadableWebData () (List Publication.MetaData)
     }
 
 
@@ -48,7 +48,7 @@ initialModel =
 type Msg
     = CategoryClicked Int
     | CategorySelected (List Int)
-    | GetPublicationCompleted (ReloadableWebData () (List Publication))
+    | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -69,7 +69,7 @@ update msg model =
             , selectedCategoryIds
                 |> Set.toList
                 |> List.head
-                |> Maybe.map (\id -> Entity.Publication.listByCategory id GetPublicationCompleted)
+                |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
                 |> Maybe.withDefault Cmd.none
             )
 
@@ -91,7 +91,7 @@ view categories model =
     }
 
 
-mainSection : ReloadableWebData () (List Publication) -> Html Msg
+mainSection : ReloadableWebData () (List Publication.MetaData) -> Html Msg
 mainSection data =
     div []
         (case data of
@@ -115,17 +115,17 @@ mainSection data =
         )
 
 
-publicationsView : List Publication -> Html Msg
+publicationsView : List Publication.MetaData -> Html Msg
 publicationsView publications =
     div [ style "display" "flex", style "flex-wrap" "wrap" ]
         (publications |> List.map publicationView)
 
 
-publicationView : Publication -> Html Msg
+publicationView : Publication.MetaData -> Html Msg
 publicationView publication =
     UI.Card.view
         [ a [] [ text publication.title ]
-        , a [ href <| "/pub/" ++ String.fromInt publication.id ]
+        , a [ href <| Route.publicationUrl publication.id ]
             [ publication.thumbnail
                 |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
                 |> Maybe.withDefault emptyThumbnail

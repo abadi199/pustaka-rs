@@ -6,6 +6,7 @@ import Html exposing (..)
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
 import Page.Publication as PublicationPage
+import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
 import Route exposing (Route)
 import Set
@@ -47,6 +48,7 @@ initialModel =
 type Page
     = Home HomePage.Model
     | Publication PublicationPage.Model
+    | Read ReadPage.Model
     | Problem String
 
 
@@ -56,6 +58,7 @@ type Msg
     | RouteChanged Route
     | HomeMsg HomePage.Msg
     | PublicationMsg PublicationPage.Msg
+    | ReadMsg ReadPage.Msg
 
 
 subscriptions : Model -> Sub Msg
@@ -117,6 +120,18 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ReadMsg readMsg ->
+            case model.page of
+                Read readModel ->
+                    let
+                        ( newReadModel, cmds ) =
+                            ReadPage.update readMsg readModel
+                    in
+                    ( { model | page = Read newReadModel }, cmds |> Cmd.map ReadMsg )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 check : Model -> Cmd Msg -> ( Model, Cmd Msg )
 check model cmd =
@@ -151,6 +166,13 @@ check model cmd =
             in
             ( { model | page = Publication pubModel }, pubCmd |> Cmd.map PublicationMsg )
 
+        Route.Read publicationId ->
+            let
+                ( readModel, readCmd ) =
+                    ReadPage.init publicationId
+            in
+            ( { model | page = Read readModel }, readCmd |> Cmd.map ReadMsg )
+
         Route.NotFound text ->
             ( { model | page = Problem "404" }, cmd )
 
@@ -165,6 +187,10 @@ view model =
         Publication publicationModel ->
             PublicationPage.view model.categories publicationModel
                 |> mapPage PublicationMsg
+
+        Read readModel ->
+            ReadPage.view readModel
+                |> mapPage ReadMsg
 
         Problem text ->
             ProblemPage.view text

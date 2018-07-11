@@ -11,12 +11,14 @@ module Page.Publication
 import Browser
 import Browser.Navigation as Navigation
 import Entity.Category exposing (Category)
-import Entity.Publication exposing (Publication)
+import Entity.Publication as Publication
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set
 import String
+import Task
 import Tree exposing (Tree)
 import UI.Layout.SideNav
 import UI.ReloadableData
@@ -39,9 +41,28 @@ view categoryData model =
     }
 
 
-publicationView : Publication -> Html Msg
+publicationView : Publication.MetaData -> Html Msg
 publicationView publication =
-    text <| Debug.toString publication
+    div
+        [ style "display" "flex"
+        , style "flex-direction" "column"
+        ]
+        [ h2 [] [ text publication.title ]
+        , posterView publication.id publication.thumbnail
+        ]
+
+
+posterView : Int -> Maybe String -> Html Msg
+posterView publicationId maybePoster =
+    case maybePoster of
+        Just poster ->
+            div []
+                [ a [ href <| "/read/" ++ String.fromInt publicationId ]
+                    [ img [ src poster ] [] ]
+                ]
+
+        Nothing ->
+            div [] []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -55,13 +76,13 @@ update msg model =
 
 
 type alias Model =
-    { publication : ReloadableWebData Int Publication }
+    { publication : ReloadableWebData Int Publication.MetaData }
 
 
 init : Int -> ( Model, Cmd Msg )
 init publicationId =
     ( initialModel publicationId
-    , Entity.Publication.get publicationId GetPublicationCompleted
+    , Publication.get publicationId |> Task.perform GetPublicationCompleted
     )
 
 
@@ -72,4 +93,4 @@ initialModel publicationId =
 
 type Msg
     = CategoryClicked Int
-    | GetPublicationCompleted (ReloadableWebData Int Publication)
+    | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)

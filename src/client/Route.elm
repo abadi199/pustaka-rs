@@ -3,6 +3,8 @@ module Route
         ( Route(..)
         , categoryUrl
         , fromUrl
+        , publicationUrl
+        , readUrl
         , selectedCategories
         )
 
@@ -16,6 +18,7 @@ type Route
     = Home
     | Category (List Int)
     | Publication Int
+    | Read Int
     | NotFound String
 
 
@@ -35,12 +38,23 @@ parser =
         [ UrlParser.map Home <| s "app"
         , UrlParser.map (List.singleton >> Category) <| s "category" </> int
         , UrlParser.map Publication <| s "pub" </> int
+        , UrlParser.map Read <| s "read" </> int
         ]
 
 
 categoryUrl : Int -> String
 categoryUrl id =
     "/category/" ++ String.fromInt id
+
+
+publicationUrl : Int -> String
+publicationUrl id =
+    "/pub/" ++ String.fromInt id
+
+
+readUrl : Int -> String
+readUrl id =
+    "/read/" ++ String.fromInt id
 
 
 selectedCategories : Route -> List Int

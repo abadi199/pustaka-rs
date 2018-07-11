@@ -199,6 +199,7 @@ fn insert_publication(connection: &SqliteConnection) {
             author: String,
             category: String,
             thumbnail: String,
+            file: String,
         }
 
         let mut rdr = csv::Reader::from_path("./data/publication.csv")
@@ -225,6 +226,7 @@ fn insert_publication(connection: &SqliteConnection) {
                         },
                         media_type_id: media_type.id,
                         author_id: author.id,
+                        file: record.file,
                     },
                     category.id,
                 ));

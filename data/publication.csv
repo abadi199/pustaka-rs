@@ -1,9 +1,10 @@
-"isbn","title","media_type","author","category","thumbnail"
-"9780316129084","Leviathan Wakes","ebook","James S.A. Corey","Science fiction","/home/abadi199/Temp/thumbnails/leviathan_wakes_tn.jpg"
-"9781841499901","Caliban's War","ebook","James S.A. Corey","Science fiction","/home/abadi199/Temp/thumbnails/caliban's_war_tn.jpg"
-"9780316129077","Abaddon's Gate","ebook","James S.A. Corey","Science fiction",
-"9780316217620","Cibola Burn","ebook","James S.A. Corey","Science fiction",
-"9780316217583","Nemesis Games","ebook","James S.A. Corey","Science fiction",
-"9780316334747","Babylon's Ashes","ebook","James S.A. Corey","Science fiction",
-"9780316332835","Persepolis ","ebook","James S.A. Corey","Science fiction",
-"9781617293023","Type-Driven Development with Idris","ebook","Edwin Brady","Programming","/home/abadi199/Temp/thumbnails/type-driven_development_with_idris_tn.jpg"
+"isbn","title","media_type","author","category","thumbnail","file"
+"9780316129084","Leviathan Wakes","ebook","James S.A. Corey","Science fiction","/home/abadi199/Temp/thumbnails/leviathan_wakes_tn.jpg","test"
+"9781841499901","Caliban's War","ebook","James S.A. Corey","Science fiction","/home/abadi199/Temp/thumbnails/caliban's_war_tn.jpg","test"
+"9780316129077","Abaddon's Gate","ebook","James S.A. Corey","Science fiction","","test"
+"9780316217620","Cibola Burn","ebook","James S.A. Corey","Science fiction","","test"
+"9780316217583","Nemesis Games","ebook","James S.A. Corey","Science fiction","","test"
+"9780316334747","Babylon's Ashes","ebook","James S.A. Corey","Science fiction","","test"
+"9780316332835","Persepolis ","ebook","James S.A. Corey","Science fiction","","test"
+"9781617293023","Type-Driven Development with Idris","ebook","Edwin Brady","Programming","/home/abadi199/Temp/thumbnails/type-driven_development_with_idris_tn.jpg","test"
+"9781401270995","Shade, the Changing Girl, Volume 1: Earth Girl Made Easy","ebook","Cecil Castellucci","Comics/Graphic novel","/home/abadi199/Temp/thumbnails/shade-the-changing-girl_tn.jpg","/home/abadi199/Documents/Comics/Shade-the-Changing-Girl/Shade-the-Changing-Girl-001.cbr"
