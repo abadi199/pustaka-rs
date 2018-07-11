@@ -5,6 +5,12 @@ pub struct Data {
     pub title: String,
     pub media_type_id: i32,
     pub author_id: i32,
-    pub thumbnail: Option<String>,
+    pub thumbnail_url: Option<String>,
     pub file: String,
+    pub total_pages: usize,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Page {
+    pub page_number: i32,
 }

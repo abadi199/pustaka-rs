@@ -3,7 +3,6 @@ module Entity.Publication
         ( Data
         , MetaData
         , Page
-        , decoder
         , get
         , listByCategory
         , read
@@ -46,7 +45,7 @@ listByCategory categoryId msg =
         ()
         ("/api/publication/category/" ++ String.fromInt categoryId)
         msg
-        (JD.list decoder)
+        (JD.list metaDecoder)
 
 
 get : Int -> Task Never (ReloadableWebData Int MetaData)
@@ -54,7 +53,7 @@ get publicationId =
     ReloadableData.Http.getTask
         publicationId
         ("/api/publication/" ++ String.fromInt publicationId)
-        decoder
+        metaDecoder
 
 
 read : Int -> Task Never (ReloadableWebData Int Data)
@@ -62,11 +61,11 @@ read publicationId =
     ReloadableData.Http.getTask
         publicationId
         ("/api/publication/read/" ++ String.fromInt publicationId)
-        openedDecoder
+        decoder
 
 
-decoder : JD.Decoder MetaData
-decoder =
+metaDecoder : JD.Decoder MetaData
+metaDecoder =
     JD.map4 MetaData
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
@@ -74,15 +73,15 @@ decoder =
         (JD.field "thumbnail_url" (JD.maybe JD.string))
 
 
-openedDecoder : JD.Decoder Data
-openedDecoder =
+decoder : JD.Decoder Data
+decoder =
     JD.map6 Data
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
         (JD.field "thumbnail_url" (JD.maybe JD.string))
         (JD.field "total_pages" JD.int)
-        (JD.field "pages" (JD.list pageDecoder))
+        (JD.maybe (JD.field "pages" (JD.list pageDecoder)) |> JD.map (Maybe.withDefault []))
 
 
 pageDecoder : JD.Decoder Page
