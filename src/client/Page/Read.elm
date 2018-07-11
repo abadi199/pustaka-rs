@@ -58,7 +58,10 @@ header pub =
 
 pages : Publication.Data -> Html Msg
 pages pub =
-    div [] []
+    div []
+        [ img [ src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/1" ] []
+        , img [ src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/2" ] []
+        ]
 
 
 footer : Publication.Data -> Html Msg
