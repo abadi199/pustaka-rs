@@ -27,7 +27,7 @@ pub fn read(the_publication: &Publication) -> Result<Data, CbrError> {
         title: the_publication.title.clone(),
         media_type_id: the_publication.media_type_id,
         author_id: the_publication.author_id,
-        thumbnail_url: the_publication.thumbnail.clone(),
+        thumbnail_url: the_publication.thumbnail_url().clone(),
         file: the_publication.file.clone(),
         total_pages: pages.count(),
     })

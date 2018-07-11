@@ -68,6 +68,15 @@ pub struct Publication {
     pub file: String,
 }
 
+impl Publication {
+    pub fn thumbnail_url(&self) -> Option<String> {
+        match self.thumbnail {
+            Some(_) => Some(format!("/api/publication/thumbnail/{}", &self.id)),
+            None => None,
+        }
+    }
+}
+
 impl Serialize for Publication {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -80,11 +89,8 @@ impl Serialize for Publication {
         state.serialize_field("title", &self.title)?;
         state.serialize_field("media_type_id", &self.media_type_id)?;
         state.serialize_field("author_id", &self.author_id)?;
-        match self.thumbnail {
-            Some(_) => state.serialize_field(
-                "thumbnail_url",
-                &format!("/api/publication/thumbnail/{}", &self.id),
-            )?,
+        match self.thumbnail_url() {
+            Some(url) => state.serialize_field("thumbnail_url", &url)?,
             None => state.serialize_field("thumbnail_url", &self.thumbnail)?,
         }
         state.end()
