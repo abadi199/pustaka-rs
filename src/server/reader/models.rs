@@ -13,4 +13,5 @@ pub struct Data {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Page {
     pub page_number: i32,
+    pub url: Vec<String>,
 }

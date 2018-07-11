@@ -26,9 +26,22 @@ fn read(the_publication_id: i32, connection: DbConn) -> Json<reader::Data> {
         .filter(publication::id.eq(the_publication_id))
         .first::<Publication>(&*connection)
         .expect("Error getting publication");
-    let data = cbr::read(&the_publication).expect("Unable to read publication");
+    let data = cbr::open(&the_publication).expect("Unable to read publication");
     println!("Data: {:?}", data);
     Json(data)
+}
+
+#[get("/read/<publication_id>/page/<page_number>")]
+fn read_page(publication_id: i32, page_number: usize, connection: DbConn) -> Option<NamedFile> {
+    use schema::publication::dsl as publication;
+    let the_publication = publication::publication
+        .filter(publication::id.eq(publication_id))
+        .first::<Publication>(&*connection)
+        .expect("Invalid publication");
+
+    let filename = cbr::page(&the_publication, page_number).expect("Unable to read page");
+    println!("Page Filename: {:?}", filename);
+    NamedFile::open(filename).ok()
 }
 
 #[get("/<the_publication_id>")]
@@ -171,5 +184,12 @@ fn get_descendant_rec(
 // }
 
 pub fn routes() -> Vec<Route> {
-    routes![read, list, by_category, get_thumbnail, get_publication] //, create, delete, get, update]
+    routes![
+        read,
+        read_page,
+        list,
+        by_category,
+        get_thumbnail,
+        get_publication
+    ] //, create, delete, get, update]
 }
