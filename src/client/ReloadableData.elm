@@ -2,7 +2,6 @@ module ReloadableData
     exposing
         ( ReloadableData(..)
         , ReloadableWebData
-        , fromRemoteData
         , join
         , loading
         , map
@@ -12,7 +11,6 @@ module ReloadableData
         )
 
 import Http
-import RemoteData exposing (RemoteData)
 
 
 type alias ReloadableWebData i a =
@@ -45,22 +43,6 @@ join result =
 
         Err a ->
             a
-
-
-fromRemoteData : i -> RemoteData e a -> ReloadableData e i a
-fromRemoteData i remoteData =
-    case remoteData of
-        RemoteData.NotAsked ->
-            NotAsked i
-
-        RemoteData.Loading ->
-            Loading i
-
-        RemoteData.Success a ->
-            Success a
-
-        RemoteData.Failure e ->
-            Failure e i
 
 
 toMaybe : ReloadableData e i a -> Maybe a

@@ -4,6 +4,7 @@ module Page.Home
         , Msg(..)
         , init
         , initialModel
+        , selectCategories
         , update
         , view
         )
@@ -31,17 +32,19 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( initialModel
-    , Cmd.none
-    )
+init : List Int -> ( Model, Cmd Msg )
+init categoryIds =
+    let
+        selectedCategoryIds =
+            Set.fromList categoryIds
+    in
+    selectCategories selectedCategoryIds initialModel
 
 
 initialModel : Model
 initialModel =
-    { selectedCategoryIds = Set.empty
-    , publications = ReloadableData.NotAsked ()
+    { selectedCategoryIds = Set.fromList []
+    , publications = ReloadableData.Loading ()
     }
 
 
@@ -55,23 +58,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CategoryClicked id ->
-            ( model, Navigation.pushUrl <| Route.categoryUrl id )
+            ( model
+            , Cmd.none
+              -- , Navigation.pushUrl model.key <| Route.categoryUrl id
+            )
 
         CategorySelected ids ->
             let
                 selectedCategoryIds =
                     Set.fromList ids
             in
-            ( { model
-                | selectedCategoryIds = selectedCategoryIds
-                , publications = ReloadableData.loading model.publications
-              }
-            , selectedCategoryIds
-                |> Set.toList
-                |> List.head
-                |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
-                |> Maybe.withDefault Cmd.none
-            )
+            selectCategories selectedCategoryIds model
 
         GetPublicationCompleted publications ->
             ( { model | publications = publications }
@@ -79,7 +76,22 @@ update msg model =
             )
 
 
-view : ReloadableWebData () (Tree Category) -> Model -> Browser.Page Msg
+selectCategories : Set Int -> Model -> ( Model, Cmd Msg )
+selectCategories selectedCategoryIds model =
+    ( { model
+        | selectedCategoryIds = selectedCategoryIds
+        , publications = ReloadableData.loading model.publications
+      }
+    , selectedCategoryIds
+        |> Set.toList
+        |> List.head
+        |> Debug.log "categoryId"
+        |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
+        |> Maybe.withDefault Cmd.none
+    )
+
+
+view : ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
 view categories model =
     { title = "Pustaka - Main"
     , body =

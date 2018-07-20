@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "rustup": "rustup override set nightly-2018-05-15",
     "postinstall": "cargo install watchexec",
     "watch": "watchexec -w src/client './bin/elm make src/client/Main.elm --output app/app.js'",
     "build": "tput reset && ./bin/elm make src/client/Main.elm --optimize --output app/app.js",
@@ -12,7 +13,6 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "elm-format": "^0.8.0-alpha-elm019rc1-rc2"
+  "dependencies": { 
   }
 }
