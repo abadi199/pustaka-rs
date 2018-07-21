@@ -10,7 +10,7 @@ module Page.Home
         )
 
 import Browser
-import Browser.Navigation as Navigation
+import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import Html exposing (..)
@@ -54,13 +54,12 @@ type Msg
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
     case msg of
         CategoryClicked id ->
             ( model
-            , Cmd.none
-              -- , Navigation.pushUrl model.key <| Route.categoryUrl id
+            , Nav.pushUrl key <| Route.categoryUrl id
             )
 
         CategorySelected ids ->
@@ -85,14 +84,13 @@ selectCategories selectedCategoryIds model =
     , selectedCategoryIds
         |> Set.toList
         |> List.head
-        |> Debug.log "categoryId"
         |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
         |> Maybe.withDefault Cmd.none
     )
 
 
-view : ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
-view categories model =
+view : Nav.Key -> ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
+view key categories model =
     { title = "Pustaka - Main"
     , body =
         [ UI.Layout.SideNav.view CategoryClicked

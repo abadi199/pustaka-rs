@@ -97,21 +97,21 @@ update msg model =
                     ( model, Nav.load href )
 
         HomeMsg homeMsg ->
-            ( model, Cmd.none )
+            case model.page of
+                Home homeModel ->
+                    let
+                        ( newHomeModel, cmds ) =
+                            HomePage.update model.key homeMsg homeModel
+                    in
+                    ( { model | page = Home newHomeModel }
+                    , cmds |> Cmd.map HomeMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 
--- case model.page of
---     Home homeModel ->
---         let
---             ( newHomeModel, cmds ) =
---                 HomePage.update homeMsg homeModel
---         in
---         ( { model | page = Home newHomeModel }
---         , cmds |> Cmd.map HomeMsg
---         )
---     _ ->
---         ( model, Cmd.none )
 -- PublicationMsg pubMsg ->
 --     case model.page of
 --         Publication pubModel ->
@@ -140,7 +140,7 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         Home homeModel ->
-            HomePage.view model.categories homeModel
+            HomePage.view model.key model.categories homeModel
                 |> mapPage HomeMsg
 
         -- Publication publicationModel ->

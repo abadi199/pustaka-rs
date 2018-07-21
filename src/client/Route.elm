@@ -44,12 +44,12 @@ parser =
 
 categoryUrl : Int -> String
 categoryUrl id =
-    "/category/" ++ String.fromInt id
+    "/app/category/" ++ String.fromInt id
 
 
 publicationUrl : Int -> String
 publicationUrl id =
-    "/pub/" ++ String.fromInt id
+    "/app/pub/" ++ String.fromInt id
 
 
 readUrl : Int -> String
