@@ -1,18 +1,19 @@
 module UI.Menu
     exposing
-        ( Action
-        , click
-        , link
+        ( Link
+        , externalLink
+        , internalLink
         , view
         )
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Extra exposing (link)
 import Tree exposing (Tree)
 
 
-view : Tree { text : String, action : Action msg, selected : Bool } -> Html msg
+view : Tree { text : String, link : Link msg, selected : Bool } -> Html msg
 view items =
     nav []
         (items
@@ -21,7 +22,7 @@ view items =
         )
 
 
-viewItem : { text : String, action : Action msg, selected : Bool } -> List (Html msg)
+viewItem : { text : String, link : Link msg, selected : Bool } -> List (Html msg)
 viewItem item =
     let
         itemStyles =
@@ -33,29 +34,28 @@ viewItem item =
             else
                 [ style "cursor" "pointer" ]
     in
-    case item.action of
-        Link url ->
-            [ li itemStyles
+    [ li itemStyles
+        (case item.link of
+            External url ->
                 [ a [ href url ] [ text item.text ] ]
-            ]
 
-        Click msg ->
-            [ li
-                (onClick msg :: itemStyles)
-                [ text item.text ]
-            ]
-
-
-link : String -> Action msg
-link url =
-    Link url
+            Internal msg url ->
+                [ link msg [ href url ] [ text item.text ]
+                ]
+        )
+    ]
 
 
-click : msg -> Action msg
-click msg =
-    Click msg
+externalLink : String -> Link msg
+externalLink url =
+    External url
 
 
-type Action msg
-    = Link String
-    | Click msg
+internalLink : msg -> String -> Link msg
+internalLink msg url =
+    Internal msg url
+
+
+type Link msg
+    = Internal msg String
+    | External String

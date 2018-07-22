@@ -1,9 +1,11 @@
 module UI.Layout.SideNav exposing (view)
 
+import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
+import Route
 import Set exposing (Set)
 import Tree exposing (Tree)
 import UI.Error
@@ -50,7 +52,7 @@ categoriesView onCategoryClicked selectedCategoryIds categories =
             (\category ->
                 { text = category.name
                 , selected = Set.member category.id selectedCategoryIds
-                , action = UI.Menu.click <| onCategoryClicked category.id
+                , link = UI.Menu.internalLink (onCategoryClicked category.id) (Route.categoryUrl category.id)
                 }
             )
         |> UI.Menu.view
