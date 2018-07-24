@@ -54,7 +54,7 @@ publicationUrl id =
 
 readUrl : Int -> String
 readUrl id =
-    "/read/" ++ String.fromInt id
+    "/app/read/" ++ String.fromInt id
 
 
 selectedCategories : Route -> List Int

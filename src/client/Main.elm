@@ -1,14 +1,13 @@
 module Main exposing (main)
 
--- import Page.Publication as PublicationPage
--- import Page.Read as ReadPage
-
 import Browser
 import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Html exposing (..)
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
+import Page.Publication as PublicationPage
+import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
 import Route exposing (Route)
 import Set
@@ -38,8 +37,8 @@ type alias Model =
 
 type Page
     = Home HomePage.Model
-      -- | Publication PublicationPage.Model
-      -- | Read ReadPage.Model
+    | Publication PublicationPage.Model
+    | Read ReadPage.Model
     | Problem String
 
 
@@ -49,11 +48,8 @@ type Msg
     | UrlChanged Url.Url
     | LinkClicked Browser.UrlRequest
     | HomeMsg HomePage.Msg
-
-
-
--- | PublicationMsg PublicationPage.Msg
--- | ReadMsg ReadPage.Msg
+    | PublicationMsg PublicationPage.Msg
+    | ReadMsg ReadPage.Msg
 
 
 subscriptions : Model -> Sub Msg
@@ -110,30 +106,31 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        PublicationMsg pubMsg ->
+            case model.page of
+                Publication pubModel ->
+                    let
+                        ( newPubModel, cmds ) =
+                            PublicationPage.update model.key pubMsg pubModel
+                    in
+                    ( { model | page = Publication newPubModel }
+                    , cmds |> Cmd.map PublicationMsg
+                    )
 
+                _ ->
+                    ( model, Cmd.none )
 
--- PublicationMsg pubMsg ->
---     case model.page of
---         Publication pubModel ->
---             let
---                 ( newPubModel, cmds ) =
---                     PublicationPage.update pubMsg pubModel
---             in
---             ( { model | page = Publication newPubModel }
---             , cmds |> Cmd.map PublicationMsg
---             )
---         _ ->
---             ( model, Cmd.none )
--- ReadMsg readMsg ->
---     case model.page of
---         Read readModel ->
---             let
---                 ( newReadModel, cmds ) =
---                     ReadPage.update readMsg readModel
---             in
---             ( { model | page = Read newReadModel }, cmds |> Cmd.map ReadMsg )
---         _ ->
---             ( model, Cmd.none )
+        ReadMsg readMsg ->
+            case model.page of
+                Read readModel ->
+                    let
+                        ( newReadModel, cmds ) =
+                            ReadPage.update readMsg readModel
+                    in
+                    ( { model | page = Read newReadModel }, cmds |> Cmd.map ReadMsg )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Browser.Document Msg
@@ -143,12 +140,14 @@ view model =
             HomePage.view model.key model.categories homeModel
                 |> mapPage HomeMsg
 
-        -- Publication publicationModel ->
-        --     PublicationPage.view model.categories publicationModel
-        --         |> mapPage PublicationMsg
-        -- Read readModel ->
-        --     ReadPage.view readModel
-        --         |> mapPage ReadMsg
+        Publication publicationModel ->
+            PublicationPage.view model.categories publicationModel
+                |> mapPage PublicationMsg
+
+        Read readModel ->
+            ReadPage.view readModel
+                |> mapPage ReadMsg
+
         Problem text ->
             ProblemPage.view text
 
@@ -168,10 +167,6 @@ stepUrl url model =
                 [ route (s "app") (stepHome model (HomePage.init []))
                 , route (s "app" </> s "category" </> int)
                     (\categoryId ->
-                        let
-                            _ =
-                                Debug.log "route.category" categoryId
-                        in
                         case model.page of
                             Home homeModel ->
                                 stepHome model (HomePage.selectCategories (Set.fromList [ categoryId ]) homeModel)
@@ -179,6 +174,10 @@ stepUrl url model =
                             _ ->
                                 stepHome model (HomePage.selectCategories (Set.fromList [ categoryId ]) HomePage.initialModel)
                     )
+                , route (s "app" </> s "pub" </> int)
+                    (\pubId -> stepPublication model (PublicationPage.init pubId))
+                , route (s "app" </> s "read" </> int)
+                    (\pubId -> stepRead model (ReadPage.init pubId))
                 ]
     in
     case Parser.parse parser url of
@@ -186,7 +185,7 @@ stepUrl url model =
             answer
 
         Nothing ->
-            ( model, Cmd.none )
+            ( { model | page = Problem "Not Found" }, Cmd.none )
 
 
 route : Parser a b -> a -> Parser (b -> c) c
@@ -197,5 +196,15 @@ route parser handler =
 stepHome : Model -> ( HomePage.Model, Cmd HomePage.Msg ) -> ( Model, Cmd Msg )
 stepHome model ( homeModel, cmds ) =
     ( { model | page = Home homeModel }
-    , Cmd.map HomeMsg (Cmd.batch [ cmds ])
+    , Cmd.map HomeMsg cmds
     )
+
+
+stepPublication : Model -> ( PublicationPage.Model, Cmd PublicationPage.Msg ) -> ( Model, Cmd Msg )
+stepPublication model ( pubModel, cmds ) =
+    ( { model | page = Publication pubModel }, Cmd.map PublicationMsg cmds )
+
+
+stepRead : Model -> ( ReadPage.Model, Cmd ReadPage.Msg ) -> ( Model, Cmd Msg )
+stepRead model ( readModel, cmds ) =
+    ( { model | page = Read readModel }, Cmd.map ReadMsg cmds )

@@ -35,7 +35,7 @@ initialModel pubId =
     { publication = Loading pubId }
 
 
-view : Model -> Browser.Page Msg
+view : Model -> Browser.Document Msg
 view model =
     { title = "Read"
     , body =

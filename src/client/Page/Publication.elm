@@ -9,11 +9,12 @@ module Page.Publication
         )
 
 import Browser
-import Browser.Navigation as Navigation
+import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Extra exposing (link)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set
@@ -24,7 +25,7 @@ import UI.Layout.SideNav
 import UI.ReloadableData
 
 
-view : ReloadableWebData () (Tree Category) -> Model -> Browser.Page Msg
+view : ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
 view categoryData model =
     { title = "Pustaka - Publication"
     , body =
@@ -57,7 +58,8 @@ posterView publicationId maybePoster =
     case maybePoster of
         Just poster ->
             div []
-                [ a [ href <| "/read/" ++ String.fromInt publicationId ]
+                [ link (PublicationClicked publicationId)
+                    [ href <| Route.readUrl publicationId ]
                     [ img [ src poster ] [] ]
                 ]
 
@@ -65,14 +67,17 @@ posterView publicationId maybePoster =
             div [] []
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
     case msg of
         CategoryClicked id ->
-            ( model, Navigation.pushUrl <| Route.categoryUrl id )
+            ( model, Nav.pushUrl key <| Route.categoryUrl id )
 
         GetPublicationCompleted data ->
             ( { model | publication = data }, Cmd.none )
+
+        PublicationClicked pubId ->
+            ( model, Nav.pushUrl key <| Route.readUrl pubId )
 
 
 type alias Model =
@@ -94,3 +99,4 @@ initialModel publicationId =
 type Msg
     = CategoryClicked Int
     | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)
+    | PublicationClicked Int
