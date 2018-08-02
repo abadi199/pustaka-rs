@@ -13,11 +13,13 @@
             "elm/http": "1.0.0",
             "elm/json": "1.0.0",
             "elm/parser": "1.0.0",
-            "elm/url": "1.0.0"
+            "elm/url": "1.0.0",
+            "rtfeldman/elm-css": "15.0.0"
         },
         "indirect": {
             "elm/time": "1.0.0",
-            "elm/virtual-dom": "1.0.0"
+            "elm/virtual-dom": "1.0.0",
+            "rtfeldman/hex": "1.0.1"
         }
     },
     "test-dependencies": {

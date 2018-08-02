@@ -10,8 +10,8 @@ module Page.Read
 
 import Browser
 import Entity.Publication as Publication
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Task
 import UI.ReloadableData
@@ -48,6 +48,7 @@ view model =
                     ]
             )
             model.publication
+            |> List.map Html.Styled.toUnstyled
     }
 
 

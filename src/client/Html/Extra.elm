@@ -1,7 +1,7 @@
 module Html.Extra exposing (link)
 
-import Html exposing (..)
-import Html.Events exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Events exposing (..)
 import Json.Decode as JD
 
 

@@ -6,10 +6,11 @@ module UI.Menu
         , view
         )
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Css exposing (..)
 import Html.Events exposing (..)
 import Html.Extra exposing (link)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
 import Tree exposing (Tree)
 
 
@@ -18,7 +19,16 @@ view items =
     nav []
         (items
             |> Tree.map viewItem
-            |> Tree.flatten (\n c -> ul [] (n ++ c))
+            |> Tree.flatten
+                (\n c ->
+                    ul
+                        [ css
+                            [ margin zero
+                            , padding4 zero (rem 1) zero (rem 1)
+                            ]
+                        ]
+                        (n ++ c)
+                )
         )
 
 
@@ -27,20 +37,33 @@ viewItem item =
     let
         itemStyles =
             if item.selected then
-                [ style "font-weight" "bold"
-                , style "cursor" "pointer"
+                [ css
+                    [ fontWeight bold
+                    , cursor pointer
+                    ]
                 ]
 
             else
-                [ style "cursor" "pointer" ]
+                [ css [ cursor pointer ] ]
+
+        linkStyles =
+            css [ color unset, textDecoration unset ]
     in
-    [ li itemStyles
+    [ li
+        (itemStyles
+            ++ [ css
+                    [ listStyleType none
+                    , padding zero
+                    , margin zero
+                    ]
+               ]
+        )
         (case item.link of
             External url ->
-                [ a [ href url ] [ text item.text ] ]
+                [ a [ linkStyles, href url ] [ text item.text ] ]
 
             Internal msg url ->
-                [ link msg [ href url ] [ text item.text ]
+                [ link msg [ linkStyles, href url ] [ text item.text ]
                 ]
         )
     ]

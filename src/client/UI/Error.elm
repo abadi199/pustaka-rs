@@ -1,6 +1,6 @@
 module UI.Error exposing (view)
 
-import Html exposing (..)
+import Html.Styled exposing (..)
 
 
 view : String -> Html msg

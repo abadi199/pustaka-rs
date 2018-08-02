@@ -10,11 +10,13 @@ pub enum CbrError {
     GenericError(String),
 }
 
+const EXTRACT_LOCATION : &str = "/home/abadi199/Temp/test";
+
 pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
     use reader::cbr::CbrError::*;
 
     let open_archive = Archive::new(the_publication.file.clone())
-        .extract_to("/home/abadi199/Temp/test".to_string())
+        .extract_to(EXTRACT_LOCATION.to_string())
         .map_err(|_err| RarError)?;
 
     Ok(Data {
@@ -33,12 +35,12 @@ pub fn page(the_publication: &Publication, page_number: usize) -> Result<String,
     use reader::cbr::CbrError::*;
 
     let mut open_archive = Archive::new(the_publication.file.clone())
-        .extract_to("/home/abadi199/Temp/test".to_string())
+        .extract_to(EXTRACT_LOCATION.to_string())
         .map_err(|_err| RarError)?;
 
     match open_archive.nth(page_number) {
         Some(item) => match item {
-            Ok(entry) => Ok(format!("/home/abadi199/Temp/test/{}", entry.filename)),
+            Ok(entry) => Ok(format!("{}/{}", EXTRACT_LOCATION, entry.filename)),
             Err(_err) => Err(PageError),
         },
         None => Err(PageNotFound),

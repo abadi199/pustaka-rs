@@ -1,6 +1,6 @@
 module UI.ReloadableData exposing (view)
 
-import Html exposing (..)
+import Html.Styled exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import UI.Error
 import UI.Loading

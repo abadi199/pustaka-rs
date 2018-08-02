@@ -13,17 +13,19 @@ import Browser
 import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
 import Tree exposing (Tree)
 import UI.Card
 import UI.Error
-import UI.Layout.SideNav
+import UI.Layout
 import UI.Loading
 import UI.Menu
+import UI.Nav.Side
+import UI.Parts.Search
 
 
 type alias Model =
@@ -49,7 +51,8 @@ initialModel =
 
 
 type Msg
-    = CategoryClicked Int
+    = NoOp
+    | CategoryClicked Int
     | CategorySelected (List Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
@@ -57,6 +60,9 @@ type Msg
 update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
 update key msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         CategoryClicked id ->
             ( model
             , Nav.pushUrl key <| Route.categoryUrl id
@@ -91,14 +97,14 @@ selectCategories selectedCategoryIds model =
 
 view : Nav.Key -> ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
 view key categories model =
-    { title = "Pustaka - Main"
-    , body =
-        [ UI.Layout.SideNav.view CategoryClicked
-            model.selectedCategoryIds
+    UI.Layout.withSideNav
+        { title = "Pustaka - Main"
+        , sideNav =
             categories
-            (mainSection model.publications)
-        ]
-    }
+                |> UI.Nav.Side.view CategoryClicked model.selectedCategoryIds
+                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+        , content = [ mainSection model.publications ]
+        }
 
 
 mainSection : ReloadableWebData () (List Publication.MetaData) -> Html Msg
