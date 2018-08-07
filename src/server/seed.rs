@@ -20,7 +20,36 @@ fn main() {
     insert_media_type(&*connection);
     insert_author(&*connection);
     insert_publication(&*connection);
+    insert_favorite_category(&*connection);
 }
+
+fn insert_favorite_category(connection: &SqliteConnection) {
+    use schema::favorite_category::dsl::*;
+
+    diesel::delete(favorite_category)
+        .execute(&*connection)
+        .expect("Error deleting favorite categories");
+
+    let favorites = vec![
+        "Comics/Graphic novel".to_string(),
+        "Fantasy".to_string(),
+        "Science fiction".to_string(),
+        "Programming".to_string(),
+        "Picture book".to_string(),
+    ]; 
+
+     for favorite_category_name in favorites {
+        let category =
+            get_category(&favorite_category_name, connection).expect("Error getting category");
+        
+        diesel::insert_into(favorite_category)
+            .values(&FavoriteCategory{
+                category_id: category.id,
+            })
+            .execute(connection)
+            .expect("Error inserting category");
+    }
+ }
 
 fn insert_category(connection: &SqliteConnection) {
     use schema::category::dsl::*;
@@ -236,40 +265,41 @@ fn insert_publication(connection: &SqliteConnection) {
         publications
     }
 
-    fn get_publication(the_isbn: &str, connection: &SqliteConnection) -> QueryResult<Publication> {
-        use schema::publication::dsl::*;
-        publication
-            .filter(isbn.eq(the_isbn))
-            .first::<Publication>(connection)
+
+}
+fn get_publication(the_isbn: &str, connection: &SqliteConnection) -> QueryResult<Publication> {
+    use schema::publication::dsl::*;
+    publication
+        .filter(isbn.eq(the_isbn))
+        .first::<Publication>(connection)
+}
+
+fn get_category(the_name: &str, connection: &SqliteConnection) -> QueryResult<Category> {
+    use schema::category::dsl::*;
+    category
+        .filter(name.eq(the_name))
+        .first::<Category>(connection)
+}
+
+fn get_media_type(the_name: &str, connection: &SqliteConnection) -> QueryResult<MediaType> {
+    use schema::media_type::dsl::*;
+    media_type
+        .filter(name.eq(the_name))
+        .first::<MediaType>(connection)
+}
+
+fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryResult<Author> {
+    use schema::author::dsl::*;
+    let mut the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
+    if let Err(_e) = the_author {
+        diesel::insert_into(author)
+            .values(&NewAuthor {
+                name: the_name.to_string(),
+            })
+            .execute(connection)
+            .expect("Error inserting author");
+        the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
     }
 
-    fn get_category(the_name: &str, connection: &SqliteConnection) -> QueryResult<Category> {
-        use schema::category::dsl::*;
-        category
-            .filter(name.eq(the_name))
-            .first::<Category>(connection)
-    }
-
-    fn get_media_type(the_name: &str, connection: &SqliteConnection) -> QueryResult<MediaType> {
-        use schema::media_type::dsl::*;
-        media_type
-            .filter(name.eq(the_name))
-            .first::<MediaType>(connection)
-    }
-
-    fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryResult<Author> {
-        use schema::author::dsl::*;
-        let mut the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
-        if let Err(_e) = the_author {
-            diesel::insert_into(author)
-                .values(&NewAuthor {
-                    name: the_name.to_string(),
-                })
-                .execute(connection)
-                .expect("Error inserting author");
-            the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
-        }
-
-        the_author
-    }
+    the_author
 }

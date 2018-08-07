@@ -9,7 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
-import Tree exposing (Tree)
+import Tree
 import UI.Error
 import UI.Loading
 import UI.Menu
@@ -50,7 +50,7 @@ withSearch search sideNav =
             sideNav
 
 
-view : (Int -> msg) -> Set Int -> ReloadableWebData () (Tree Category) -> SideNav msg
+view : (Int -> msg) -> Set Int -> ReloadableWebData () (List Category) -> SideNav msg
 view onCategoryClicked selectedCategoryIds data =
     (case data of
         NotAsked _ ->
@@ -74,16 +74,69 @@ view onCategoryClicked selectedCategoryIds data =
         |> SideNav
 
 
-categoriesView : (Int -> msg) -> Set Int -> Tree Category -> Html msg
+categoriesView : (Int -> msg) -> Set Int -> List Category -> Html msg
 categoriesView onCategoryClicked selectedCategoryIds categories =
-    div [ css [ marginTop (rem 4) ] ]
-        [ categories
-            |> Tree.map
-                (\category ->
-                    { text = category.name
-                    , selected = Set.member category.id selectedCategoryIds
-                    , link = UI.Menu.internalLink (onCategoryClicked category.id) (Route.categoryUrl category.id)
-                    }
+    div
+        [ css
+            [ marginTop (rem 4)
+            , minWidth (px 300)
+            , color (rgba 255 255 255 0.7)
+            , Css.Global.descendants
+                [ Css.Global.typeSelector "li"
+                    [ margin2 (Css.em 0.5) zero ]
+                ]
+            , Css.Global.children
+                [ Css.Global.typeSelector "nav"
+                    [ Css.Global.children
+                        [ Css.Global.typeSelector "ul"
+                            [ padding zero
+                            , Css.Global.children
+                                [ Css.Global.typeSelector "li"
+                                    [ margin3 (Css.em 2) zero (Css.em 1)
+                                    , fontSize (px 20)
+                                    , fontWeight bold
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        [ UI.Menu.view
+            [ Tree.node
+                { text = "Home"
+                , selected = False
+                , link = UI.Menu.noLink
+                }
+                []
+            , Tree.node
+                { text = "Favorites"
+                , selected = False
+                , link = UI.Menu.noLink
+                }
+                (categories
+                    |> List.map
+                        (\category ->
+                            Tree.node
+                                { text = category.name
+                                , selected = Set.member category.id selectedCategoryIds
+                                , link = UI.Menu.internalLink (onCategoryClicked category.id) (Route.categoryUrl category.id)
+                                }
+                                []
+                        )
                 )
-            |> UI.Menu.view
+            , Tree.node
+                { text = "Manage"
+                , selected = False
+                , link = UI.Menu.noLink
+                }
+                [ Tree.node
+                    { text = "Settings"
+                    , selected = False
+                    , link = UI.Menu.noLink
+                    }
+                    []
+                ]
+            ]
         ]

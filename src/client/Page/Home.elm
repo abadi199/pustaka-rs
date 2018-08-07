@@ -95,7 +95,7 @@ selectCategories selectedCategoryIds model =
     )
 
 
-view : Nav.Key -> ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
+view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view key categories model =
     UI.Layout.withSideNav
         { title = "Pustaka - Main"

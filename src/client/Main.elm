@@ -31,7 +31,7 @@ main =
 type alias Model =
     { key : Nav.Key
     , page : Page
-    , categories : ReloadableWebData () (Tree Category)
+    , favoriteCategories : ReloadableWebData () (List Category)
     }
 
 
@@ -44,7 +44,6 @@ type Page
 
 type Msg
     = NoOp
-    | GetCategoriesCompleted (ReloadableWebData () (Tree Category))
     | UrlChanged Url.Url
     | LinkClicked Browser.UrlRequest
     | HomeMsg HomePage.Msg
@@ -64,11 +63,21 @@ init _ url key =
             stepUrl url
                 { key = key
                 , page = Home HomePage.initialModel
-                , categories = ReloadableData.Loading ()
+                , favoriteCategories =
+                    ReloadableData.Success
+                        [ { id = 2
+                          , name = "Comic"
+                          , parentId = Nothing
+                          }
+                        , { id = 1
+                          , name = "Science Fiction"
+                          , parentId = Nothing
+                          }
+                        ]
                 }
     in
     ( model
-    , Cmd.batch [ cmd, Entity.Category.list GetCategoriesCompleted ]
+    , Cmd.batch [ cmd ]
     )
 
 
@@ -77,9 +86,6 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
-
-        GetCategoriesCompleted data ->
-            ( { model | categories = data }, Cmd.none )
 
         UrlChanged url ->
             stepUrl url model
@@ -137,11 +143,11 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         Home homeModel ->
-            HomePage.view model.key model.categories homeModel
+            HomePage.view model.key model.favoriteCategories homeModel
                 |> mapPage HomeMsg
 
         Publication publicationModel ->
-            PublicationPage.view model.categories publicationModel
+            PublicationPage.view model.favoriteCategories publicationModel
                 |> mapPage PublicationMsg
 
         Read readModel ->

@@ -57,6 +57,25 @@ fn get(category_id: i32, connection: DbConn) -> Json<Category> {
     }
 }
 
+#[get("/favorite")]
+fn favorite(connection: DbConn) -> Json<Vec<Category>> {
+    use schema::favorite_category::dsl::*;
+
+    let favorite_category_ids: Vec<i32> = favorite_category
+        .load::<FavoriteCategory>(&*connection)
+        .expect("Error loading favorite categories")
+        .iter()
+        .map(|fav| fav.category_id)
+        .collect();
+
+    let categories = category
+        .filter(id.eq_any(favorite_category_ids))
+        .load::<Category>(&*connection)
+        .expect("Error getting categories");
+
+    Json(categories)
+}
+
 pub fn routes() -> Vec<Route> {
-    routes![list, create, delete, get, update]
+    routes![list, create, delete, get, update, favorite]
 }

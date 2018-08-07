@@ -14,6 +14,12 @@ table! {
 }
 
 table! {
+    favorite_category (category_id) {
+        category_id -> Integer,
+    }
+}
+
+table! {
     media_type (id) {
         id -> Integer,
         name -> Text,
@@ -53,6 +59,7 @@ table! {
     }
 }
 
+joinable!(favorite_category -> category (category_id));
 joinable!(publication -> author (author_id));
 joinable!(publication -> media_type (media_type_id));
 joinable!(publication_category -> category (category_id));
@@ -63,6 +70,7 @@ joinable!(publication_tag -> tag (tag_id));
 allow_tables_to_appear_in_same_query!(
     author,
     category,
+    favorite_category,
     media_type,
     publication,
     publication_category,

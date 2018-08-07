@@ -1,4 +1,4 @@
-use schema::{author, category, media_type, publication, publication_category, tag};
+use schema::{author, category, media_type, publication, publication_category, tag, favorite_category};
 use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
@@ -117,4 +117,12 @@ pub struct NewTag {
 pub struct Tag {
     pub id: i32,
     pub name: String,
+}
+
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations, Insertable)]
+#[belongs_to(Category, foreign_key = "category_id")]
+#[table_name = "favorite_category"]
+#[primary_key(category_id)]
+pub struct FavoriteCategory {
+    pub category_id: i32,
 }

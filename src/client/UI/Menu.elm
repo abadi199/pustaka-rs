@@ -3,6 +3,7 @@ module UI.Menu
         ( Link
         , externalLink
         , internalLink
+        , noLink
         , view
         )
 
@@ -65,6 +66,9 @@ viewItem item =
             Internal msg url ->
                 [ link msg [ linkStyles, href url ] [ text item.text ]
                 ]
+
+            NoLink ->
+                [ span [ linkStyles ] [ text item.text ] ]
         )
     ]
 
@@ -79,6 +83,12 @@ internalLink msg url =
     Internal msg url
 
 
+noLink : Link msg
+noLink =
+    NoLink
+
+
 type Link msg
     = Internal msg String
     | External String
+    | NoLink

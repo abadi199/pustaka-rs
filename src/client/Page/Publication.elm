@@ -27,7 +27,7 @@ import UI.Parts.Search
 import UI.ReloadableData
 
 
-view : ReloadableWebData () (Tree Category) -> Model -> Browser.Document Msg
+view : ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view categoryData model =
     UI.Layout.withSideNav
         { title = "Pustaka - Publication"
