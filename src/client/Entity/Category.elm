@@ -4,6 +4,7 @@ module Entity.Category
         , create
         , decoder
         , delete
+        , favorite
         , get
         , list
         , update
@@ -43,6 +44,15 @@ list msg =
         "/api/category"
         msg
         (JD.list decoder |> JD.map toTree)
+
+
+favorite : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
+favorite msg =
+    ReloadableData.Http.get
+        ()
+        "/api/category/favorite"
+        msg
+        (JD.list decoder)
 
 
 toTree : List Category -> Tree Category
