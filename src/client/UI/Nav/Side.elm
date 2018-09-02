@@ -143,6 +143,12 @@ categoriesView onLinkClicked selectedCategoryIds categories =
                     , link = UI.Menu.internalLink onLinkClicked Route.browseByCategoryUrl
                     }
                     []
+                , Tree.node
+                    { text = "By Media Type"
+                    , selected = False
+                    , link = UI.Menu.internalLink onLinkClicked Route.browseByMediaTypeUrl
+                    }
+                    []
                 ]
             , Tree.node
                 { text = "Manage"

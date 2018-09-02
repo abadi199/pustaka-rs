@@ -1,5 +1,7 @@
 module Main exposing (main)
 
+-- import Route exposing (Route)
+
 import Browser
 import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
@@ -9,7 +11,6 @@ import Page.Problem as ProblemPage
 import Page.Publication as PublicationPage
 import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
-import Route exposing (Route)
 import Set
 import Tree exposing (Tree)
 import Url
@@ -37,6 +38,8 @@ type alias Model =
 
 type Page
     = Home HomePage.Model
+    | BrowseByCategory
+    | BrowseByMediaType
     | Publication PublicationPage.Model
     | Read ReadPage.Model
     | Problem String
@@ -151,6 +154,12 @@ view model =
         Problem text ->
             ProblemPage.view text
 
+        BrowseByMediaType ->
+            { title = "Pustaka - Media Type", body = [] }
+
+        BrowseByCategory ->
+            { title = "Pustaka - Category", body = [] }
+
 
 mapPage : (a -> b) -> Browser.Document a -> Browser.Document b
 mapPage f page =
@@ -174,6 +183,10 @@ stepUrl url model =
                             _ ->
                                 stepHome model (HomePage.selectCategories (Set.fromList [ categoryId ]) HomePage.initialModel)
                     )
+                , route (s "app" </> s "media-types")
+                    (stepBrowseByMediaType model)
+                , route (s "app" </> s "categories")
+                    (stepBrowseByCategory model)
                 , route (s "app" </> s "pub" </> int)
                     (\pubId -> stepPublication model (PublicationPage.init pubId))
                 , route (s "app" </> s "read" </> int)
@@ -198,6 +211,16 @@ stepHome model ( homeModel, cmds ) =
     ( { model | page = Home homeModel }
     , Cmd.map HomeMsg cmds
     )
+
+
+stepBrowseByCategory : Model -> ( Model, Cmd Msg )
+stepBrowseByCategory model =
+    ( { model | page = BrowseByCategory }, Cmd.none )
+
+
+stepBrowseByMediaType : Model -> ( Model, Cmd Msg )
+stepBrowseByMediaType model =
+    ( { model | page = BrowseByMediaType }, Cmd.none )
 
 
 stepPublication : Model -> ( PublicationPage.Model, Cmd PublicationPage.Msg ) -> ( Model, Cmd Msg )
