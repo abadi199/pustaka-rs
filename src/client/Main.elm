@@ -49,6 +49,7 @@ type Msg
     | HomeMsg HomePage.Msg
     | PublicationMsg PublicationPage.Msg
     | ReadMsg ReadPage.Msg
+    | LoadFavoriteCompleted (ReloadableWebData () (List Category))
 
 
 subscriptions : Model -> Sub Msg
@@ -63,21 +64,11 @@ init _ url key =
             stepUrl url
                 { key = key
                 , page = Home HomePage.initialModel
-                , favoriteCategories =
-                    ReloadableData.Success
-                        [ { id = 2
-                          , name = "Comic"
-                          , parentId = Nothing
-                          }
-                        , { id = 1
-                          , name = "Science Fiction"
-                          , parentId = Nothing
-                          }
-                        ]
+                , favoriteCategories = ReloadableData.Loading ()
                 }
     in
     ( model
-    , Cmd.batch [ cmd ]
+    , Cmd.batch [ cmd, Entity.Category.favorite LoadFavoriteCompleted ]
     )
 
 
@@ -137,6 +128,9 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        LoadFavoriteCompleted data ->
+            ( { model | favoriteCategories = data }, Cmd.none )
 
 
 view : Model -> Browser.Document Msg

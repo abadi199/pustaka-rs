@@ -1,12 +1,13 @@
-module Route
-    exposing
-        ( Route(..)
-        , categoryUrl
-        , fromUrl
-        , publicationUrl
-        , readUrl
-        , selectedCategories
-        )
+module Route exposing
+    ( Route(..)
+    , browseByCategoryUrl
+    , categoryUrl
+    , fromUrl
+    , homeUrl
+    , publicationUrl
+    , readUrl
+    , selectedCategories
+    )
 
 import Parser exposing ((|.), (|=))
 import Url
@@ -42,19 +43,29 @@ parser =
         ]
 
 
+baseUrl : String
+baseUrl =
+    "/app"
+
+
+homeUrl : String
+homeUrl =
+    baseUrl
+
+
 categoryUrl : Int -> String
 categoryUrl id =
-    "/app/category/" ++ String.fromInt id
+    baseUrl ++ "/category/" ++ String.fromInt id
 
 
 publicationUrl : Int -> String
 publicationUrl id =
-    "/app/pub/" ++ String.fromInt id
+    baseUrl ++ "/pub/" ++ String.fromInt id
 
 
 readUrl : Int -> String
 readUrl id =
-    "/app/read/" ++ String.fromInt id
+    baseUrl ++ "/read/" ++ String.fromInt id
 
 
 selectedCategories : Route -> List Int
@@ -65,3 +76,8 @@ selectedCategories route =
 
         _ ->
             []
+
+
+browseByCategoryUrl : String
+browseByCategoryUrl =
+    baseUrl ++ "/categories"

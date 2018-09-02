@@ -50,8 +50,8 @@ withSearch search sideNav =
             sideNav
 
 
-view : (Int -> msg) -> Set Int -> ReloadableWebData () (List Category) -> SideNav msg
-view onCategoryClicked selectedCategoryIds data =
+view : (String -> msg) -> Set Int -> ReloadableWebData () (List Category) -> SideNav msg
+view onLinkClicked selectedCategoryIds data =
     (case data of
         NotAsked _ ->
             []
@@ -60,22 +60,22 @@ view onCategoryClicked selectedCategoryIds data =
             [ UI.Loading.view ]
 
         Reloading categories ->
-            [ UI.Loading.view, categoriesView onCategoryClicked selectedCategoryIds categories ]
+            [ UI.Loading.view, categoriesView onLinkClicked selectedCategoryIds categories ]
 
         Success categories ->
-            [ categoriesView onCategoryClicked selectedCategoryIds categories ]
+            [ categoriesView onLinkClicked selectedCategoryIds categories ]
 
         Failure error _ ->
-            [ UI.Error.view <| Debug.toString error ]
+            [ UI.Error.view "Error" ]
 
         FailureWithData error categories ->
-            [ categoriesView onCategoryClicked selectedCategoryIds categories, UI.Error.view <| Debug.toString error ]
+            [ categoriesView onLinkClicked selectedCategoryIds categories, UI.Error.view "Error" ]
     )
         |> SideNav
 
 
-categoriesView : (Int -> msg) -> Set Int -> List Category -> Html msg
-categoriesView onCategoryClicked selectedCategoryIds categories =
+categoriesView : (String -> msg) -> Set Int -> List Category -> Html msg
+categoriesView onLinkClicked selectedCategoryIds categories =
     div
         [ css
             [ marginTop (rem 4)
@@ -107,7 +107,10 @@ categoriesView onCategoryClicked selectedCategoryIds categories =
             [ Tree.node
                 { text = "Home"
                 , selected = False
-                , link = UI.Menu.noLink
+                , link =
+                    UI.Menu.internalLink
+                        onLinkClicked
+                        Route.homeUrl
                 }
                 []
             , Tree.node
@@ -121,11 +124,26 @@ categoriesView onCategoryClicked selectedCategoryIds categories =
                             Tree.node
                                 { text = category.name
                                 , selected = Set.member category.id selectedCategoryIds
-                                , link = UI.Menu.internalLink (onCategoryClicked category.id) (Route.categoryUrl category.id)
+                                , link =
+                                    UI.Menu.internalLink
+                                        onLinkClicked
+                                        (Route.categoryUrl category.id)
                                 }
                                 []
                         )
                 )
+            , Tree.node
+                { text = "Browse"
+                , selected = False
+                , link = UI.Menu.noLink
+                }
+                [ Tree.node
+                    { text = "By Category"
+                    , selected = False
+                    , link = UI.Menu.internalLink onLinkClicked Route.browseByCategoryUrl
+                    }
+                    []
+                ]
             , Tree.node
                 { text = "Manage"
                 , selected = False

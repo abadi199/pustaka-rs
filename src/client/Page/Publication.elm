@@ -1,12 +1,11 @@
-module Page.Publication
-    exposing
-        ( Model
-        , Msg
-        , init
-        , initialModel
-        , update
-        , view
-        )
+module Page.Publication exposing
+    ( Model
+    , Msg
+    , init
+    , initialModel
+    , update
+    , view
+    )
 
 import Browser
 import Browser.Navigation as Nav
@@ -33,7 +32,7 @@ view categoryData model =
         { title = "Pustaka - Publication"
         , sideNav =
             categoryData
-                |> UI.Nav.Side.view CategoryClicked (Set.fromList [])
+                |> UI.Nav.Side.view MenuItemClicked (Set.fromList [])
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
         , content =
             [ div []
@@ -61,8 +60,9 @@ posterView publicationId maybePoster =
     case maybePoster of
         Just poster ->
             div []
-                [ link (PublicationClicked publicationId)
-                    [ href <| Route.readUrl publicationId ]
+                [ link MenuItemClicked
+                    (Route.readUrl publicationId)
+                    []
                     [ img [ src poster ] [] ]
                 ]
 
@@ -76,8 +76,8 @@ update key msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        CategoryClicked id ->
-            ( model, Nav.pushUrl key <| Route.categoryUrl id )
+        MenuItemClicked url ->
+            ( model, Nav.pushUrl key url )
 
         GetPublicationCompleted data ->
             ( { model | publication = data }, Cmd.none )
@@ -103,7 +103,7 @@ initialModel publicationId =
 
 
 type Msg
-    = CategoryClicked Int
+    = MenuItemClicked String
     | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)
     | PublicationClicked Int
     | NoOp

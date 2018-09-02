@@ -1,11 +1,10 @@
-module UI.Menu
-    exposing
-        ( Link
-        , externalLink
-        , internalLink
-        , noLink
-        , view
-        )
+module UI.Menu exposing
+    ( Link
+    , externalLink
+    , internalLink
+    , noLink
+    , view
+    )
 
 import Css exposing (..)
 import Html.Events exposing (..)
@@ -64,7 +63,7 @@ viewItem item =
                 [ a [ linkStyles, href url ] [ text item.text ] ]
 
             Internal msg url ->
-                [ link msg [ linkStyles, href url ] [ text item.text ]
+                [ link msg url [ linkStyles ] [ text item.text ]
                 ]
 
             NoLink ->
@@ -78,7 +77,7 @@ externalLink url =
     External url
 
 
-internalLink : msg -> String -> Link msg
+internalLink : (String -> msg) -> String -> Link msg
 internalLink msg url =
     Internal msg url
 
@@ -89,6 +88,6 @@ noLink =
 
 
 type Link msg
-    = Internal msg String
+    = Internal (String -> msg) String
     | External String
     | NoLink

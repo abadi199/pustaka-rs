@@ -1,16 +1,16 @@
-module Page.Home
-    exposing
-        ( Model
-        , Msg(..)
-        , init
-        , initialModel
-        , selectCategories
-        , update
-        , view
-        )
+module Page.Home exposing
+    ( Model
+    , Msg(..)
+    , init
+    , initialModel
+    , selectCategories
+    , update
+    , view
+    )
 
 import Browser
 import Browser.Navigation as Nav
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import Html.Styled exposing (..)
@@ -46,13 +46,13 @@ init categoryIds =
 initialModel : Model
 initialModel =
     { selectedCategoryIds = Set.fromList []
-    , publications = ReloadableData.Loading ()
+    , publications = ReloadableData.NotAsked ()
     }
 
 
 type Msg
     = NoOp
-    | CategoryClicked Int
+    | MenuItemClicked String
     | CategorySelected (List Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
@@ -63,9 +63,9 @@ update key msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        CategoryClicked id ->
+        MenuItemClicked url ->
             ( model
-            , Nav.pushUrl key <| Route.categoryUrl id
+            , Nav.pushUrl key url
             )
 
         CategorySelected ids ->
@@ -85,7 +85,12 @@ selectCategories : Set Int -> Model -> ( Model, Cmd Msg )
 selectCategories selectedCategoryIds model =
     ( { model
         | selectedCategoryIds = selectedCategoryIds
-        , publications = ReloadableData.loading model.publications
+        , publications =
+            if Set.isEmpty selectedCategoryIds then
+                ReloadableData.NotAsked ()
+
+            else
+                ReloadableData.loading model.publications
       }
     , selectedCategoryIds
         |> Set.toList
@@ -101,7 +106,7 @@ view key categories model =
         { title = "Pustaka - Main"
         , sideNav =
             categories
-                |> UI.Nav.Side.view CategoryClicked model.selectedCategoryIds
+                |> UI.Nav.Side.view MenuItemClicked model.selectedCategoryIds
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
         , content = [ mainSection model.publications ]
         }
@@ -124,10 +129,10 @@ mainSection data =
                 [ publicationsView publications ]
 
             Failure error _ ->
-                [ UI.Error.view <| Debug.toString error ]
+                [ UI.Error.view "Error" ]
 
             FailureWithData error publications ->
-                [ publicationsView publications, UI.Error.view <| Debug.toString error ]
+                [ publicationsView publications, UI.Error.view "Error" ]
         )
 
 
@@ -152,9 +157,6 @@ publicationView publication =
 emptyThumbnail : Html msg
 emptyThumbnail =
     div
-        [ style "display" "flex"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        , style "max-height" "100%"
+        [ css [ displayFlex, alignItems center, justifyContent center, maxHeight (pct 100) ]
         ]
         [ text "N/A" ]
