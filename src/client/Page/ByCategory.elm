@@ -44,10 +44,10 @@ update key msg model =
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view key categories model =
     UI.Layout.withSideNav
-        { title = "Pustaka - By Category"
+        { title = "Pustaka - Browse By Category"
         , sideNav =
             categories
-                |> UI.Nav.Side.view MenuItemClicked (Set.fromList [])
+                |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
         , content = [ Html.text "By Category" ]
         }

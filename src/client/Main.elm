@@ -13,6 +13,9 @@ import ReloadableData exposing (ReloadableWebData)
 import Return
 import Set
 import Tree exposing (Tree)
+import UI.Layout
+import UI.Nav.Side
+import UI.Parts.Search
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, top)
 
@@ -156,7 +159,14 @@ view model =
             ProblemPage.view text
 
         ByMediaType ->
-            { title = "Pustaka - Media Type", body = [] }
+            UI.Layout.withSideNav
+                { title = "Pustaka - Browse By Media Type"
+                , sideNav =
+                    model.favoriteCategories
+                        |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
+                        |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+                , content = []
+                }
 
         ByCategory byCategoryModel ->
             ByCategoryPage.view model.key model.favoriteCategories byCategoryModel
@@ -175,15 +185,15 @@ stepUrl url model =
     let
         parser =
             oneOf
-                [ route (s "app") (stepHome model (HomePage.init []))
+                [ route (s "app") (stepHome model (HomePage.init Nothing))
                 , route (s "app" </> s "category" </> int)
                     (\categoryId ->
                         case model.page of
                             Home homeModel ->
-                                stepHome model (HomePage.selectCategories (Set.fromList [ categoryId ]) homeModel)
+                                stepHome model (HomePage.selectCategory (Just categoryId) homeModel)
 
                             _ ->
-                                stepHome model (HomePage.selectCategories (Set.fromList [ categoryId ]) HomePage.initialModel)
+                                stepHome model (HomePage.selectCategory (Just categoryId) HomePage.initialModel)
                     )
                 , route (s "app" </> s "media-types")
                     (stepBrowseByMediaType model)

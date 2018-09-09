@@ -1,4 +1,4 @@
-module UI.Nav.Side exposing (SideNav, toHtml, view, withSearch)
+module UI.Nav.Side exposing (SelectedItem(..), SideNav, toHtml, view, withSearch)
 
 import Browser.Navigation as Nav
 import Css exposing (..)
@@ -19,6 +19,15 @@ import UI.Parts.Search exposing (Search)
 type SideNav msg
     = SideNav (List (Html msg))
     | SideNavWithSearch (Search msg) (List (Html msg))
+
+
+type SelectedItem
+    = NoSelection
+    | Home
+    | CategoryId Int
+    | BrowseByCategory
+    | BrowseByMediaType
+    | Settings
 
 
 toHtml : SideNav msg -> Html msg
@@ -50,8 +59,8 @@ withSearch search sideNav =
             sideNav
 
 
-view : (String -> msg) -> Set Int -> ReloadableWebData () (List Category) -> SideNav msg
-view onLinkClicked selectedCategoryIds data =
+view : (String -> msg) -> SelectedItem -> ReloadableWebData () (List Category) -> SideNav msg
+view onLinkClicked selectedItem data =
     (case data of
         NotAsked _ ->
             []
@@ -60,22 +69,32 @@ view onLinkClicked selectedCategoryIds data =
             [ UI.Loading.view ]
 
         Reloading categories ->
-            [ UI.Loading.view, categoriesView onLinkClicked selectedCategoryIds categories ]
+            [ UI.Loading.view, categoriesView onLinkClicked selectedItem categories ]
 
         Success categories ->
-            [ categoriesView onLinkClicked selectedCategoryIds categories ]
+            [ categoriesView onLinkClicked selectedItem categories ]
 
         Failure error _ ->
             [ UI.Error.view "Error" ]
 
         FailureWithData error categories ->
-            [ categoriesView onLinkClicked selectedCategoryIds categories, UI.Error.view "Error" ]
+            [ categoriesView onLinkClicked selectedItem categories, UI.Error.view "Error" ]
     )
         |> SideNav
 
 
-categoriesView : (String -> msg) -> Set Int -> List Category -> Html msg
-categoriesView onLinkClicked selectedCategoryIds categories =
+isSelectedCategoryId : Int -> SelectedItem -> Bool
+isSelectedCategoryId categoryId selectedItem =
+    case selectedItem of
+        CategoryId selectedCategoryId ->
+            categoryId == selectedCategoryId
+
+        _ ->
+            False
+
+
+categoriesView : (String -> msg) -> SelectedItem -> List Category -> Html msg
+categoriesView onLinkClicked selectedItem categories =
     div
         [ css
             [ marginTop (rem 4)
@@ -106,7 +125,7 @@ categoriesView onLinkClicked selectedCategoryIds categories =
         [ UI.Menu.view
             [ Tree.node
                 { text = "Home"
-                , selected = False
+                , selected = selectedItem == Home
                 , link =
                     UI.Menu.internalLink
                         onLinkClicked
@@ -123,7 +142,7 @@ categoriesView onLinkClicked selectedCategoryIds categories =
                         (\category ->
                             Tree.node
                                 { text = category.name
-                                , selected = Set.member category.id selectedCategoryIds
+                                , selected = isSelectedCategoryId category.id selectedItem
                                 , link =
                                     UI.Menu.internalLink
                                         onLinkClicked
@@ -139,13 +158,13 @@ categoriesView onLinkClicked selectedCategoryIds categories =
                 }
                 [ Tree.node
                     { text = "By Category"
-                    , selected = False
+                    , selected = selectedItem == BrowseByCategory
                     , link = UI.Menu.internalLink onLinkClicked Route.browseByCategoryUrl
                     }
                     []
                 , Tree.node
                     { text = "By Media Type"
-                    , selected = False
+                    , selected = selectedItem == BrowseByMediaType
                     , link = UI.Menu.internalLink onLinkClicked Route.browseByMediaTypeUrl
                     }
                     []
@@ -157,7 +176,7 @@ categoriesView onLinkClicked selectedCategoryIds categories =
                 }
                 [ Tree.node
                     { text = "Settings"
-                    , selected = False
+                    , selected = selectedItem == Settings
                     , link = UI.Menu.noLink
                     }
                     []

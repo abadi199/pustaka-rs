@@ -3,7 +3,7 @@ module Page.Home exposing
     , Msg(..)
     , init
     , initialModel
-    , selectCategories
+    , selectCategory
     , update
     , view
     )
@@ -29,23 +29,19 @@ import UI.Parts.Search
 
 
 type alias Model =
-    { selectedCategoryIds : Set Int
+    { selectedCategoryId : Maybe Int
     , publications : ReloadableWebData () (List Publication.MetaData)
     }
 
 
-init : List Int -> ( Model, Cmd Msg )
-init categoryIds =
-    let
-        selectedCategoryIds =
-            Set.fromList categoryIds
-    in
-    selectCategories selectedCategoryIds initialModel
+init : Maybe Int -> ( Model, Cmd Msg )
+init selectedCategoryId =
+    selectCategory selectedCategoryId initialModel
 
 
 initialModel : Model
 initialModel =
-    { selectedCategoryIds = Set.fromList []
+    { selectedCategoryId = Nothing
     , publications = ReloadableData.NotAsked ()
     }
 
@@ -53,7 +49,7 @@ initialModel =
 type Msg
     = NoOp
     | MenuItemClicked String
-    | CategorySelected (List Int)
+    | CategorySelected (Maybe Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
 
@@ -68,12 +64,8 @@ update key msg model =
             , Nav.pushUrl key url
             )
 
-        CategorySelected ids ->
-            let
-                selectedCategoryIds =
-                    Set.fromList ids
-            in
-            selectCategories selectedCategoryIds model
+        CategorySelected selectedCategoryId ->
+            selectCategory selectedCategoryId model
 
         GetPublicationCompleted publications ->
             ( { model | publications = publications }
@@ -81,23 +73,32 @@ update key msg model =
             )
 
 
-selectCategories : Set Int -> Model -> ( Model, Cmd Msg )
-selectCategories selectedCategoryIds model =
+selectCategory : Maybe Int -> Model -> ( Model, Cmd Msg )
+selectCategory selectedCategoryId model =
     ( { model
-        | selectedCategoryIds = selectedCategoryIds
+        | selectedCategoryId = selectedCategoryId
         , publications =
-            if Set.isEmpty selectedCategoryIds then
-                ReloadableData.NotAsked ()
+            case selectedCategoryId of
+                Nothing ->
+                    ReloadableData.NotAsked ()
 
-            else
-                ReloadableData.loading model.publications
+                Just _ ->
+                    ReloadableData.loading model.publications
       }
-    , selectedCategoryIds
-        |> Set.toList
-        |> List.head
+    , selectedCategoryId
         |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
         |> Maybe.withDefault Cmd.none
     )
+
+
+selectedItem : Maybe Int -> UI.Nav.Side.SelectedItem
+selectedItem selectedCategoryId =
+    case selectedCategoryId of
+        Just id ->
+            UI.Nav.Side.CategoryId id
+
+        Nothing ->
+            UI.Nav.Side.NoSelection
 
 
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -106,7 +107,7 @@ view key categories model =
         { title = "Pustaka - Main"
         , sideNav =
             categories
-                |> UI.Nav.Side.view MenuItemClicked model.selectedCategoryIds
+                |> UI.Nav.Side.view MenuItemClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
         , content = [ mainSection model.publications ]
         }

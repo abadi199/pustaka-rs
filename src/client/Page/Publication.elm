@@ -32,7 +32,7 @@ view categoryData model =
         { title = "Pustaka - Publication"
         , sideNav =
             categoryData
-                |> UI.Nav.Side.view MenuItemClicked (Set.fromList [])
+                |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.NoSelection
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
         , content =
             [ div []
