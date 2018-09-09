@@ -1,16 +1,16 @@
 module Main exposing (main)
 
--- import Route exposing (Route)
-
 import Browser
 import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Html exposing (..)
+import Page.ByCategory as ByCategoryPage
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
 import Page.Publication as PublicationPage
 import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
+import Return
 import Set
 import Tree exposing (Tree)
 import Url
@@ -38,8 +38,8 @@ type alias Model =
 
 type Page
     = Home HomePage.Model
-    | BrowseByCategory
-    | BrowseByMediaType
+    | ByCategory ByCategoryPage.Model
+    | ByMediaType
     | Publication PublicationPage.Model
     | Read ReadPage.Model
     | Problem String
@@ -49,10 +49,15 @@ type Msg
     = NoOp
     | UrlChanged Url.Url
     | LinkClicked Browser.UrlRequest
-    | HomeMsg HomePage.Msg
+    | LoadFavoriteCompleted (ReloadableWebData () (List Category))
+    | PageMsg PageMsg
+
+
+type PageMsg
+    = HomeMsg HomePage.Msg
+    | ByCategoryMsg ByCategoryPage.Msg
     | PublicationMsg PublicationPage.Msg
     | ReadMsg ReadPage.Msg
-    | LoadFavoriteCompleted (ReloadableWebData () (List Category))
 
 
 subscriptions : Model -> Sub Msg
@@ -81,59 +86,55 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        LoadFavoriteCompleted data ->
+            ( { model | favoriteCategories = data }, Cmd.none )
+
         UrlChanged url ->
             stepUrl url model
 
-        LinkClicked urlRequest ->
-            case urlRequest of
-                Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
+        LinkClicked url ->
+            gotoUrl model url
 
-                Browser.External href ->
-                    ( model, Nav.load href )
+        PageMsg pageMsg ->
+            pageUpdate pageMsg model
 
-        HomeMsg homeMsg ->
-            case model.page of
-                Home homeModel ->
-                    let
-                        ( newHomeModel, cmds ) =
-                            HomePage.update model.key homeMsg homeModel
-                    in
-                    ( { model | page = Home newHomeModel }
-                    , cmds |> Cmd.map HomeMsg
-                    )
 
-                _ ->
-                    ( model, Cmd.none )
+pageUpdate : PageMsg -> Model -> ( Model, Cmd Msg )
+pageUpdate msg model =
+    case ( msg, model.page ) of
+        ( HomeMsg pageMsg, Home pageModel ) ->
+            HomePage.update model.key pageMsg pageModel
+                |> Return.mapBoth (PageMsg << HomeMsg) (updatePage model Home)
 
-        PublicationMsg pubMsg ->
-            case model.page of
-                Publication pubModel ->
-                    let
-                        ( newPubModel, cmds ) =
-                            PublicationPage.update model.key pubMsg pubModel
-                    in
-                    ( { model | page = Publication newPubModel }
-                    , cmds |> Cmd.map PublicationMsg
-                    )
+        ( ByCategoryMsg pageMsg, ByCategory pageModel ) ->
+            ByCategoryPage.update model.key pageMsg pageModel
+                |> Return.mapBoth (PageMsg << ByCategoryMsg) (updatePage model ByCategory)
 
-                _ ->
-                    ( model, Cmd.none )
+        ( PublicationMsg pageMsg, Publication pageModel ) ->
+            PublicationPage.update model.key pageMsg pageModel
+                |> Return.mapBoth (PageMsg << PublicationMsg) (updatePage model Publication)
 
-        ReadMsg readMsg ->
-            case model.page of
-                Read readModel ->
-                    let
-                        ( newReadModel, cmds ) =
-                            ReadPage.update readMsg readModel
-                    in
-                    ( { model | page = Read newReadModel }, cmds |> Cmd.map ReadMsg )
+        ( ReadMsg pageMsg, Read pageModel ) ->
+            ReadPage.update pageMsg pageModel
+                |> Return.mapBoth (PageMsg << ReadMsg) (updatePage model Read)
 
-                _ ->
-                    ( model, Cmd.none )
+        _ ->
+            ( model, Cmd.none )
 
-        LoadFavoriteCompleted data ->
-            ( { model | favoriteCategories = data }, Cmd.none )
+
+gotoUrl : Model -> Browser.UrlRequest -> ( Model, Cmd Msg )
+gotoUrl model url =
+    case url of
+        Browser.Internal internalUrl ->
+            ( model, Nav.pushUrl model.key (Url.toString internalUrl) )
+
+        Browser.External externalUrl ->
+            ( model, Nav.load externalUrl )
+
+
+updatePage : Model -> (a -> Page) -> a -> Model
+updatePage model page pageModel =
+    { model | page = page pageModel }
 
 
 view : Model -> Browser.Document Msg
@@ -141,24 +142,25 @@ view model =
     case model.page of
         Home homeModel ->
             HomePage.view model.key model.favoriteCategories homeModel
-                |> mapPage HomeMsg
+                |> mapPage (PageMsg << HomeMsg)
 
         Publication publicationModel ->
             PublicationPage.view model.favoriteCategories publicationModel
-                |> mapPage PublicationMsg
+                |> mapPage (PageMsg << PublicationMsg)
 
         Read readModel ->
             ReadPage.view readModel
-                |> mapPage ReadMsg
+                |> mapPage (PageMsg << ReadMsg)
 
         Problem text ->
             ProblemPage.view text
 
-        BrowseByMediaType ->
+        ByMediaType ->
             { title = "Pustaka - Media Type", body = [] }
 
-        BrowseByCategory ->
-            { title = "Pustaka - Category", body = [] }
+        ByCategory byCategoryModel ->
+            ByCategoryPage.view model.key model.favoriteCategories byCategoryModel
+                |> mapPage (PageMsg << ByCategoryMsg)
 
 
 mapPage : (a -> b) -> Browser.Document a -> Browser.Document b
@@ -186,7 +188,7 @@ stepUrl url model =
                 , route (s "app" </> s "media-types")
                     (stepBrowseByMediaType model)
                 , route (s "app" </> s "categories")
-                    (stepBrowseByCategory model)
+                    (stepByCategory model ByCategoryPage.init)
                 , route (s "app" </> s "pub" </> int)
                     (\pubId -> stepPublication model (PublicationPage.init pubId))
                 , route (s "app" </> s "read" </> int)
@@ -209,25 +211,31 @@ route parser handler =
 stepHome : Model -> ( HomePage.Model, Cmd HomePage.Msg ) -> ( Model, Cmd Msg )
 stepHome model ( homeModel, cmds ) =
     ( { model | page = Home homeModel }
-    , Cmd.map HomeMsg cmds
+    , Cmd.map (PageMsg << HomeMsg) cmds
     )
 
 
-stepBrowseByCategory : Model -> ( Model, Cmd Msg )
-stepBrowseByCategory model =
-    ( { model | page = BrowseByCategory }, Cmd.none )
+stepByCategory : Model -> ( ByCategoryPage.Model, Cmd ByCategoryPage.Msg ) -> ( Model, Cmd Msg )
+stepByCategory model ( byCategoryModel, cmds ) =
+    ( { model | page = ByCategory byCategoryModel }
+    , Cmd.map (PageMsg << ByCategoryMsg) cmds
+    )
 
 
 stepBrowseByMediaType : Model -> ( Model, Cmd Msg )
 stepBrowseByMediaType model =
-    ( { model | page = BrowseByMediaType }, Cmd.none )
+    ( { model | page = ByMediaType }, Cmd.none )
 
 
 stepPublication : Model -> ( PublicationPage.Model, Cmd PublicationPage.Msg ) -> ( Model, Cmd Msg )
 stepPublication model ( pubModel, cmds ) =
-    ( { model | page = Publication pubModel }, Cmd.map PublicationMsg cmds )
+    ( { model | page = Publication pubModel }
+    , Cmd.map (PageMsg << PublicationMsg) cmds
+    )
 
 
 stepRead : Model -> ( ReadPage.Model, Cmd ReadPage.Msg ) -> ( Model, Cmd Msg )
 stepRead model ( readModel, cmds ) =
-    ( { model | page = Read readModel }, Cmd.map ReadMsg cmds )
+    ( { model | page = Read readModel }
+    , Cmd.map (PageMsg << ReadMsg) cmds
+    )
