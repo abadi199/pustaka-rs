@@ -24,7 +24,14 @@ withSideNav { title, sideNav, content } =
             ((sideNav
                 |> UI.Nav.Side.toHtml
              )
-                :: [ div [ css [ padding (rem 2) ] ] content ]
+                :: [ div
+                        [ css
+                            [ position relative
+                            , padding (rem 2)
+                            ]
+                        ]
+                        content
+                   ]
             )
         ]
             |> List.map Html.Styled.toUnstyled

@@ -10,6 +10,7 @@ import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
 import Tree
+import UI.Css.Basics
 import UI.Error
 import UI.Loading
 import UI.Menu
@@ -37,7 +38,7 @@ toHtml sideNav =
             [ backgroundColor (rgba 0 0 0 0.2)
             , color (rgba 255 255 255 1)
             , padding (rem 1)
-            , boxShadow4 (px 2) (px 0) (px 10) (rgba 0 0 0 0.25)
+            , UI.Css.Basics.containerShadow
             ]
         ]
         (case sideNav of
