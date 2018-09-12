@@ -1,5 +1,6 @@
 module Route exposing
-    ( browseByCategoryUrl
+    ( browseByCategoryIdUrl
+    , browseByCategoryUrl
     , browseByMediaTypeUrl
     , categoryUrl
     , homeUrl
@@ -41,6 +42,11 @@ readUrl id =
 browseByCategoryUrl : String
 browseByCategoryUrl =
     baseUrl ++ "/categories"
+
+
+browseByCategoryIdUrl : Int -> String
+browseByCategoryIdUrl categoryId =
+    browseByCategoryUrl ++ "/" ++ String.fromInt categoryId
 
 
 browseByMediaTypeUrl : String

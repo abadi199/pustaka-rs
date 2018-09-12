@@ -1,14 +1,14 @@
-module Entity.Category
-    exposing
-        ( Category
-        , create
-        , decoder
-        , delete
-        , favorite
-        , get
-        , list
-        , update
-        )
+module Entity.Category exposing
+    ( Category
+    , create
+    , decoder
+    , delete
+    , favorite
+    , get
+    , list
+    , tree
+    , update
+    )
 
 import Json.Decode as JD
 import Json.Encode as JE
@@ -37,8 +37,17 @@ decoder =
         (JD.field "parent_id" (JD.nullable JD.int))
 
 
-list : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
+list : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
 list msg =
+    ReloadableData.Http.get
+        ()
+        "/api/category"
+        msg
+        (JD.list decoder)
+
+
+tree : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
+tree msg =
     ReloadableData.Http.get
         ()
         "/api/category"

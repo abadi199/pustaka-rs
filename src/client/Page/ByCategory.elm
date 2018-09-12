@@ -10,30 +10,38 @@ import Browser
 import Browser.Navigation as Nav
 import Css exposing (..)
 import Entity.Category exposing (Category)
+import Html.Extra
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableWebData)
+import Route
 import Set
 import UI.Css.Basics
 import UI.Css.Color
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Search
+import UI.ReloadableData
 
 
 type alias Model =
-    { categories : ReloadableWebData () (List Category) }
+    { categories : ReloadableWebData () (List Category)
+    , selectedCategoryId : Maybe Int
+    }
 
 
 type Msg
     = NoOp
     | MenuItemClicked String
+    | LoadCategoryCompleted (ReloadableWebData () (List Category))
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { categories = ReloadableData.NotAsked () }
-    , Cmd.none
+init : Maybe Int -> ( Model, Cmd Msg )
+init selectedCategoryId =
+    ( { categories = ReloadableData.Loading ()
+      , selectedCategoryId = selectedCategoryId
+      }
+    , Entity.Category.list LoadCategoryCompleted
     )
 
 
@@ -44,7 +52,10 @@ update key msg model =
             ( model, Cmd.none )
 
         MenuItemClicked url ->
-            ( model, Cmd.none )
+            ( model, Nav.pushUrl key url )
+
+        LoadCategoryCompleted categories ->
+            ( { model | categories = categories }, Cmd.none )
 
 
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -63,6 +74,41 @@ view key categories model =
 
 categorySliderView : Nav.Key -> Model -> Html Msg
 categorySliderView key model =
+    div
+        [ css
+            [ position absolute
+            , top zero
+            , left zero
+            , Css.width (pct 100)
+            , backgroundColor (rgba 255 255 255 0.73)
+            , UI.Css.Basics.containerShadow
+            ]
+        ]
+        [ div [ css [ margin (rem 1) ] ]
+            (UI.ReloadableData.view (categoriesView key model) model.categories)
+        ]
+
+
+categoriesView : Nav.Key -> Model -> List Category -> Html Msg
+categoriesView key model categories =
+    ul
+        [ css
+            [ listStyle none
+            , padding zero
+            , margin zero
+            , displayFlex
+            ]
+        ]
+        (categoryView key model "All" Nothing
+            :: (categories
+                    |> List.take 5
+                    |> List.map (\category -> categoryView key model category.name (Just category.id))
+               )
+        )
+
+
+categoryView : Nav.Key -> Model -> String -> Maybe Int -> Html Msg
+categoryView key model categoryName maybeCategoryId =
     let
         listItemStyle =
             batch
@@ -75,31 +121,26 @@ categorySliderView key model =
         currentStyle =
             batch [ fontWeight bold ]
     in
-    div
+    li
         [ css
-            [ position absolute
-            , top zero
-            , left zero
-            , width (pct 100)
-            , backgroundColor (rgba 255 255 255 0.73)
-            , UI.Css.Basics.containerShadow
+            [ listItemStyle
+            , if model.selectedCategoryId == maybeCategoryId then
+                currentStyle
+
+              else
+                batch []
             ]
         ]
-        [ div [ css [ margin (rem 1) ] ]
-            [ ul
-                [ css
-                    [ listStyle none
-                    , padding zero
-                    , margin zero
-                    , displayFlex
-                    ]
-                ]
-                [ li [ css [ listItemStyle, currentStyle ] ] [ text "All" ]
-                , li [ css [ listItemStyle ] ] [ text "Programming Book" ]
-                , li [ css [ listItemStyle ] ] [ text "Comics / Graphics Novel" ]
-                , li [ css [ listItemStyle ] ] [ text "Science Fiction" ]
-                , li [ css [ listItemStyle ] ] [ text "Novel" ]
-                , li [ css [ listItemStyle ] ] [ text "Manga" ]
-                ]
-            ]
+        [ case maybeCategoryId of
+            Just categoryId ->
+                Html.Extra.link MenuItemClicked
+                    (Route.browseByCategoryIdUrl categoryId)
+                    [ css [ color unset ] ]
+                    [ text categoryName ]
+
+            Nothing ->
+                Html.Extra.link MenuItemClicked
+                    Route.browseByCategoryUrl
+                    [ css [ color unset ] ]
+                    [ text categoryName ]
         ]
