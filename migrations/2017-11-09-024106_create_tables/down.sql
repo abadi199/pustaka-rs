@@ -6,3 +6,4 @@ DROP TABLE publication_category;
 DROP TABLE publication_tag;
 DROP TABLE tag;
 DROP TABLE favorite_category;
+DROP TABLE user;

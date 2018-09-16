@@ -17,5 +17,5 @@ extern crate unrar;
 pub mod api;
 pub mod db;
 pub mod models;
-pub mod schema;
 pub mod reader;
+pub mod schema;

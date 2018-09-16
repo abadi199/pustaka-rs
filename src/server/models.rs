@@ -1,4 +1,6 @@
-use schema::{author, category, media_type, publication, publication_category, tag, favorite_category};
+use schema::{
+    author, category, favorite_category, media_type, publication, publication_category, tag,
+};
 use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
@@ -56,7 +58,8 @@ pub struct NewPublication {
 }
 
 #[derive(Identifiable, Debug, Queryable, Deserialize, Associations)]
-#[belongs_to(MediaType, Author)]
+#[belongs_to(MediaType)]
+#[belongs_to(Author)]
 #[table_name = "publication"]
 pub struct Publication {
     pub id: i32,

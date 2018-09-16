@@ -8,13 +8,17 @@
     "postinstall": "cargo install watchexec",
     "watch": "watchexec -w src/client 'elm make src/client/Main.elm --output app/app.js'",
     "build": "tput reset && elm make src/client/Main.elm --optimize --output app/app.js",
-    "start": "cargo run --bin pustaka",
-    "seed": "cargo run --bin seed"
+    "start:server": "cargo run --bin pustaka",
+    "seed": "cargo run --bin seed",
+    "start": "run-p watch start:server"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+  },
+  "devDependencies": {
     "elm": "0.19.0-bugfix2",
-    "elm-format": "0.8.0"
+    "elm-format": "0.8.0",
+    "npm-run-all": "^4.1.3"
   }
 }

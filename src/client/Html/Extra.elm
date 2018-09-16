@@ -1,7 +1,8 @@
 module Html.Extra exposing (link)
 
+import Css exposing (..)
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (href)
+import Html.Styled.Attributes exposing (css, href)
 import Html.Styled.Events exposing (..)
 import Json.Decode as JD
 
@@ -11,6 +12,7 @@ link msg url attrs children =
     a
         (href url
             :: preventDefaultOn "click" (JD.succeed ( msg url, True ))
+            :: css [ color unset ]
             :: attrs
         )
         children

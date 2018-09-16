@@ -18,6 +18,7 @@ import Route
 import Set
 import UI.Css.Basics
 import UI.Css.Color
+import UI.Icon.Navigation
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Search
@@ -84,8 +85,24 @@ categorySliderView key model =
             , UI.Css.Basics.containerShadow
             ]
         ]
-        [ div [ css [ margin (rem 1) ] ]
-            (UI.ReloadableData.view (categoriesView key model) model.categories)
+        [ div
+            [ css
+                [ margin (rem 1)
+                , displayFlex
+                , flexDirection row
+                , justifyContent spaceBetween
+                , alignItems flexEnd
+                ]
+            ]
+            (UI.ReloadableData.view (categoriesView key model) model.categories
+                ++ [ Html.Extra.link MenuItemClicked
+                        ""
+                        [ css [ whiteSpace noWrap, displayFlex, alignItems center ] ]
+                        [ UI.Icon.Navigation.expandMore
+                        , Html.text "All Categories"
+                        ]
+                   ]
+            )
         ]
 
 
@@ -97,6 +114,7 @@ categoriesView key model categories =
             , padding zero
             , margin zero
             , displayFlex
+            , flexWrap Css.wrap
             ]
         ]
         (categoryView key model "All" Nothing

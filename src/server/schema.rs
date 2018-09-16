@@ -59,6 +59,13 @@ table! {
     }
 }
 
+table! {
+    user (id) {
+        id -> Integer,
+        username -> Text,
+    }
+}
+
 joinable!(favorite_category -> category (category_id));
 joinable!(publication -> author (author_id));
 joinable!(publication -> media_type (media_type_id));
@@ -76,4 +83,5 @@ allow_tables_to_appear_in_same_query!(
     publication_category,
     publication_tag,
     tag,
+    user,
 );
