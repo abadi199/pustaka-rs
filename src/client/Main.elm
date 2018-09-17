@@ -204,7 +204,7 @@ stepUrl url model =
                 , route (s "app" </> s "pub" </> int)
                     (\pubId -> stepPublication model (PublicationPage.init pubId))
                 , route (s "app" </> s "read" </> int)
-                    (\pubId -> stepRead model (ReadPage.init pubId))
+                    (\pubId -> stepRead model (ReadPage.init pubId Nothing))
                 ]
     in
     case Parser.parse parser url of

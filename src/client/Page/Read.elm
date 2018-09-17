@@ -10,10 +10,12 @@ module Page.Read exposing
 import Browser
 import Css exposing (..)
 import Entity.Publication as Publication
+import Html.Extra
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
+import Route
 import Task
 import UI.ReloadableData
 
@@ -21,6 +23,7 @@ import UI.ReloadableData
 type alias Model =
     { publication : ReloadableWebData Int Publication.Data
     , currentPage : PageView
+    , previousUrl : Maybe String
     }
 
 
@@ -33,17 +36,21 @@ type Msg
     = GetDataCompleted (ReloadableWebData Int Publication.Data)
     | NextPage
     | PreviousPage
+    | BackLinkClicked
 
 
-init : Int -> ( Model, Cmd Msg )
-init pubId =
-    ( initialModel pubId, Publication.read pubId |> Task.perform GetDataCompleted )
+init : Int -> Maybe String -> ( Model, Cmd Msg )
+init pubId previousUrl =
+    ( initialModel pubId previousUrl
+    , Publication.read pubId |> Task.perform GetDataCompleted
+    )
 
 
-initialModel : Int -> Model
-initialModel pubId =
+initialModel : Int -> Maybe String -> Model
+initialModel pubId previousUrl =
     { publication = Loading pubId
     , currentPage = DoublePage 1 2
+    , previousUrl = previousUrl
     }
 
 
@@ -62,7 +69,7 @@ view model =
                         , Css.height (vh 100)
                         ]
                     ]
-                    [ left pub
+                    [ left pub model.previousUrl
                     , pages pub model.currentPage
                     , right pub
                     ]
@@ -72,8 +79,8 @@ view model =
     }
 
 
-left : Publication.Data -> Html Msg
-left pub =
+left : Publication.Data -> Maybe String -> Html Msg
+left pub previousUrl =
     div
         [ css
             [ backgroundColor (rgba 0 0 0 0.95)
@@ -83,7 +90,9 @@ left pub =
             ]
         , onClick PreviousPage
         ]
-        [ text pub.title ]
+        [ div [] [ text pub.title ]
+        , div [] [ Html.Extra.link (always BackLinkClicked) (previousUrl |> Maybe.withDefault (Route.publicationUrl pub.id)) [] [ text "<< Back" ] ]
+        ]
 
 
 pages : Publication.Data -> PageView -> Html Msg
@@ -135,6 +144,9 @@ update msg model =
 
         NextPage ->
             ( { model | currentPage = nextPage model.currentPage }, Cmd.none )
+
+        BackLinkClicked ->
+            ( model, Cmd.none )
 
 
 previousPage : PageView -> PageView
