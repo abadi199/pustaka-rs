@@ -12,6 +12,10 @@ path = "src/server/main.rs"
 name = "seed"
 path = "src/server/seed.rs"
 
+[[bin]]
+name = "scanner"
+path = "src/server/scanner.rs"
+
 [lib]
 name = "pustaka"
 path = "src/server/lib.rs"
@@ -29,3 +33,4 @@ serde_json = "1.0"
 serde_derive = "1.0"
 csv = "1"
 unrar = "0.4.3"
+actix = "0.7"

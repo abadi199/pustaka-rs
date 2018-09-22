@@ -30,6 +30,7 @@ fn redirect_to_app() -> Redirect {
 fn main() {
     rocket::ignite()
         .manage(pustaka::db::create_db_pool())
+        .manage(pustaka::config::get_config())
         .mount("/app", routes![files, index])
         .mount("/api/category", pustaka::api::category::routes())
         .mount("/api/media_type", pustaka::api::media_type::routes())
