@@ -45,14 +45,12 @@ fn main() {
     // start http server
     server::new(move || {
         vec![
-            App::with_state(AppState {
-                categoryDb: addr.clone(),
-            }).middleware(middleware::Logger::default())
-            .prefix("/api/category")
-            .resource("/favorite", |r| {
-                r.method(http::Method::GET)
-                    .with(pustaka::api::category::favorite)
-            }),
+            pustaka::api::category::create_app(
+                AppState {
+                    categoryDb: addr.clone(),
+                },
+                "/api/category",
+            ),
             App::with_state(AppState {
                 categoryDb: addr.clone(),
             }).resource(r"/{tail:.*}", |r| r.method(http::Method::GET).f(index)),

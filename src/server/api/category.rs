@@ -2,32 +2,49 @@ extern crate diesel;
 
 // use db::DbConn;
 // use models::*;
-use actix::prelude::*;
-use actix_web::{AsyncResponder, FutureResponse, HttpResponse, Path, State};
-
+use actix_web::http::Method;
+use actix_web::Json;
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Path, State};
+use db::category::Create;
 use db::category::Favorite;
-use futures::future;
+use db::category::List;
 use futures::Future;
+use models::NewCategory;
 use state::AppState;
-// use rocket::Route;
-// use rocket_contrib::Json;
 
-// #[get("/")]
-// fn list(connection: DbConn) -> Json<Vec<Category>> {
-//     let categories = category
-//         .load::<Category>(&*connection)
-//         .expect("Error loading categories");
-//     Json(categories)
-// }
+fn favorite(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .categoryDb
+        .send(Favorite {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
+}
 
-// #[post("/", data = "<json>")]
-// fn create(json: Json<NewCategory>, connection: DbConn) {
-//     let new_category = &json.0;
-//     diesel::insert_into(category)
-//         .values(new_category)
-//         .execute(&*connection)
-//         .expect("Error inserting category");
-// }
+fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .categoryDb
+        .send(List {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
+}
+
+fn create(state: State<AppState>, json: Json<NewCategory>) -> FutureResponse<HttpResponse> {
+    state
+        .categoryDb
+        .send(Create {
+            new_category: json.into_inner(),
+        }).from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
+}
 
 // #[put("/", data = "<json>")]
 // fn update(json: Json<Category>, connection: DbConn) {
@@ -62,20 +79,11 @@ use state::AppState;
 //     }
 // }
 
-pub fn favorite(state: State<AppState>) -> FutureResponse<HttpResponse> {
-    state
-        .categoryDb
-        .send(Favorite {})
-        .from_err()
-        .and_then(|res| match res {
-            Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
-}
-
-pub fn handlers((path, state): (Path<String>, State<AppState>)) -> FutureResponse<HttpResponse> {
-    match path.as_str() {
-        "favorite" => favorite(state),
-        _ => future::ok(HttpResponse::NotFound().into()).responder(),
-    }
+pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
+    App::with_state(state)
+        .middleware(middleware::Logger::default())
+        .prefix(prefix)
+        .resource("/", |r| r.method(Method::GET).with(list))
+        .resource("/", |r| r.method(Method::POST).with(create))
+        .resource("/favorite", |r| r.method(Method::GET).with(favorite))
 }
