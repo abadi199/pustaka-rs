@@ -21,9 +21,6 @@ name = "pustaka"
 path = "src/server/lib.rs"
 
 [dependencies]
-rocket = "0.3.11"
-rocket_codegen = "0.3.11"
-rocket_contrib = "0.3.11" 
 diesel = { version = "1.3.0", features = ["sqlite"] }
 dotenv = "0.9.0"
 r2d2 = "0.8.2"
@@ -34,3 +31,5 @@ serde_derive = "1.0"
 csv = "1"
 unrar = "0.4.3"
 actix = "0.7"
+actix-web = "0.7.8"
+futures = "0.1.24"

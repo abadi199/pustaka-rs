@@ -1,43 +1,66 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
-
+extern crate actix;
+extern crate actix_web;
 extern crate diesel;
 extern crate pustaka;
-extern crate rocket;
-extern crate rocket_contrib;
 
-use rocket::response::NamedFile;
-use rocket::response::Redirect;
+use actix::prelude::*;
+use actix_web::dev::Params;
+use actix_web::{fs::NamedFile, http, middleware, server, App, HttpRequest, HttpResponse, Result};
+use pustaka::db::category::CategoryDbExecutor;
+use pustaka::state::AppState;
 use std::path::{Path, PathBuf};
+// #[get("/<file..>")]
+// fn files(file: PathBuf) -> Option<NamedFile> {
+//     println!("{:?}", file);
+//     NamedFile::open(Path::new("app").join(file)).ok()
+// }
 
-#[get("/<file..>")]
-fn files(file: PathBuf) -> Option<NamedFile> {
-    println!("{:?}", file);
-    NamedFile::open(Path::new("app").join(file)).ok()
+fn index(req: &HttpRequest<AppState>) -> Result<NamedFile> {
+    let mut path: PathBuf = PathBuf::from("./app");
+    let index: PathBuf = PathBuf::from("index.html");
+    let file: PathBuf = req.match_info().query("tail").unwrap_or(index.clone());
+    println!("file: {:?}", file);
+    if file.clone().into_os_string() == "" {
+        path.push(index);
+    } else {
+        path.push(file);
+    }
+
+    println!("path: {:?}", path);
+    Ok(NamedFile::open(path)?)
 }
 
-#[get("/")]
-#[error(404)]
-fn index() -> Option<NamedFile> {
-    NamedFile::open(Path::new("app/index.html")).ok()
-}
-
-#[get("/")]
-fn redirect_to_app() -> Redirect {
-    Redirect::permanent("/app")
-}
+// #[get("/")]
+// fn redirect_to_app() -> Redirect {
+// Redirect::permanent("/app")
+// }
 
 fn main() {
-    rocket::ignite()
-        .manage(pustaka::db::create_db_pool())
-        .manage(pustaka::config::get_config())
-        .mount("/app", routes![files, index])
-        .mount("/api/category", pustaka::api::category::routes())
-        .mount("/api/media_type", pustaka::api::media_type::routes())
-        .mount("/api/author", pustaka::api::author::routes())
-        .mount("/api/tag", pustaka::api::tag::routes())
-        .mount("/api/publication", pustaka::api::publication::routes())
-        .mount("/", routes![redirect_to_app])
-        .catch(errors![index])
-        .launch();
+    let sys = actix::System::new("pustaka");
+
+    // start db executor
+    let pool = pustaka::db::create_db_pool();
+    let addr = SyncArbiter::start(3, move || CategoryDbExecutor(pool.clone()));
+
+    // start http server
+    server::new(move || {
+        vec![
+            App::with_state(AppState {
+                categoryDb: addr.clone(),
+            }).middleware(middleware::Logger::default())
+            .prefix("/api/category")
+            .resource("/favorite", |r| {
+                r.method(http::Method::GET)
+                    .with(pustaka::api::category::favorite)
+            }),
+            App::with_state(AppState {
+                categoryDb: addr.clone(),
+            }).resource(r"/{tail:.*}", |r| r.method(http::Method::GET).f(index)),
+        ]
+    }).bind("0.0.0.0:8080")
+    .unwrap()
+    .start();
+
+    println!("Started pustaka server at 0.0.0.0:8080");
+    let _ = sys.run();
 }
