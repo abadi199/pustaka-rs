@@ -13,21 +13,41 @@ use schema::category::dsl::*;
 pub struct CategoryDbExecutor(pub Pool<ConnectionManager<SqliteConnection>>);
 
 pub struct Favorite {}
-pub struct List {}
-pub struct Create {
-    pub new_category: NewCategory,
-}
-
 impl Message for Favorite {
     type Result = Result<Vec<Category>, Error>;
 }
 
+pub struct List {}
 impl Message for List {
     type Result = Result<Vec<Category>, Error>;
 }
 
+pub struct Create {
+    pub new_category: NewCategory,
+}
 impl Message for Create {
     type Result = Result<(), Error>;
+}
+
+pub struct Update {
+    pub category: Category,
+}
+impl Message for Update {
+    type Result = Result<(), Error>;
+}
+
+pub struct Delete {
+    pub category_id: i32,
+}
+impl Message for Delete {
+    type Result = Result<(), Error>;
+}
+
+pub struct Get {
+    pub category_id: i32,
+}
+impl Message for Get {
+    type Result = Result<Category, Error>;
 }
 
 impl Actor for CategoryDbExecutor {
@@ -77,5 +97,54 @@ impl Handler<Create> for CategoryDbExecutor {
             .execute(&*connection)
             .expect("Error inserting category");
         Ok(())
+    }
+}
+
+impl Handler<Update> for CategoryDbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: Update, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        diesel::update(category.filter(id.eq(msg.category.id)))
+            .set(msg.category)
+            .execute(&*connection)
+            .expect("Error updating category");
+        Ok(())
+    }
+}
+
+impl Handler<Delete> for CategoryDbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: Delete, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        diesel::delete(category.filter(id.eq(msg.category_id)))
+            .execute(&*connection)
+            .expect(&format!("Error deleting category {}", msg.category_id));
+        Ok(())
+    }
+}
+
+impl Handler<Get> for CategoryDbExecutor {
+    type Result = Result<Category, Error>;
+
+    fn handle(&mut self, msg: Get, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        let mut row = category
+            .filter(id.eq(msg.category_id))
+            .limit(1)
+            .load(&*connection)
+            .expect(&format!(
+                "Error loading category with id {}",
+                msg.category_id
+            ));
+
+        match row.is_empty() {
+            true => panic!(format!(
+                "category with id of {} can't be found",
+                msg.category_id
+            )),
+            false => Ok(row.remove(0)),
+        }
     }
 }
