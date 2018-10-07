@@ -4,7 +4,6 @@ extern crate diesel;
 extern crate pustaka;
 
 use actix::prelude::*;
-use actix_web::dev::Params;
 use actix_web::{fs::NamedFile, http, middleware, server, App, HttpRequest, HttpResponse, Result};
 use pustaka::db::category::CategoryDbExecutor;
 use pustaka::state::AppState;
@@ -15,18 +14,20 @@ use std::path::{Path, PathBuf};
 //     NamedFile::open(Path::new("app").join(file)).ok()
 // }
 
+fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
+    let mut path: PathBuf = PathBuf::from("./app/assets");
+    let file: PathBuf = req.match_info().query("tail").unwrap();
+    println!("file: {:?}", file);
+    path.push(file);
+    Ok(NamedFile::open(path)?)
+}
+
 fn index(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let mut path: PathBuf = PathBuf::from("./app");
     let index: PathBuf = PathBuf::from("index.html");
-    let file: PathBuf = req.match_info().query("tail").unwrap_or(index.clone());
-    println!("file: {:?}", file);
-    if file.clone().into_os_string() == "" {
-        path.push(index);
-    } else {
-        path.push(file);
-    }
+    println!("index");
+    path.push(index);
 
-    println!("path: {:?}", path);
     Ok(NamedFile::open(path)?)
 }
 
@@ -41,6 +42,9 @@ fn main() {
     // start db executor
     let pool = pustaka::db::create_db_pool();
     let addr = SyncArbiter::start(3, move || CategoryDbExecutor(pool.clone()));
+    let state = AppState {
+        categoryDb: addr.clone(),
+    };
 
     // start http server
     server::new(move || {
@@ -53,7 +57,9 @@ fn main() {
             ),
             App::with_state(AppState {
                 categoryDb: addr.clone(),
-            }).resource(r"/{tail:.*}", |r| r.method(http::Method::GET).f(index)),
+            }).resource("/assets/{tail:.*}", |r| {
+                r.method(http::Method::GET).f(assets)
+            }).resource("/{tail:.*}", |r| r.method(http::Method::GET).f(index)),
         ]
     }).bind("0.0.0.0:8080")
     .unwrap()

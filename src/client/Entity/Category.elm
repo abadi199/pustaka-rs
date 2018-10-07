@@ -59,7 +59,7 @@ favorite : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
 favorite msg =
     ReloadableData.Http.get
         ()
-        "/api/category/favorite"
+        "/api/category/favorite/"
         msg
         (JD.list decoder)
 

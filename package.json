@@ -6,8 +6,8 @@
   "scripts": {
     "rustup": "rustup override set nightly-2018-05-15",
     "postinstall": "cargo install --version 1.9.2 watchexec",
-    "watch": "watchexec --restart -w src 'elm make src/client/Main.elm --output app/app.js; npm run start:server'",
-    "build": "tput reset && elm make src/client/Main.elm --optimize --output app/app.js",
+    "watch": "watchexec --restart -w src 'elm make src/client/Main.elm --output app/assets/app.js; npm run start:server'",
+    "build": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
     "start:server": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed",
     "start": "npm run watch"

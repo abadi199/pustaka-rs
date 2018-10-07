@@ -185,8 +185,8 @@ stepUrl url model =
     let
         parser =
             oneOf
-                [ route (s "app") (stepHome model (HomePage.init Nothing))
-                , route (s "app" </> s "category" </> int)
+                [ route top (stepHome model (HomePage.init Nothing))
+                , route (top </> s "category" </> int)
                     (\categoryId ->
                         case model.page of
                             Home homeModel ->
@@ -195,15 +195,15 @@ stepUrl url model =
                             _ ->
                                 stepHome model (HomePage.selectCategory (Just categoryId) HomePage.initialModel)
                     )
-                , route (s "app" </> s "media-types")
+                , route (top </> s "media-types")
                     (stepBrowseByMediaType model)
-                , route (s "app" </> s "categories")
+                , route (top </> s "categories")
                     (stepByCategory model (ByCategoryPage.init Nothing))
-                , route (s "app" </> s "categories" </> int)
+                , route (top </> s "categories" </> int)
                     (\categoryId -> stepByCategory model (ByCategoryPage.init (Just categoryId)))
-                , route (s "app" </> s "pub" </> int)
+                , route (top </> s "pub" </> int)
                     (\pubId -> stepPublication model (PublicationPage.init pubId))
-                , route (s "app" </> s "read" </> int)
+                , route (top </> s "read" </> int)
                     (\pubId -> stepRead model (ReadPage.init pubId Nothing))
                 ]
     in
@@ -212,7 +212,7 @@ stepUrl url model =
             answer
 
         Nothing ->
-            ( { model | page = Problem "Not Found" }, Cmd.none )
+            ( { model | page = Problem "404" }, Cmd.none )
 
 
 route : Parser a b -> a -> Parser (b -> c) c

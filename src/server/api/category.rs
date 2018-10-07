@@ -11,6 +11,7 @@ use models::{Category, NewCategory};
 use state::AppState;
 
 fn favorite(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    println!("Favorite");
     state
         .categoryDb
         .send(Favorite {})
@@ -18,7 +19,8 @@ fn favorite(state: State<AppState>) -> FutureResponse<HttpResponse> {
         .and_then(|res| match res {
             Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
@@ -29,7 +31,8 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
         .and_then(|res| match res {
             Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn create(state: State<AppState>, json: Json<NewCategory>) -> FutureResponse<HttpResponse> {
@@ -37,11 +40,13 @@ fn create(state: State<AppState>, json: Json<NewCategory>) -> FutureResponse<Htt
         .categoryDb
         .send(Create {
             new_category: json.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn update(state: State<AppState>, json: Json<Category>) -> FutureResponse<HttpResponse> {
@@ -49,11 +54,13 @@ fn update(state: State<AppState>, json: Json<Category>) -> FutureResponse<HttpRe
         .categoryDb
         .send(Update {
             category: json.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn delete(state: State<AppState>, category_id: Path<i32>) -> FutureResponse<HttpResponse> {
@@ -61,11 +68,13 @@ fn delete(state: State<AppState>, category_id: Path<i32>) -> FutureResponse<Http
         .categoryDb
         .send(Delete {
             category_id: category_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(err) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn get(state: State<AppState>, category_id: Path<i32>) -> FutureResponse<HttpResponse> {
@@ -73,11 +82,13 @@ fn get(state: State<AppState>, category_id: Path<i32>) -> FutureResponse<HttpRes
         .categoryDb
         .send(Get {
             category_id: category_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(category) => Ok(HttpResponse::Ok().json(category)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
@@ -89,5 +100,5 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .route("/", Method::PUT, update)
         .route("/{category_id}", Method::DELETE, delete)
         .route("/{category_id}", Method::GET, get)
-        .route("/favorite", Method::GET, favorite)
+        .route("/favorite/", Method::GET, favorite)
 }

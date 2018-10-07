@@ -16,7 +16,7 @@ import Url.Parser as UrlParser exposing ((</>), Parser, int, s, top)
 
 baseUrl : String
 baseUrl =
-    "/app"
+    ""
 
 
 homeUrl : String
