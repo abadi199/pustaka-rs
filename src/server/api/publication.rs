@@ -1,8 +1,7 @@
 extern crate diesel;
 
 use actix_web::http::Method;
-use actix_web::Json;
-use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, State};
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Path, State};
 use db::publication::{Create, Delete, Get, List, Update};
 use futures::Future;
 use models::{Category, NewCategory};
@@ -45,17 +44,17 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
 //     NamedFile::open(filename).ok()
 // }
 
-// #[get("/<the_publication_id>")]
-// fn get_publication(the_publication_id: i32, connection: DbConn) -> Json<Publication> {
-//     use schema::publication::dsl as publication;
-
-//     let the_publication = publication::publication
-//         .filter(publication::id.eq(the_publication_id))
-//         .first::<Publication>(&*connection)
-//         .expect("Error getting publication");
-
-//     Json(the_publication)
-// }
+fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Get {
+            publication_id: publication_id.into_inner(),
+        }).from_err()
+        .and_then(|res| match res {
+            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
+}
 
 // #[get("/category/<the_category_id>")]
 // fn by_category(the_category_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
@@ -193,6 +192,7 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         // .route("/", Method::GET, read)
         // .route("/", Method::GET, read_page)
         .route("/", Method::GET, list)
+        .route("/{publication_id}", Method::GET, get)
     // .route("/", Method::GET, by_category)
     // .route("/", Method::GET, get_thumbnail)
     // .route("/", Method::GET, get_publication)
