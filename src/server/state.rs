@@ -1,6 +1,7 @@
 use actix::prelude::Addr;
-use db::category::CategoryDbExecutor;
+use db::executor::DbExecutor;
 
+#[derive(Clone)]
 pub struct AppState {
-    pub categoryDb: Addr<CategoryDbExecutor>,
+    pub db: Addr<DbExecutor>,
 }

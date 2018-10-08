@@ -2,15 +2,11 @@ extern crate diesel;
 
 use actix_web::Error;
 use diesel::prelude::*;
-use r2d2::Pool;
-use r2d2_diesel::ConnectionManager;
 
 use actix::prelude::*;
+use db::executor::DbExecutor;
 use models::{Category, FavoriteCategory, NewCategory};
 use schema::category::dsl::*;
-
-/// This is db executor actor. We are going to run 3 of them in parallel.
-pub struct CategoryDbExecutor(pub Pool<ConnectionManager<SqliteConnection>>);
 
 pub struct Favorite {}
 impl Message for Favorite {
@@ -50,11 +46,7 @@ impl Message for Get {
     type Result = Result<Category, Error>;
 }
 
-impl Actor for CategoryDbExecutor {
-    type Context = SyncContext<Self>;
-}
-
-impl Handler<Favorite> for CategoryDbExecutor {
+impl Handler<Favorite> for DbExecutor {
     type Result = Result<Vec<Category>, Error>;
 
     fn handle(&mut self, _msg: Favorite, _: &mut Self::Context) -> Self::Result {
@@ -75,7 +67,7 @@ impl Handler<Favorite> for CategoryDbExecutor {
     }
 }
 
-impl Handler<List> for CategoryDbExecutor {
+impl Handler<List> for DbExecutor {
     type Result = Result<Vec<Category>, Error>;
 
     fn handle(&mut self, _msg: List, _: &mut Self::Context) -> Self::Result {
@@ -87,7 +79,7 @@ impl Handler<List> for CategoryDbExecutor {
     }
 }
 
-impl Handler<Create> for CategoryDbExecutor {
+impl Handler<Create> for DbExecutor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
@@ -100,7 +92,7 @@ impl Handler<Create> for CategoryDbExecutor {
     }
 }
 
-impl Handler<Update> for CategoryDbExecutor {
+impl Handler<Update> for DbExecutor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: Update, _: &mut Self::Context) -> Self::Result {
@@ -113,7 +105,7 @@ impl Handler<Update> for CategoryDbExecutor {
     }
 }
 
-impl Handler<Delete> for CategoryDbExecutor {
+impl Handler<Delete> for DbExecutor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: Delete, _: &mut Self::Context) -> Self::Result {
@@ -125,7 +117,7 @@ impl Handler<Delete> for CategoryDbExecutor {
     }
 }
 
-impl Handler<Get> for CategoryDbExecutor {
+impl Handler<Get> for DbExecutor {
     type Result = Result<Category, Error>;
 
     fn handle(&mut self, msg: Get, _: &mut Self::Context) -> Self::Result {

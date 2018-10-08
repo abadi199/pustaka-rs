@@ -41,7 +41,7 @@ list : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
 list msg =
     ReloadableData.Http.get
         ()
-        "/api/category"
+        "/api/category/"
         msg
         (JD.list decoder)
 
@@ -50,7 +50,7 @@ tree : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
 tree msg =
     ReloadableData.Http.get
         ()
-        "/api/category"
+        "/api/category/"
         msg
         (JD.list decoder |> JD.map toTree)
 

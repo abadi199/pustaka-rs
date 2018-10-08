@@ -4,15 +4,12 @@ extern crate diesel;
 extern crate pustaka;
 
 use actix::prelude::*;
-use actix_web::{fs::NamedFile, http, middleware, server, App, HttpRequest, HttpResponse, Result};
-use pustaka::db::category::CategoryDbExecutor;
+use actix_web::{fs::NamedFile, http, server, App, HttpRequest, Result};
+use http::Method;
+use pustaka::api::{category, publication};
+use pustaka::db::executor::DbExecutor;
 use pustaka::state::AppState;
-use std::path::{Path, PathBuf};
-// #[get("/<file..>")]
-// fn files(file: PathBuf) -> Option<NamedFile> {
-//     println!("{:?}", file);
-//     NamedFile::open(Path::new("app").join(file)).ok()
-// }
+use std::path::PathBuf;
 
 fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let mut path: PathBuf = PathBuf::from("./app/assets");
@@ -41,25 +38,18 @@ fn main() {
 
     // start db executor
     let pool = pustaka::db::create_db_pool();
-    let addr = SyncArbiter::start(3, move || CategoryDbExecutor(pool.clone()));
     let state = AppState {
-        categoryDb: addr.clone(),
+        db: SyncArbiter::start(3, move || DbExecutor(pool.clone())),
     };
 
     // start http server
     server::new(move || {
         vec![
-            pustaka::api::category::create_app(
-                AppState {
-                    categoryDb: addr.clone(),
-                },
-                "/api/category",
-            ),
-            App::with_state(AppState {
-                categoryDb: addr.clone(),
-            }).resource("/assets/{tail:.*}", |r| {
-                r.method(http::Method::GET).f(assets)
-            }).resource("/{tail:.*}", |r| r.method(http::Method::GET).f(index)),
+            category::create_app(state.clone(), "/api/category"),
+            publication::create_app(state.clone(), "/api/publication"),
+            App::with_state(state.clone())
+                .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
+                .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
         ]
     }).bind("0.0.0.0:8080")
     .unwrap()

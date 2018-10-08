@@ -57,7 +57,7 @@ pub struct NewPublication {
     pub file: String,
 }
 
-#[derive(Identifiable, Debug, Queryable, Deserialize, Associations)]
+#[derive(Identifiable, Debug, Queryable, Deserialize, Associations, AsChangeset)]
 #[belongs_to(MediaType)]
 #[belongs_to(Author)]
 #[table_name = "publication"]

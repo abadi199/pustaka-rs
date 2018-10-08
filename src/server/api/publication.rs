@@ -1,145 +1,148 @@
 extern crate diesel;
 
-use db::DbConn;
-use diesel::prelude::*;
-use models::*;
-use reader::cbr;
-use reader::models as reader;
-use rocket::response::NamedFile;
-use rocket::Route;
-use rocket_contrib::Json;
-use schema::publication::dsl::*;
+use actix_web::http::Method;
+use actix_web::Json;
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, State};
+use db::publication::{Create, Delete, Get, List, Update};
+use futures::Future;
+use models::{Category, NewCategory};
+use state::AppState;
 
-#[get("/")]
-fn list(connection: DbConn) -> Json<Vec<Publication>> {
-    let publications = publication
-        .load::<Publication>(&*connection)
-        .expect("Error loading publications");
-    Json(publications)
+fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(List {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(categories) => Ok(HttpResponse::Ok().json(categories)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
 }
 
-#[get("/read/<the_publication_id>")]
-fn read(the_publication_id: i32, connection: DbConn) -> Json<reader::Data> {
-    use schema::publication::dsl as publication;
+// #[get("/read/<the_publication_id>")]
+// fn read(the_publication_id: i32, connection: DbConn) -> Json<reader::Data> {
+//     use schema::publication::dsl as publication;
 
-    let the_publication = publication::publication
-        .filter(publication::id.eq(the_publication_id))
-        .first::<Publication>(&*connection)
-        .expect("Error getting publication");
-    let data = cbr::open(&the_publication).expect("Unable to read publication");
-    println!("Data: {:?}", data);
-    Json(data)
-}
+//     let the_publication = publication::publication
+//         .filter(publication::id.eq(the_publication_id))
+//         .first::<Publication>(&*connection)
+//         .expect("Error getting publication");
+//     let data = cbr::open(&the_publication).expect("Unable to read publication");
+//     println!("Data: {:?}", data);
+//     Json(data)
+// }
 
-#[get("/read/<publication_id>/page/<page_number>")]
-fn read_page(publication_id: i32, page_number: usize, connection: DbConn) -> Option<NamedFile> {
-    use schema::publication::dsl as publication;
-    let the_publication = publication::publication
-        .filter(publication::id.eq(publication_id))
-        .first::<Publication>(&*connection)
-        .expect("Invalid publication");
+// #[get("/read/<publication_id>/page/<page_number>")]
+// fn read_page(publication_id: i32, page_number: usize, connection: DbConn) -> Option<NamedFile> {
+//     use schema::publication::dsl as publication;
+//     let the_publication = publication::publication
+//         .filter(publication::id.eq(publication_id))
+//         .first::<Publication>(&*connection)
+//         .expect("Invalid publication");
 
-    let filename = cbr::page(&the_publication, page_number).expect("Unable to read page");
-    println!("Page Filename: {:?}", filename);
-    NamedFile::open(filename).ok()
-}
+//     let filename = cbr::page(&the_publication, page_number).expect("Unable to read page");
+//     println!("Page Filename: {:?}", filename);
+//     NamedFile::open(filename).ok()
+// }
 
-#[get("/<the_publication_id>")]
-fn get_publication(the_publication_id: i32, connection: DbConn) -> Json<Publication> {
-    use schema::publication::dsl as publication;
+// #[get("/<the_publication_id>")]
+// fn get_publication(the_publication_id: i32, connection: DbConn) -> Json<Publication> {
+//     use schema::publication::dsl as publication;
 
-    let the_publication = publication::publication
-        .filter(publication::id.eq(the_publication_id))
-        .first::<Publication>(&*connection)
-        .expect("Error getting publication");
+//     let the_publication = publication::publication
+//         .filter(publication::id.eq(the_publication_id))
+//         .first::<Publication>(&*connection)
+//         .expect("Error getting publication");
 
-    Json(the_publication)
-}
+//     Json(the_publication)
+// }
 
-#[get("/category/<the_category_id>")]
-fn by_category(the_category_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
-    use schema::publication::dsl as publication;
-    use schema::publication_category::dsl as publication_category;
+// #[get("/category/<the_category_id>")]
+// fn by_category(the_category_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
+//     use schema::publication::dsl as publication;
+//     use schema::publication_category::dsl as publication_category;
 
-    let categories: Vec<i32> = get_category_and_descendants(the_category_id, &connection)
-        .expect("Invalid category id")
-        .iter()
-        .map(|category| category.id)
-        .collect();
+//     let categories: Vec<i32> = get_category_and_descendants(the_category_id, &connection)
+//         .expect("Invalid category id")
+//         .iter()
+//         .map(|category| category.id)
+//         .collect();
 
-    let the_publication_id = publication_category::publication_category
-        .filter(publication_category::category_id.eq_any(categories))
-        .select(publication_category::publication_id)
-        .load::<i32>(&*connection)
-        .expect("Error getting publications id");
+//     let the_publication_id = publication_category::publication_category
+//         .filter(publication_category::category_id.eq_any(categories))
+//         .select(publication_category::publication_id)
+//         .load::<i32>(&*connection)
+//         .expect("Error getting publications id");
 
-    let publications = publication::publication
-        .filter(publication::id.eq_any(the_publication_id))
-        .load::<Publication>(&*connection)
-        .expect("Error getting publications");
+//     let publications = publication::publication
+//         .filter(publication::id.eq_any(the_publication_id))
+//         .load::<Publication>(&*connection)
+//         .expect("Error getting publications");
 
-    Json(publications)
-}
+//     Json(publications)
+// }
 
-#[get("/thumbnail/<publication_id>")]
-fn get_thumbnail(publication_id: i32, connection: DbConn) -> Option<NamedFile> {
-    use schema::publication::dsl as publication;
-    let the_publication = publication::publication
-        .filter(publication::id.eq(publication_id))
-        .first::<Publication>(&*connection)
-        .expect("Invalid publication");
+// #[get("/thumbnail/<publication_id>")]
+// fn get_thumbnail(publication_id: i32, connection: DbConn) -> Option<NamedFile> {
+//     use schema::publication::dsl as publication;
+//     let the_publication = publication::publication
+//         .filter(publication::id.eq(publication_id))
+//         .first::<Publication>(&*connection)
+//         .expect("Invalid publication");
 
-    the_publication
-        .thumbnail
-        .and_then(|tn| NamedFile::open(tn).ok())
-}
+//     the_publication
+//         .thumbnail
+//         .and_then(|tn| NamedFile::open(tn).ok())
+// }
 
-fn get_category(category_id: i32, connection: &SqliteConnection) -> QueryResult<Category> {
-    use schema::category::dsl as category;
+// fn get_category(category_id: i32, connection: &SqliteConnection) -> QueryResult<Category> {
+//     use schema::category::dsl as category;
 
-    category::category
-        .filter(category::id.eq(category_id))
-        .first::<Category>(&*connection)
-}
+//     category::category
+//         .filter(category::id.eq(category_id))
+//         .first::<Category>(&*connection)
+// }
 
-fn get_category_and_descendants(
-    category_id: i32,
-    connection: &SqliteConnection,
-) -> QueryResult<Vec<Category>> {
-    let mut categories: Vec<Category> = vec![];
+// fn get_category_and_descendants(
+//     category_id: i32,
+//     connection: &SqliteConnection,
+// ) -> QueryResult<Vec<Category>> {
+//     let mut categories: Vec<Category> = vec![];
 
-    let parent_category = get_category(category_id, connection)?;
-    categories.push(parent_category);
+//     let parent_category = get_category(category_id, connection)?;
+//     categories.push(parent_category);
 
-    let mut children = get_descendant_rec(category_id, connection)?;
-    categories.append(&mut children);
+//     let mut children = get_descendant_rec(category_id, connection)?;
+//     categories.append(&mut children);
 
-    Ok(categories)
-}
+//     Ok(categories)
+// }
 
-fn get_descendant_rec(
-    category_id: i32,
-    connection: &SqliteConnection,
-) -> QueryResult<Vec<Category>> {
-    use schema::category::dsl as category;
-    let mut categories = category::category
-        .filter(category::parent_id.eq(category_id))
-        .load::<Category>(connection)?;
+// fn get_descendant_rec(
+//     category_id: i32,
+//     connection: &SqliteConnection,
+// ) -> QueryResult<Vec<Category>> {
+//     use schema::category::dsl as category;
+//     let mut categories = category::category
+//         .filter(category::parent_id.eq(category_id))
+//         .load::<Category>(connection)?;
 
-    let mut grandchildren: Vec<Category> = vec![];
-    for c in categories.iter() {
-        let mut result = get_descendant_rec(c.id, connection);
-        match result {
-            Ok(mut d) => {
-                grandchildren.append(&mut d);
-            }
-            Err(_) => {}
-        }
-    }
+//     let mut grandchildren: Vec<Category> = vec![];
+//     for c in categories.iter() {
+//         let mut result = get_descendant_rec(c.id, connection);
+//         match result {
+//             Ok(mut d) => {
+//                 grandchildren.append(&mut d);
+//             }
+//             Err(_) => {}
+//         }
+//     }
 
-    categories.append(&mut grandchildren);
-    Ok(categories)
-}
+//     categories.append(&mut grandchildren);
+//     Ok(categories)
+// }
+
+// END HERE
 
 // #[post("/", data = "<json>")]
 // fn create(json: Json<NewCategory>, connection: DbConn) {
@@ -183,13 +186,14 @@ fn get_descendant_rec(
 //     }
 // }
 
-pub fn routes() -> Vec<Route> {
-    routes![
-        read,
-        read_page,
-        list,
-        by_category,
-        get_thumbnail,
-        get_publication
-    ] //, create, delete, get, update]
+pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
+    App::with_state(state)
+        .middleware(middleware::Logger::default())
+        .prefix(prefix)
+        // .route("/", Method::GET, read)
+        // .route("/", Method::GET, read_page)
+        .route("/", Method::GET, list)
+    // .route("/", Method::GET, by_category)
+    // .route("/", Method::GET, get_thumbnail)
+    // .route("/", Method::GET, get_publication)
 }

@@ -3,4 +3,4 @@
 node_modules/
 elm-stuff/
 *.db
-app/*.js
+app/**/*.js

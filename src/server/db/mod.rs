@@ -5,6 +5,8 @@ use r2d2_diesel::ConnectionManager;
 use std::env;
 
 pub mod category;
+pub mod executor;
+pub mod publication;
 
 pub fn create_db_pool() -> Pool<ConnectionManager<SqliteConnection>> {
     dotenv().ok();
