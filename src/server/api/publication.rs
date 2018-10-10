@@ -115,7 +115,7 @@ fn read_page(
                 file.map_err(|err| err.into())
             })
         }).responder()
-
+}
 
 // #[get("/publication/<the_publication_id>")]
 // fn by_publication(the_publication_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
