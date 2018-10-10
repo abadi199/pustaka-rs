@@ -62,7 +62,7 @@ fn delete(state: State<AppState>, category_id: Path<i32>) -> FutureResponse<Http
         }).from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
-            Err(err) => Ok(HttpResponse::InternalServerError().into()),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
         }).responder()
 }
 

@@ -1,7 +1,10 @@
 extern crate diesel;
 
 use actix_web::http::Method;
-use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
+use actix_web::{
+    fs::NamedFile, middleware, App, AsyncResponder, Error, FutureResponse, HttpResponse, Json,
+    Path, Result, State,
+};
 use db::publication::{Create, Delete, Get, List, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
@@ -94,6 +97,25 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
 //     println!("Page Filename: {:?}", filename);
 //     NamedFile::open(filename).ok()
 // }
+fn read_page(
+    state: State<AppState>,
+    publication_id: Path<i32>,
+    page_number: Path<usize>,
+) -> FutureResponse<NamedFile> {
+    state
+        .db
+        .send(Get {
+            publication_id: publication_id.into_inner(),
+        }).from_err()
+        .and_then(|res| {
+            res.and_then(|publication| {
+                let filename =
+                    cbr::page(&publication, page_number.into_inner()).expect("Unable to read page");
+                let file = NamedFile::open(filename);
+                file.map_err(|err| err.into())
+            })
+        }).responder()
+
 
 // #[get("/publication/<the_publication_id>")]
 // fn by_publication(the_publication_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
@@ -229,12 +251,15 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .middleware(middleware::Logger::default())
         .prefix(prefix)
         .route("/{publication_id}", Method::GET, read)
-        // .route("/", Method::GET, read_page)
-        .route("/", Method::GET, list)
+        .route(
+            "/{publication_id}/page/{page_number}",
+            Method::GET,
+            read_page,
+        ).route("/", Method::GET, list)
         .route("/", Method::POST, create)
         .route("/", Method::PUT, update)
         .route("/{publication_id}", Method::DELETE, delete)
-         .route("/{publication_id}", Method::GET, get)
+        .route("/{publication_id}", Method::GET, get)
     // .route("/", Method::GET, by_publication)
     // .route("/", Method::GET, get_thumbnail)
     // .route("/", Method::GET, get_publication)

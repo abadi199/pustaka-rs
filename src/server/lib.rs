@@ -1,3 +1,4 @@
+#![allow(proc_macro_derive_resolution_fallback)]
 #[macro_use]
 extern crate diesel;
 extern crate serde;
