@@ -15,6 +15,6 @@ pub mod api;
 // pub mod config;
 pub mod db;
 pub mod models;
-// pub mod reader;
+pub mod reader;
 pub mod schema;
 pub mod state;

@@ -5,6 +5,7 @@ use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, J
 use db::publication::{Create, Delete, Get, List, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
+use reader::cbr;
 use state::AppState;
 
 fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
@@ -65,18 +66,21 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         }).responder()
 }
-// #[get("/read/<the_publication_id>")]
-// fn read(the_publication_id: i32, connection: DbConn) -> Json<reader::Data> {
-//     use schema::publication::dsl as publication;
 
-//     let the_publication = publication::publication
-//         .filter(publication::id.eq(the_publication_id))
-//         .first::<Publication>(&*connection)
-//         .expect("Error getting publication");
-//     let data = cbr::open(&the_publication).expect("Unable to read publication");
-//     println!("Data: {:?}", data);
-//     Json(data)
-// }
+fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Get {
+            publication_id: publication_id.into_inner(),
+        }).from_err()
+        .and_then(|res| match res {
+            Ok(publication) => {
+                let data = cbr::open(&publication).expect("Unable to read poblication");
+                Ok(HttpResponse::Ok().json(data))
+            }
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        }).responder()
+}
 
 // #[get("/read/<publication_id>/page/<page_number>")]
 // fn read_page(publication_id: i32, page_number: usize, connection: DbConn) -> Option<NamedFile> {
@@ -224,7 +228,7 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
     App::with_state(state)
         .middleware(middleware::Logger::default())
         .prefix(prefix)
-        // .route("/", Method::GET, read)
+        .route("/{publication_id}", Method::GET, read)
         // .route("/", Method::GET, read_page)
         .route("/", Method::GET, list)
         .route("/", Method::POST, create)

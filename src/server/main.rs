@@ -19,7 +19,7 @@ fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     Ok(NamedFile::open(path)?)
 }
 
-fn index(req: &HttpRequest<AppState>) -> Result<NamedFile> {
+fn index(_req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let mut path: PathBuf = PathBuf::from("./app");
     let index: PathBuf = PathBuf::from("index.html");
     println!("index");
