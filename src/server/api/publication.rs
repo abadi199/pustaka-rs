@@ -7,6 +7,7 @@ use futures::Future;
 use models::{NewPublication, Publication};
 use reader::cbr;
 use state::AppState;
+use std::io;
 
 fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
     state
@@ -57,7 +58,7 @@ fn delete(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<H
         .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
-            Err(err) => Ok(HttpResponse::InternalServerError().into()),
+            Err(_err) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
 }
@@ -84,10 +85,9 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => {
-                let data = cbr::open(&publication).expect("Unable to read poblication");
-                Ok(HttpResponse::Ok().json(data))
-            }
+            Ok(publication) => cbr::open(&publication)
+                .map_err(|err| err.into())
+                .and_then(|data| Ok(HttpResponse::Ok().json(data))),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
@@ -115,31 +115,6 @@ fn read_page(
         .responder()
 }
 
-// #[get("/publication/<the_publication_id>")]
-// fn by_publication(the_publication_id: i32, connection: DbConn) -> Json<Vec<Publication>> {
-//     use schema::publication::dsl as publication;
-//     use schema::publication_publication::dsl as publication_publication;
-
-//     let publications: Vec<i32> = get_publication_and_descendants(the_publication_id, &connection)
-//         .expect("Invalid publication id")
-//         .iter()
-//         .map(|publication| publication.id)
-//         .collect();
-
-//     let the_publication_id = publication_publication::publication_publication
-//         .filter(publication_publication::publication_id.eq_any(publications))
-//         .select(publication_publication::publication_id)
-//         .load::<i32>(&*connection)
-//         .expect("Error getting publications id");
-
-//     let publications = publication::publication
-//         .filter(publication::id.eq_any(the_publication_id))
-//         .load::<Publication>(&*connection)
-//         .expect("Error getting publications");
-
-//     Json(publications)
-// }
-
 fn list_by_category(
     state: State<AppState>,
     category_id: Path<i32>,
@@ -151,24 +126,31 @@ fn list_by_category(
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
+            Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
 }
 
-// #[get("/thumbnail/<publication_id>")]
-// fn get_thumbnail(publication_id: i32, connection: DbConn) -> Option<NamedFile> {
-//     use schema::publication::dsl as publication;
-//     let the_publication = publication::publication
-//         .filter(publication::id.eq(publication_id))
-//         .first::<Publication>(&*connection)
-//         .expect("Invalid publication");
-
-//     the_publication
-//         .thumbnail
-//         .and_then(|tn| NamedFile::open(tn).ok())
-// }
+fn get_thumbnail(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<NamedFile> {
+    state
+        .db
+        .send(Get {
+            publication_id: publication_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| {
+            res.and_then(|publication| match publication.thumbnail {
+                Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
+                None => Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Publication doesn't have thumbnail",
+                )
+                .into()),
+            })
+        })
+        .responder()
+}
 
 // END HERE
 
@@ -218,18 +200,18 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
     App::with_state(state)
         .middleware(middleware::Logger::default())
         .prefix(prefix)
-        .route("/{publication_id}", Method::GET, read)
-        .route(
-            "/{publication_id}/page/{page_number}",
-            Method::GET,
-            read_page,
-        )
+        .route("/{publication_id}", Method::GET, get)
         .route("/", Method::GET, list)
         .route("/", Method::POST, create)
         .route("/", Method::PUT, update)
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
         .route("/category/{category_id}", Method::GET, list_by_category)
-    // .route("/", Method::GET, get_thumbnail)
-    // .route("/", Method::GET, get_publication)
+        .route("/thumbnail/{publication_id}", Method::GET, get_thumbnail)
+        .route("/read/{publication_id}", Method::GET, read)
+        .route(
+            "/read/{publication_id}/page/{page_number}",
+            Method::GET,
+            read_page,
+        )
 }

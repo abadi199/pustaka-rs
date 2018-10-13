@@ -1,5 +1,8 @@
+use actix_web::ResponseError;
 use models::Publication;
 use reader::models::Data;
+use std::error::Error;
+use std::fmt;
 use unrar::Archive;
 
 #[derive(Debug)]
@@ -10,7 +13,22 @@ pub enum CbrError {
     GenericError(String),
 }
 
-const EXTRACT_LOCATION : &str = "/home/abadi199/Temp/test";
+impl fmt::Display for CbrError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CbrError::RarError => write!(f, "RarError"),
+            CbrError::PageError => write!(f, "PageError"),
+            CbrError::PageNotFound => write!(f, "PageNotFound"),
+            CbrError::GenericError(err) => write!(f, "GenericError: {}", &err),
+        }
+    }
+}
+
+impl Error for CbrError {}
+
+impl ResponseError for CbrError {}
+
+const EXTRACT_LOCATION: &str = "/home/abadi199/Temp/test";
 
 pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
     use reader::cbr::CbrError::*;
