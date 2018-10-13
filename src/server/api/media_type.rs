@@ -1,65 +1,85 @@
-extern crate diesel;
+use actix_web::http::Method;
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
+use db::media_type::{Create, Delete, Get, List, Update};
+use futures::Future;
+use models::{MediaType, NewMediaType};
+use state::AppState;
 
-use db::DbConn;
-use diesel::prelude::*;
-use models::*;
-use rocket::Route;
-use rocket_contrib::Json;
-use schema::media_type::dsl::*;
-
-#[get("/")]
-fn list(connection: DbConn) -> Json<Vec<MediaType>> {
-    let media_types = media_type
-        .load::<MediaType>(&*connection)
-        .expect("Error loading media types");
-    Json(media_types)
+fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(List {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(media_types) => Ok(HttpResponse::Ok().json(media_types)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[post("/", data = "<json>")]
-fn create(json: Json<NewMediaType>, connection: DbConn) {
-    let new_media_type = &json.0;
-    diesel::insert_into(media_type)
-        .values(new_media_type)
-        .execute(&*connection)
-        .expect("Error inserting media type");
+fn create(state: State<AppState>, json: Json<NewMediaType>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Create {
+            new_media_type: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[put("/", data = "<json>")]
-fn update(json: Json<MediaType>, connection: DbConn) {
-    let the_media_type = &json.0;
-    diesel::update(media_type.filter(id.eq(the_media_type.id)))
-        .set(the_media_type)
-        .execute(&*connection)
-        .expect("Error updating media type");
+fn update(state: State<AppState>, json: Json<MediaType>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Update {
+            media_type: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[delete("/<media_type_id>")]
-fn delete(media_type_id: i32, connection: DbConn) {
-    diesel::delete(media_type.filter(id.eq(media_type_id)))
-        .execute(&*connection)
-        .expect(&format!("Error deleting media type {}", media_type_id));
+fn delete(state: State<AppState>, media_type_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Delete {
+            media_type_id: media_type_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[get("/<media_type_id>")]
-fn get(media_type_id: i32, connection: DbConn) -> Json<MediaType> {
-    let mut row = media_type
-        .filter(id.eq(media_type_id))
-        .limit(1)
-        .load(&*connection)
-        .expect(&format!(
-            "Error loading media type with id {}",
-            media_type_id
-        ));
-
-    match row.is_empty() {
-        true => panic!(format!(
-            "media_type with id of {} can't be found",
-            media_type_id
-        )),
-        false => Json(row.remove(0)),
-    }
+fn get(state: State<AppState>, media_type_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Get {
+            media_type_id: media_type_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(media_type) => Ok(HttpResponse::Ok().json(media_type)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-pub fn routes() -> Vec<Route> {
-    routes![list, create, delete, get, update]
+pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
+    App::with_state(state)
+        .middleware(middleware::Logger::default())
+        .prefix(prefix)
+        .route("/", Method::GET, list)
+        .route("/", Method::POST, create)
+        .route("/", Method::PUT, update)
+        .route("/{media_type_id}", Method::DELETE, delete)
+        .route("/{media_type_id}", Method::GET, get)
 }

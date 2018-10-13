@@ -5,14 +5,6 @@ use futures::Future;
 use models::{Author, NewAuthor};
 use state::AppState;
 
-// #[get("/")]
-// fn list(connection: DbConn) -> Json<Vec<Author>> {
-//     let authors = author
-//         .load::<Author>(&*connection)
-//         .expect("Error loading authors");
-//     Json(authors)
-// }
-
 fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
     state
         .db
