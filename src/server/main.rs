@@ -6,7 +6,7 @@ extern crate pustaka;
 use actix::prelude::*;
 use actix_web::{fs::NamedFile, http, server, App, HttpRequest, Result};
 use http::Method;
-use pustaka::api::{category, publication};
+use pustaka::api::{author, category, publication};
 use pustaka::db::executor::DbExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
@@ -47,11 +47,13 @@ fn main() {
         vec![
             category::create_app(state.clone(), "/api/category"),
             publication::create_app(state.clone(), "/api/publication"),
+            author::create_app(state.clone(), "/api/author"),
             App::with_state(state.clone())
                 .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
                 .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
         ]
-    }).bind("0.0.0.0:8080")
+    })
+    .bind("0.0.0.0:8080")
     .unwrap()
     .start();
 

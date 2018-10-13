@@ -1,59 +1,93 @@
-extern crate diesel;
+use actix_web::http::Method;
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
+use db::author::{Create, Delete, Get, List, Update};
+use futures::Future;
+use models::{Author, NewAuthor};
+use state::AppState;
 
-use db::DbConn;
-use diesel::prelude::*;
-use models::*;
-use rocket::Route;
-use rocket_contrib::Json;
-use schema::author::dsl::*;
+// #[get("/")]
+// fn list(connection: DbConn) -> Json<Vec<Author>> {
+//     let authors = author
+//         .load::<Author>(&*connection)
+//         .expect("Error loading authors");
+//     Json(authors)
+// }
 
-#[get("/")]
-fn list(connection: DbConn) -> Json<Vec<Author>> {
-    let authors = author
-        .load::<Author>(&*connection)
-        .expect("Error loading authors");
-    Json(authors)
+fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(List {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(authors) => Ok(HttpResponse::Ok().json(authors)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[post("/", data = "<json>")]
-fn create(json: Json<NewAuthor>, connection: DbConn) {
-    let new_author = &json.0;
-    diesel::insert_into(author)
-        .values(new_author)
-        .execute(&*connection)
-        .expect("Error inserting author");
+fn create(state: State<AppState>, json: Json<NewAuthor>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Create {
+            new_author: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[put("/", data = "<json>")]
-fn update(json: Json<Author>, connection: DbConn) {
-    let the_author = &json.0;
-    diesel::update(author.filter(id.eq(the_author.id)))
-        .set(the_author)
-        .execute(&*connection)
-        .expect("Error updating author");
+fn update(state: State<AppState>, json: Json<Author>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Update {
+            author: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[delete("/<author_id>")]
-fn delete(author_id: i32, connection: DbConn) {
-    diesel::delete(author.filter(id.eq(author_id)))
-        .execute(&*connection)
-        .expect(&format!("Error deleting author {}", author_id));
+fn delete(state: State<AppState>, author_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Delete {
+            author_id: author_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[get("/<author_id>")]
-fn get(author_id: i32, connection: DbConn) -> Json<Author> {
-    let mut row = author
-        .filter(id.eq(author_id))
-        .limit(1)
-        .load(&*connection)
-        .expect(&format!("Error loading author with id {}", author_id));
-
-    match row.is_empty() {
-        true => panic!(format!("Author with id of {} can't be found", author_id)),
-        false => Json(row.remove(0)),
-    }
+fn get(state: State<AppState>, author_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Get {
+            author_id: author_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(author) => Ok(HttpResponse::Ok().json(author)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-pub fn routes() -> Vec<Route> {
-    routes![list, create, delete, get, update]
+pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
+    App::with_state(state)
+        .middleware(middleware::Logger::default())
+        .prefix(prefix)
+        .route("/", Method::GET, list)
+        .route("/", Method::POST, create)
+        .route("/", Method::PUT, update)
+        .route("/{author_id}", Method::DELETE, delete)
+        .route("/{author_id}", Method::GET, get)
 }

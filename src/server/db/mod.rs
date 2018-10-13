@@ -4,6 +4,7 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use std::env;
 
+pub mod author;
 pub mod category;
 pub mod executor;
 pub mod publication;

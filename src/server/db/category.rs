@@ -12,40 +12,6 @@ pub struct Favorite {}
 impl Message for Favorite {
     type Result = Result<Vec<Category>, Error>;
 }
-
-pub struct List {}
-impl Message for List {
-    type Result = Result<Vec<Category>, Error>;
-}
-
-pub struct Create {
-    pub new_category: NewCategory,
-}
-impl Message for Create {
-    type Result = Result<(), Error>;
-}
-
-pub struct Update {
-    pub category: Category,
-}
-impl Message for Update {
-    type Result = Result<(), Error>;
-}
-
-pub struct Delete {
-    pub category_id: i32,
-}
-impl Message for Delete {
-    type Result = Result<(), Error>;
-}
-
-pub struct Get {
-    pub category_id: i32,
-}
-impl Message for Get {
-    type Result = Result<Category, Error>;
-}
-
 impl Handler<Favorite> for DbExecutor {
     type Result = Result<Vec<Category>, Error>;
 
@@ -67,6 +33,10 @@ impl Handler<Favorite> for DbExecutor {
     }
 }
 
+pub struct List {}
+impl Message for List {
+    type Result = Result<Vec<Category>, Error>;
+}
 impl Handler<List> for DbExecutor {
     type Result = Result<Vec<Category>, Error>;
 
@@ -79,6 +49,12 @@ impl Handler<List> for DbExecutor {
     }
 }
 
+pub struct Create {
+    pub new_category: NewCategory,
+}
+impl Message for Create {
+    type Result = Result<(), Error>;
+}
 impl Handler<Create> for DbExecutor {
     type Result = Result<(), Error>;
 
@@ -92,6 +68,12 @@ impl Handler<Create> for DbExecutor {
     }
 }
 
+pub struct Update {
+    pub category: Category,
+}
+impl Message for Update {
+    type Result = Result<(), Error>;
+}
 impl Handler<Update> for DbExecutor {
     type Result = Result<(), Error>;
 
@@ -105,6 +87,12 @@ impl Handler<Update> for DbExecutor {
     }
 }
 
+pub struct Delete {
+    pub category_id: i32,
+}
+impl Message for Delete {
+    type Result = Result<(), Error>;
+}
 impl Handler<Delete> for DbExecutor {
     type Result = Result<(), Error>;
 
@@ -117,6 +105,12 @@ impl Handler<Delete> for DbExecutor {
     }
 }
 
+pub struct Get {
+    pub category_id: i32,
+}
+impl Message for Get {
+    type Result = Result<Category, Error>;
+}
 impl Handler<Get> for DbExecutor {
     type Result = Result<Category, Error>;
 
