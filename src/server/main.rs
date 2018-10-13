@@ -6,7 +6,7 @@ extern crate pustaka;
 use actix::prelude::*;
 use actix_web::{fs::NamedFile, http, server, App, HttpRequest, Result};
 use http::Method;
-use pustaka::api::{author, category, media_type, publication};
+use pustaka::api::{author, category, media_type, publication, tag};
 use pustaka::db::executor::DbExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
@@ -28,11 +28,6 @@ fn index(_req: &HttpRequest<AppState>) -> Result<NamedFile> {
     Ok(NamedFile::open(path)?)
 }
 
-// #[get("/")]
-// fn redirect_to_app() -> Redirect {
-// Redirect::permanent("/app")
-// }
-
 fn main() {
     let sys = actix::System::new("pustaka");
 
@@ -49,6 +44,7 @@ fn main() {
             publication::create_app(state.clone(), "/api/publication"),
             author::create_app(state.clone(), "/api/author"),
             media_type::create_app(state.clone(), "/api/media_type"),
+            tag::create_app(state.clone(), "/api/tag"),
             App::with_state(state.clone())
                 .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
                 .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),

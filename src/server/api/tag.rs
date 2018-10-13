@@ -1,57 +1,85 @@
-extern crate diesel;
+use actix_web::http::Method;
+use actix_web::{middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State};
+use db::tag::{Create, Delete, Get, List, Update};
+use futures::Future;
+use models::{NewTag, Tag};
+use state::AppState;
 
-use db::DbConn;
-use diesel::prelude::*;
-use models::*;
-use rocket::Route;
-use rocket_contrib::Json;
-use schema::tag::dsl::*;
-
-#[get("/")]
-fn list(connection: DbConn) -> Json<Vec<Tag>> {
-    let tags = tag.load::<Tag>(&*connection).expect("Error loading tags");
-    Json(tags)
+fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(List {})
+        .from_err()
+        .and_then(|res| match res {
+            Ok(tags) => Ok(HttpResponse::Ok().json(tags)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[post("/", data = "<json>")]
-fn create(json: Json<NewTag>, connection: DbConn) {
-    let new_tag = &json.0;
-    diesel::insert_into(tag)
-        .values(new_tag)
-        .execute(&*connection)
-        .expect("Error inserting tag");
+fn create(state: State<AppState>, json: Json<NewTag>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Create {
+            new_tag: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[put("/", data = "<json>")]
-fn update(json: Json<Tag>, connection: DbConn) {
-    let the_tag = &json.0;
-    diesel::update(tag.filter(id.eq(the_tag.id)))
-        .set(the_tag)
-        .execute(&*connection)
-        .expect("Error updating tag");
+fn update(state: State<AppState>, json: Json<Tag>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Update {
+            tag: json.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[delete("/<tag_id>")]
-fn delete(tag_id: i32, connection: DbConn) {
-    diesel::delete(tag.filter(id.eq(tag_id)))
-        .execute(&*connection)
-        .expect(&format!("Error deleting tag {}", tag_id));
+fn delete(state: State<AppState>, tag_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Delete {
+            tag_id: tag_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-#[get("/<tag_id>")]
-fn get(tag_id: i32, connection: DbConn) -> Json<Tag> {
-    let mut row = tag
-        .filter(id.eq(tag_id))
-        .limit(1)
-        .load(&*connection)
-        .expect(&format!("Error loading tag with id {}", tag_id));
-
-    match row.is_empty() {
-        true => panic!(format!("tag with id of {} can't be found", tag_id)),
-        false => Json(row.remove(0)),
-    }
+fn get(state: State<AppState>, tag_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(Get {
+            tag_id: tag_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(tag) => Ok(HttpResponse::Ok().json(tag)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
 }
 
-pub fn routes() -> Vec<Route> {
-    routes![list, create, delete, get, update]
+pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
+    App::with_state(state)
+        .middleware(middleware::Logger::default())
+        .prefix(prefix)
+        .route("/", Method::GET, list)
+        .route("/", Method::POST, create)
+        .route("/", Method::PUT, update)
+        .route("/{tag_id}", Method::DELETE, delete)
+        .route("/{tag_id}", Method::GET, get)
 }

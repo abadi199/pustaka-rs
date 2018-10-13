@@ -9,6 +9,7 @@ pub mod category;
 pub mod executor;
 pub mod media_type;
 pub mod publication;
+pub mod tag;
 
 pub fn create_db_pool() -> Pool<ConnectionManager<SqliteConnection>> {
     dotenv().ok();
