@@ -35,7 +35,7 @@ pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
 
     let open_archive = Archive::new(the_publication.file.clone())
         .extract_to(EXTRACT_LOCATION.to_string())
-        .map_err(|_err| RarError)?;
+        .map_err(|_err| RarError);
 
     Ok(Data {
         id: the_publication.id,
@@ -45,7 +45,7 @@ pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
         author_id: the_publication.author_id,
         thumbnail_url: the_publication.thumbnail_url().clone(),
         file: the_publication.file.clone(),
-        total_pages: open_archive.count(),
+        total_pages: open_archive.map(|cbr| cbr.count()).unwrap_or(0),
     })
 }
 

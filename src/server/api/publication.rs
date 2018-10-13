@@ -93,21 +93,17 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
         .responder()
 }
 
-fn read_page(
-    state: State<AppState>,
-    publication_id: Path<i32>,
-    page_number: Path<usize>,
-) -> FutureResponse<NamedFile> {
+fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
+    println!("read_page");
     state
         .db
         .send(Get {
-            publication_id: publication_id.into_inner(),
+            publication_id: params.0,
         })
         .from_err()
-        .and_then(|res| {
+        .and_then(move |res| {
             res.and_then(|publication| {
-                let filename =
-                    cbr::page(&publication, page_number.into_inner()).expect("Unable to read page");
+                let filename = cbr::page(&publication, params.1).expect("Unable to read page");
                 let file = NamedFile::open(filename);
                 file.map_err(|err| err.into())
             })
@@ -151,50 +147,6 @@ fn get_thumbnail(state: State<AppState>, publication_id: Path<i32>) -> FutureRes
         })
         .responder()
 }
-
-// END HERE
-
-// #[post("/", data = "<json>")]
-// fn create(json: Json<NewPublication>, connection: DbConn) {
-//     let new_publication = &json.0;
-//     diesel::insert_into(publication)
-//         .values(new_publication)
-//         .execute(&*connection)
-//         .expect("Error inserting publication");
-// }
-
-// #[put("/", data = "<json>")]
-// fn update(json: Json<Publication>, connection: DbConn) {
-//     let the_publication = &json.0;
-//     diesel::update(publication.filter(id.eq(the_publication.id)))
-//         .set(the_publication)
-//         .execute(&*connection)
-//         .expect("Error updating publication");
-// }
-
-// #[delete("/<publication_id>")]
-// fn delete(publication_id: i32, connection: DbConn) {
-//     diesel::delete(publication.filter(id.eq(publication_id)))
-//         .execute(&*connection)
-//         .expect(&format!("Error deleting publication {}", publication_id));
-// }
-
-// #[get("/<publication_id>")]
-// fn get(publication_id: i32, connection: DbConn) -> Json<Publication> {
-//     let mut row = publication
-//         .filter(id.eq(publication_id))
-//         .limit(1)
-//         .load(&*connection)
-//         .expect(&format!("Error loading publication with id {}", publication_id));
-
-//     match row.is_empty() {
-//         true => panic!(format!(
-//             "publication with id of {} can't be found",
-//             publication_id
-//         )),
-//         false => Json(row.remove(0)),
-//     }
-// }
 
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
     App::with_state(state)
