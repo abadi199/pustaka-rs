@@ -1,11 +1,8 @@
-extern crate diesel;
-
 use actix_web::http::Method;
 use actix_web::{
-    fs::NamedFile, middleware, App, AsyncResponder, Error, FutureResponse, HttpResponse, Json,
-    Path, Result, State,
+    fs::NamedFile, middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State,
 };
-use db::publication::{Create, Delete, Get, List, Update};
+use db::publication::{Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
 use reader::cbr;
@@ -19,7 +16,8 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
         .and_then(|res| match res {
             Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<HttpResponse> {
@@ -27,11 +25,13 @@ fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<
         .db
         .send(Create {
             new_publication: json.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<HttpResponse> {
@@ -39,11 +39,13 @@ fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<Htt
         .db
         .send(Update {
             publication: json.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn delete(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
@@ -51,11 +53,13 @@ fn delete(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<H
         .db
         .send(Delete {
             publication_id: publication_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(err) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
@@ -63,11 +67,13 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
         .db
         .send(Get {
             publication_id: publication_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
 fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
@@ -75,28 +81,18 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
         .db
         .send(Get {
             publication_id: publication_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| match res {
             Ok(publication) => {
                 let data = cbr::open(&publication).expect("Unable to read poblication");
                 Ok(HttpResponse::Ok().json(data))
             }
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        }).responder()
+        })
+        .responder()
 }
 
-// #[get("/read/<publication_id>/page/<page_number>")]
-// fn read_page(publication_id: i32, page_number: usize, connection: DbConn) -> Option<NamedFile> {
-//     use schema::publication::dsl as publication;
-//     let the_publication = publication::publication
-//         .filter(publication::id.eq(publication_id))
-//         .first::<Publication>(&*connection)
-//         .expect("Invalid publication");
-
-//     let filename = cbr::page(&the_publication, page_number).expect("Unable to read page");
-//     println!("Page Filename: {:?}", filename);
-//     NamedFile::open(filename).ok()
-// }
 fn read_page(
     state: State<AppState>,
     publication_id: Path<i32>,
@@ -106,7 +102,8 @@ fn read_page(
         .db
         .send(Get {
             publication_id: publication_id.into_inner(),
-        }).from_err()
+        })
+        .from_err()
         .and_then(|res| {
             res.and_then(|publication| {
                 let filename =
@@ -114,7 +111,8 @@ fn read_page(
                 let file = NamedFile::open(filename);
                 file.map_err(|err| err.into())
             })
-        }).responder()
+        })
+        .responder()
 }
 
 // #[get("/publication/<the_publication_id>")]
@@ -142,6 +140,23 @@ fn read_page(
 //     Json(publications)
 // }
 
+fn list_by_category(
+    state: State<AppState>,
+    category_id: Path<i32>,
+) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(ListByCategory {
+            category_id: category_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
+}
+
 // #[get("/thumbnail/<publication_id>")]
 // fn get_thumbnail(publication_id: i32, connection: DbConn) -> Option<NamedFile> {
 //     use schema::publication::dsl as publication;
@@ -153,53 +168,6 @@ fn read_page(
 //     the_publication
 //         .thumbnail
 //         .and_then(|tn| NamedFile::open(tn).ok())
-// }
-
-// fn get_publication(publication_id: i32, connection: &SqliteConnection) -> QueryResult<Publication> {
-//     use schema::publication::dsl as publication;
-
-//     publication::publication
-//         .filter(publication::id.eq(publication_id))
-//         .first::<Publication>(&*connection)
-// }
-
-// fn get_publication_and_descendants(
-//     publication_id: i32,
-//     connection: &SqliteConnection,
-// ) -> QueryResult<Vec<Publication>> {
-//     let mut publications: Vec<Publication> = vec![];
-
-//     let parent_publication = get_publication(publication_id, connection)?;
-//     publications.push(parent_publication);
-
-//     let mut children = get_descendant_rec(publication_id, connection)?;
-//     publications.append(&mut children);
-
-//     Ok(publications)
-// }
-
-// fn get_descendant_rec(
-//     publication_id: i32,
-//     connection: &SqliteConnection,
-// ) -> QueryResult<Vec<Publication>> {
-//     use schema::publication::dsl as publication;
-//     let mut publications = publication::publication
-//         .filter(publication::parent_id.eq(publication_id))
-//         .load::<Publication>(connection)?;
-
-//     let mut grandchildren: Vec<Publication> = vec![];
-//     for c in publications.iter() {
-//         let mut result = get_descendant_rec(c.id, connection);
-//         match result {
-//             Ok(mut d) => {
-//                 grandchildren.append(&mut d);
-//             }
-//             Err(_) => {}
-//         }
-//     }
-
-//     publications.append(&mut grandchildren);
-//     Ok(publications)
 // }
 
 // END HERE
@@ -255,12 +223,13 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             "/{publication_id}/page/{page_number}",
             Method::GET,
             read_page,
-        ).route("/", Method::GET, list)
+        )
+        .route("/", Method::GET, list)
         .route("/", Method::POST, create)
         .route("/", Method::PUT, update)
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
-    // .route("/", Method::GET, by_publication)
+        .route("/category/{category_id}", Method::GET, list_by_category)
     // .route("/", Method::GET, get_thumbnail)
     // .route("/", Method::GET, get_publication)
 }
