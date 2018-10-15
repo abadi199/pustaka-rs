@@ -13,7 +13,7 @@ extern crate r2d2_diesel;
 extern crate unrar;
 
 pub mod api;
-// pub mod config;
+pub mod config;
 pub mod db;
 pub mod models;
 pub mod reader;

@@ -12,9 +12,9 @@ path = "src/server/main.rs"
 name = "seed"
 path = "src/server/seed.rs"
 
-# [[bin]]
-# name = "scanner"
-# path = "src/server/scanner.rs"
+[[bin]]
+name = "scanner"
+path = "src/server/scanner.rs"
 
 [lib]
 name = "pustaka"
