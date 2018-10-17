@@ -24,8 +24,9 @@ impl Handler<List> for DbExecutor {
     }
 }
 
-pub struct Create {
-    pub new_publication: NewPublication,
+pub enum Create {
+    Single(NewPublication),
+    Batch(Vec<NewPublication>),
 }
 impl Message for Create {
     type Result = Result<(), Error>;
@@ -34,12 +35,24 @@ impl Handler<Create> for DbExecutor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
+        println!("Create a new publication");
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        diesel::insert_into(publication)
-            .values(msg.new_publication)
-            .execute(&*connection)
-            .expect("Error inserting publication");
-        Ok(())
+        match msg {
+            Create::Single(new_publication) => {
+                diesel::insert_into(publication)
+                    .values(new_publication)
+                    .execute(&*connection)
+                    .expect("Error inserting publication");
+                Ok(())
+            }
+            Create::Batch(new_publications) => {
+                diesel::insert_into(publication)
+                    .values(new_publications)
+                    .execute(&*connection)
+                    .expect("Error inserting publication");
+                Ok(())
+            }
+        }
     }
 }
 

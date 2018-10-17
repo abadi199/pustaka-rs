@@ -24,9 +24,7 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
 fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<HttpResponse> {
     state
         .db
-        .send(Create {
-            new_publication: json.into_inner(),
-        })
+        .send(Create::Single(json.into_inner()))
         .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),

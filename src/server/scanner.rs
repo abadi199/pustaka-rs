@@ -1,19 +1,31 @@
 extern crate actix;
+extern crate diesel;
+extern crate futures;
 extern crate pustaka;
+extern crate r2d2;
+extern crate r2d2_diesel;
+extern crate tokio;
 
+use actix::prelude::{Actor, Addr, Request, Response, SyncArbiter, System};
+use futures::future::Future;
 use pustaka::config;
+use pustaka::db::executor::DbExecutor;
+use pustaka::db::publication;
+use pustaka::models::{NewPublication, Publication};
 use std::fs;
 use std::io;
 use std::path::Path;
 
 fn main() {
-    let sys = actix::System::new("pustaka");
-    let pool = pustaka::db::create_db_pool();
+    System::run(|| {
+        let pool = pustaka::db::create_db_pool();
+        let db = DbExecutor(pool.clone()).start();
 
-    let config = config::get_config();
-    println!("Config: {:?}", config);
-    let files = scan_path(config.publication_path);
-    println!("{:?}", files);
+        let config = config::get_config();
+        println!("Config: {:?}", config);
+        let files: Vec<String> = scan_path(config.publication_path).expect("scan_path error");
+        let _ = insert_publications(&files, db);
+    });
 }
 
 fn scan_path(publication_path: String) -> io::Result<Vec<String>> {
@@ -36,5 +48,35 @@ fn scan_path(publication_path: String) -> io::Result<Vec<String>> {
     } else {
         files.push(publication_path.clone());
     }
+
     Ok(files.to_vec())
+}
+
+fn insert_publications<'a>(
+    files: &'a [String],
+    db: Addr<DbExecutor>,
+) -> Result<Vec<NewPublication>, String> {
+    let new_publications: Vec<NewPublication> = files
+        .iter()
+        .map(|file| NewPublication {
+            isbn: "".to_string(),
+            title: "".to_string(),
+            media_type_id: 2,
+            author_id: 1,
+            thumbnail: None,
+            file: file.clone(),
+        })
+        .collect();
+    let result: Request<DbExecutor, publication::Create> =
+        db.send(publication::Create::Batch(new_publications));
+    tokio::spawn(
+        result
+            .and_then(move |_| db.send(publication::Get { publication_id: 1 }))
+            .map(|res| {
+                println!("Done inserting publication: {:?}", res);
+                System::current().stop();
+            })
+            .map_err(|_| ()),
+    );
+    Ok(vec![])
 }
