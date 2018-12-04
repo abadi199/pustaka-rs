@@ -1,6 +1,6 @@
 extern crate diesel;
 
-use actix::{Actor, Context};
+use actix::{Actor, SyncContext};
 use diesel::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -9,5 +9,5 @@ use r2d2_diesel::ConnectionManager;
 pub struct DbExecutor(pub Pool<ConnectionManager<SqliteConnection>>);
 
 impl Actor for DbExecutor {
-    type Context = Context<Self>;
+    type Context = SyncContext<Self>;
 }

@@ -1,4 +1,3 @@
-#![feature(type_ascription)]
 extern crate csv;
 extern crate diesel;
 extern crate pustaka;
@@ -36,20 +35,19 @@ fn insert_favorite_category(connection: &SqliteConnection) {
         "Science fiction".to_string(),
         "Programming".to_string(),
         "Picture book".to_string(),
-    ]; 
+    ];
 
-     for favorite_category_name in favorites {
+    for favorite_category_name in favorites {
         let category =
             get_category(&favorite_category_name, connection).expect("Error getting category");
-        
+
         diesel::insert_into(favorite_category)
-            .values(&FavoriteCategory{
+            .values(&FavoriteCategory {
                 category_id: category.id,
-            })
-            .execute(connection)
+            }).execute(connection)
             .expect("Error inserting category");
     }
- }
+}
 
 fn insert_category(connection: &SqliteConnection) {
     use schema::category::dsl::*;
@@ -64,8 +62,7 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: None,
-            })
-            .execute(connection)
+            }).execute(connection)
             .expect("Error inserting category");
     }
 
@@ -110,8 +107,7 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: Some(fiction.id),
-            })
-            .execute(connection)
+            }).execute(connection)
             .expect("Error inserting category");
     }
 
@@ -134,8 +130,7 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: Some(non_fiction.id),
-            })
-            .execute(connection)
+            }).execute(connection)
             .expect("Error inserting category");
     }
 }
@@ -211,8 +206,7 @@ fn insert_publication(connection: &SqliteConnection) {
                     .values(PublicationCategory {
                         publication_id: new_publication.id,
                         category_id: category_id,
-                    })
-                    .execute(connection)
+                    }).execute(connection)
                     .expect("Error inserting publication category");
             }
             Err(..) => {}
@@ -236,7 +230,8 @@ fn insert_publication(connection: &SqliteConnection) {
 
         let mut publications: Vec<(NewPublication, i32)> = vec![];
         for result in rdr.deserialize() {
-            if let Ok(record) = result: Result<Record, _> {
+            if let Ok(record) = result {
+                let record: Record = record;
                 let media_type = get_media_type(&record.media_type, connection)
                     .expect("Error getting media type");
                 let category =
@@ -264,8 +259,6 @@ fn insert_publication(connection: &SqliteConnection) {
 
         publications
     }
-
-
 }
 fn get_publication(the_isbn: &str, connection: &SqliteConnection) -> QueryResult<Publication> {
     use schema::publication::dsl::*;
@@ -295,8 +288,7 @@ fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryR
         diesel::insert_into(author)
             .values(&NewAuthor {
                 name: the_name.to_string(),
-            })
-            .execute(connection)
+            }).execute(connection)
             .expect("Error inserting author");
         the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
     }

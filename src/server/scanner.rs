@@ -19,7 +19,7 @@ use std::path::Path;
 fn main() {
     System::run(|| {
         let pool = pustaka::db::create_db_pool();
-        let db = DbExecutor(pool.clone()).start();
+        let db = SyncArbiter::start(1, move || DbExecutor(pool.clone()));
 
         let config = config::get_config();
         println!("Config: {:?}", config);
@@ -65,8 +65,7 @@ fn insert_publications<'a>(
             author_id: 1,
             thumbnail: None,
             file: file.clone(),
-        })
-        .collect();
+        }).collect();
     let result: Request<DbExecutor, publication::Create> =
         db.send(publication::Create::Batch(new_publications));
     tokio::spawn(
@@ -75,8 +74,7 @@ fn insert_publications<'a>(
             .map(|res| {
                 println!("Done inserting publication: {:?}", res);
                 System::current().stop();
-            })
-            .map_err(|_| ()),
+            }).map_err(|_| ()),
     );
     Ok(vec![])
 }
