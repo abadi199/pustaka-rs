@@ -44,7 +44,8 @@ fn insert_favorite_category(connection: &SqliteConnection) {
         diesel::insert_into(favorite_category)
             .values(&FavoriteCategory {
                 category_id: category.id,
-            }).execute(connection)
+            })
+            .execute(connection)
             .expect("Error inserting category");
     }
 }
@@ -62,7 +63,8 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: None,
-            }).execute(connection)
+            })
+            .execute(connection)
             .expect("Error inserting category");
     }
 
@@ -107,7 +109,8 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: Some(fiction.id),
-            }).execute(connection)
+            })
+            .execute(connection)
             .expect("Error inserting category");
     }
 
@@ -130,7 +133,8 @@ fn insert_category(connection: &SqliteConnection) {
             .values(&NewCategory {
                 name: category_name,
                 parent_id: Some(non_fiction.id),
-            }).execute(connection)
+            })
+            .execute(connection)
             .expect("Error inserting category");
     }
 }
@@ -206,7 +210,8 @@ fn insert_publication(connection: &SqliteConnection) {
                     .values(PublicationCategory {
                         publication_id: new_publication.id,
                         category_id: category_id,
-                    }).execute(connection)
+                    })
+                    .execute(connection)
                     .expect("Error inserting publication category");
             }
             Err(..) => {}
@@ -219,6 +224,7 @@ fn insert_publication(connection: &SqliteConnection) {
             isbn: String,
             title: String,
             media_type: String,
+            media_format: String,
             author: String,
             category: String,
             thumbnail: String,
@@ -249,6 +255,7 @@ fn insert_publication(connection: &SqliteConnection) {
                             None::<String>
                         },
                         media_type_id: media_type.id,
+                        media_format: record.media_format,
                         author_id: author.id,
                         file: record.file,
                     },
@@ -288,7 +295,8 @@ fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryR
         diesel::insert_into(author)
             .values(&NewAuthor {
                 name: the_name.to_string(),
-            }).execute(connection)
+            })
+            .execute(connection)
             .expect("Error inserting author");
         the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
     }

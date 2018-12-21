@@ -1,13 +1,38 @@
 use actix_web::http::Method;
 use actix_web::{
-    fs::NamedFile, middleware, App, AsyncResponder, FutureResponse, HttpResponse, Json, Path, State,
+    error::ErrorBadRequest, fs::NamedFile, middleware, App, AsyncResponder, FutureResponse,
+    HttpResponse, Json, Path, State,
 };
 use db::publication::{Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
-use reader::cbr;
+use reader::{cbr, epub};
 use state::AppState;
-use std::io;
+use std::{
+    error::Error,
+    fmt::{Display, Formatter},
+    io,
+};
+
+#[derive(Debug)]
+enum PublicationError {
+    InvalidMediaFormat,
+}
+
+const CBR: &str = "cbr";
+const EPUB: &str = "epub";
+
+impl Error for PublicationError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
+
+impl Display for PublicationError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
     state
@@ -83,16 +108,27 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => cbr::open(&publication)
-                .map_err(|err| err.into())
-                .and_then(|data| Ok(HttpResponse::Ok().json(data))),
+            Ok(ref cbr) if &cbr.media_format == CBR => read_cbr(&cbr),
+            Ok(ref epub) if &epub.media_format == EPUB => read_epub(&epub),
+            Ok(_) => Ok(HttpResponse::InternalServerError().into()),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
 }
 
+fn read_cbr(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    cbr::open(&publication)
+        .map_err(|err| err.into())
+        .and_then(|data| Ok(HttpResponse::Ok().json(data)))
+}
+
+fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    epub::open(&publication)
+        .map_err(|err| err.into())
+        .and_then(|data| Ok(HttpResponse::Ok().json(data)))
+}
+
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
-    println!("read_page");
     state
         .db
         .send(Get {
@@ -100,13 +136,31 @@ fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureRespon
         })
         .from_err()
         .and_then(move |res| {
-            res.and_then(|publication| {
-                let filename = cbr::page(&publication, params.1).expect("Unable to read page");
-                let file = NamedFile::open(filename);
-                file.map_err(|err| err.into())
+            res.and_then(|publication| match publication.media_format.as_ref() {
+                CBR => read_page_cbr(&publication, params.1),
+                EPUB => read_page_epub(&publication, params.1),
+                _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
             })
         })
         .responder()
+}
+
+fn read_page_cbr(
+    publication: &Publication,
+    page_num: usize,
+) -> Result<NamedFile, actix_web::Error> {
+    let filename = cbr::page(&publication, page_num).expect("Unable to read page");
+    let file = NamedFile::open(filename);
+    file.map_err(|err| err.into())
+}
+
+fn read_page_epub(
+    publication: &Publication,
+    page_num: usize,
+) -> Result<NamedFile, actix_web::Error> {
+    let filename = epub::page(&publication, page_num).expect("Unable to read page");
+    let file = NamedFile::open(filename);
+    file.map_err(|err| err.into())
 }
 
 fn list_by_category(

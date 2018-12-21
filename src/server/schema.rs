@@ -32,6 +32,7 @@ table! {
         isbn -> Text,
         title -> Text,
         media_type_id -> Integer,
+        media_format -> Text,
         author_id -> Integer,
         thumbnail -> Nullable<Text>,
         file -> Text,

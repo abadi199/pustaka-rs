@@ -7,10 +7,13 @@ extern crate serde_derive;
 extern crate actix;
 extern crate actix_web;
 extern crate dotenv;
+extern crate epub;
 extern crate futures;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate unrar;
+#[macro_use]
+extern crate diesel_derive_enum;
 
 pub mod api;
 pub mod config;

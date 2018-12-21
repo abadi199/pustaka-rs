@@ -10,7 +10,8 @@
     "build": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
     "start:server": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed",
-    "start": "npm run watch"
+    "start": "npm run watch",
+    "diesel:run": "diesel migration run"
   },
   "author": "",
   "license": "ISC",
