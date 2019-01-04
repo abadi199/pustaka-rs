@@ -76,10 +76,10 @@ view onLinkClicked selectedItem data =
             [ categoriesView onLinkClicked selectedItem categories ]
 
         Failure error _ ->
-            [ UI.Error.view "Error" ]
+            [ UI.Error.view <| Debug.toString error ]
 
         FailureWithData error categories ->
-            [ categoriesView onLinkClicked selectedItem categories, UI.Error.view "Error" ]
+            [ categoriesView onLinkClicked selectedItem categories, UI.Error.view <| Debug.toString error ]
     )
         |> SideNav
 

@@ -9,11 +9,14 @@ module Page.Read exposing
 
 import Browser
 import Css exposing (..)
-import Entity.Publication as Publication
+import Entity.Publication as Publication exposing (MediaFormat(..))
 import Html.Extra
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
+import Reader exposing (PageView(..))
+import Reader.Comic as Comic
+import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
@@ -25,11 +28,6 @@ type alias Model =
     , currentPage : PageView
     , previousUrl : Maybe String
     }
-
-
-type PageView
-    = DoublePage Int Int
-    | SinglePage Int
 
 
 type Msg
@@ -49,7 +47,7 @@ init pubId previousUrl =
 initialModel : Int -> Maybe String -> Model
 initialModel pubId previousUrl =
     { publication = Loading pubId
-    , currentPage = DoublePage 1 2
+    , currentPage = DoublePage 1
     , previousUrl = previousUrl
     }
 
@@ -96,28 +94,16 @@ left pub previousUrl =
 
 
 pages : Publication.Data -> PageView -> Html Msg
-pages pub currentPage =
-    let
-        imgStyle =
-            batch [ Css.height (pct 100) ]
-    in
-    div
-        [ css
-            [ flex (int 1)
-            , displayFlex
-            , flexDirection row
-            , Css.height (pct 100)
-            ]
-        ]
-        (case currentPage of
-            DoublePage a b ->
-                [ img [ css [ imgStyle ], src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt a ] []
-                , img [ css [ imgStyle ], src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt b ] []
-                ]
+pages pub pageView =
+    case pub.mediaFormat of
+        CBZ ->
+            Comic.reader pub pageView
 
-            SinglePage a ->
-                [ img [ css [ imgStyle ], src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt a ] [] ]
-        )
+        CBR ->
+            Comic.reader pub pageView
+
+        Epub ->
+            Epub.reader pub pageView
 
 
 right : Publication.Data -> Html Msg
@@ -152,8 +138,8 @@ update msg model =
 previousPage : PageView -> PageView
 previousPage currentPage =
     case currentPage of
-        DoublePage a b ->
-            DoublePage (a - 2) (b - 2)
+        DoublePage a ->
+            DoublePage (a - 2)
 
         SinglePage a ->
             SinglePage (a - 1)
@@ -162,8 +148,8 @@ previousPage currentPage =
 nextPage : PageView -> PageView
 nextPage currentPage =
     case currentPage of
-        DoublePage a b ->
-            DoublePage (a + 2) (b + 2)
+        DoublePage a ->
+            DoublePage (a + 2)
 
         SinglePage a ->
             SinglePage (a + 1)

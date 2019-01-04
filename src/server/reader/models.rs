@@ -8,6 +8,7 @@ pub struct Data {
     pub thumbnail_url: Option<String>,
     pub file: String,
     pub total_pages: usize,
+    pub media_format: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

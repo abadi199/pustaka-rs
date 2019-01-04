@@ -49,7 +49,8 @@ fn main() {
                 .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
                 .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
         ]
-    }).bind("0.0.0.0:8080")
+    })
+    .bind("0.0.0.0:8080")
     .unwrap()
     .start();
 

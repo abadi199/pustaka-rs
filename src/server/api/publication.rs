@@ -94,7 +94,10 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
+            Ok(publication) => {
+                println!("{:?}", publication);
+                Ok(HttpResponse::Ok().json(publication))
+            }
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
@@ -158,8 +161,11 @@ fn read_page_epub(
     publication: &Publication,
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
-    let filename = epub::page(&publication, page_num).expect("Unable to read page");
-    let file = NamedFile::open(filename);
+    println!("read_page_epub");
+    let content = epub::page(&publication, page_num).expect("Unable to read page");
+    println!("Content: {}", content);
+    // Ok(HttpResponse::Ok().json(content))
+    let file = NamedFile::open("".to_string());
     file.map_err(|err| err.into())
 }
 

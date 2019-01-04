@@ -45,6 +45,7 @@ pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
         author_id: the_publication.author_id,
         thumbnail_url: the_publication.thumbnail_url().clone(),
         file: the_publication.file.clone(),
+        media_format: the_publication.media_format.clone(),
         total_pages: open_archive.map(|cbr| cbr.count()).unwrap_or(0),
     })
 }

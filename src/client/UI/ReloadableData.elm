@@ -22,7 +22,7 @@ view successView reloadableData =
             [ successView publications ]
 
         Failure error _ ->
-            [ UI.Error.view "Error" ]
+            [ UI.Error.view <| Debug.toString error ]
 
         FailureWithData error publications ->
-            [ successView publications, UI.Error.view "Error" ]
+            [ successView publications, UI.Error.view <| Debug.toString error ]

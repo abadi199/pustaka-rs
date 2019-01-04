@@ -130,10 +130,10 @@ mainSection data =
                 [ publicationsView publications ]
 
             Failure error _ ->
-                [ UI.Error.view "Error" ]
+                [ UI.Error.view <| Debug.toString error ]
 
             FailureWithData error publications ->
-                [ publicationsView publications, UI.Error.view "Error" ]
+                [ publicationsView publications, UI.Error.view <| Debug.toString error ]
         )
 
 

@@ -1,12 +1,12 @@
-module Entity.Publication
-    exposing
-        ( Data
-        , MetaData
-        , Page
-        , get
-        , listByCategory
-        , read
-        )
+module Entity.Publication exposing
+    ( Data
+    , MediaFormat(..)
+    , MetaData
+    , Page
+    , get
+    , listByCategory
+    , read
+    )
 
 import Json.Decode as JD
 import Json.Encode as JE
@@ -30,7 +30,14 @@ type alias Data =
     , thumbnail : Maybe String
     , totalPages : Int
     , currentPages : List Page
+    , mediaFormat : MediaFormat
     }
+
+
+type MediaFormat
+    = CBR
+    | CBZ
+    | Epub
 
 
 type alias Page =
@@ -75,13 +82,34 @@ metaDecoder =
 
 decoder : JD.Decoder Data
 decoder =
-    JD.map6 Data
+    JD.map7 Data
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
         (JD.field "thumbnail_url" (JD.maybe JD.string))
         (JD.field "total_pages" JD.int)
         (JD.maybe (JD.field "pages" (JD.list pageDecoder)) |> JD.map (Maybe.withDefault []))
+        (JD.field "media_format" mediaFormatDecoder)
+
+
+mediaFormatDecoder : JD.Decoder MediaFormat
+mediaFormatDecoder =
+    JD.string
+        |> JD.andThen
+            (\str ->
+                case String.toUpper str of
+                    "CBR" ->
+                        JD.succeed CBR
+
+                    "CBZ" ->
+                        JD.succeed CBZ
+
+                    "EPUB" ->
+                        JD.succeed Epub
+
+                    _ ->
+                        JD.fail <| "Unknown Format " ++ str
+            )
 
 
 pageDecoder : JD.Decoder Page
