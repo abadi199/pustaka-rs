@@ -9,4 +9,8 @@ import Reader exposing (PageView(..))
 
 reader : Publication.Data -> PageView -> Html msg
 reader pub pageView =
-    text "EPUB"
+    let
+        _ =
+            Debug.log "data" pub
+    in
+    node "epub-viewer" [ attribute "epub" "sample.epub" ] []
