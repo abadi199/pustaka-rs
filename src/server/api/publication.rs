@@ -1,7 +1,7 @@
 use actix_web::http::Method;
 use actix_web::{
     error::ErrorBadRequest, fs::NamedFile, middleware, App, AsyncResponder, FutureResponse,
-    HttpResponse, Json, Path, State,
+    HttpRequest, HttpResponse, Json, Path, Result, State,
 };
 use db::publication::{Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
@@ -12,6 +12,7 @@ use std::{
     error::Error,
     fmt::{Display, Formatter},
     io,
+    path::PathBuf,
 };
 
 #[derive(Debug)]
@@ -94,10 +95,7 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => {
-                println!("{:?}", publication);
-                Ok(HttpResponse::Ok().json(publication))
-            }
+            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
@@ -161,10 +159,7 @@ fn read_page_epub(
     publication: &Publication,
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
-    println!("read_page_epub");
     let content = epub::page(&publication, page_num).expect("Unable to read page");
-    println!("Content: {}", content);
-    // Ok(HttpResponse::Ok().json(content))
     let file = NamedFile::open("".to_string());
     file.map_err(|err| err.into())
 }
@@ -206,6 +201,27 @@ fn get_thumbnail(state: State<AppState>, publication_id: Path<i32>) -> FutureRes
         .responder()
 }
 
+fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
+    let publication_id: i32 = req.match_info().query("publication_id").unwrap();
+    let file: PathBuf = req.match_info().query("tail").unwrap();
+    req.state()
+        .db
+        .send(Get {
+            publication_id: publication_id,
+        })
+        .from_err()
+        .and_then(|res| res.and_then(|publication| download_file(&publication, file)))
+        .responder()
+}
+
+fn download_file(the_publication: &Publication, path: PathBuf) -> Result<NamedFile> {
+    if the_publication.media_format == EPUB {
+        return epub::file(the_publication, path).map_err(|err| err.into());
+    }
+
+    Err(ErrorBadRequest(PublicationError::InvalidMediaFormat))
+}
+
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
     App::with_state(state)
         .middleware(middleware::Logger::default())
@@ -224,4 +240,5 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             Method::GET,
             read_page,
         )
+        .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
 }

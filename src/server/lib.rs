@@ -12,6 +12,7 @@ extern crate futures;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate unrar;
+extern crate zip;
 #[macro_use]
 extern crate diesel_derive_enum;
 
@@ -22,3 +23,4 @@ pub mod models;
 pub mod reader;
 pub mod schema;
 pub mod state;
+pub mod unzip;

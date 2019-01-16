@@ -1,12 +1,19 @@
 class EpubViewer extends HTMLElement {
   constructor() {
     super();
+  }
+
+  connectedCallback() {
     const shadow = this.attachShadow({ mode: "open" });
     const info = document.createElement("div");
-    debugger;
-    const epubLocation = this.getAttribute("epub");
-    info.textContent = epubLocation + "BLa bla bla";
+    const location = this.getAttribute("epub");
+    console.log(location);
+
     shadow.appendChild(info);
+
+    const book = ePub(location);
+    const rendition = book.renderTo(info, { width: 600, height: 400 });
+    const displayed = rendition.display();
   }
 }
 
