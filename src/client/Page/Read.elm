@@ -8,6 +8,7 @@ module Page.Read exposing
     )
 
 import Browser
+import Browser.Dom exposing (Viewport)
 import Css exposing (..)
 import Entity.Publication as Publication exposing (MediaFormat(..))
 import Html.Extra
@@ -52,8 +53,8 @@ initialModel pubId previousUrl =
     }
 
 
-view : Model -> Browser.Document Msg
-view model =
+view : Viewport -> Model -> Browser.Document Msg
+view viewport model =
     { title = "Read"
     , body =
         UI.ReloadableData.view
@@ -68,7 +69,7 @@ view model =
                         ]
                     ]
                     [ left pub model.previousUrl
-                    , pages pub model.currentPage
+                    , pages viewport pub model.currentPage
                     , right pub
                     ]
             )
@@ -80,7 +81,8 @@ view model =
 left : Publication.Data -> Maybe String -> Html Msg
 left pub previousUrl =
     div
-        [ css
+        [ id "prevButton"
+        , css
             [ backgroundColor (rgba 0 0 0 0.95)
             , color (rgba 255 255 255 1)
             , flex (int 1)
@@ -93,8 +95,8 @@ left pub previousUrl =
         ]
 
 
-pages : Publication.Data -> PageView -> Html Msg
-pages pub pageView =
+pages : Viewport -> Publication.Data -> PageView -> Html Msg
+pages viewport pub pageView =
     case pub.mediaFormat of
         CBZ ->
             Comic.reader pub pageView
@@ -103,13 +105,14 @@ pages pub pageView =
             Comic.reader pub pageView
 
         Epub ->
-            Epub.reader pub pageView
+            Epub.reader viewport pub pageView
 
 
 right : Publication.Data -> Html Msg
 right pub =
     div
-        [ css
+        [ id "nextButton"
+        , css
             [ backgroundColor (rgba 0 0 0 0.95)
             , flex (int 1)
             , Css.height (pct 100)

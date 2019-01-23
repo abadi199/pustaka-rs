@@ -1,6 +1,8 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom exposing (Viewport)
+import Browser.Events
 import Browser.Navigation as Nav
 import Entity.Category exposing (Category)
 import Html exposing (..)
@@ -12,6 +14,7 @@ import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
 import Return
 import Set
+import Task
 import Tree exposing (Tree)
 import UI.Layout
 import UI.Nav.Side
@@ -36,6 +39,7 @@ type alias Model =
     { key : Nav.Key
     , page : Page
     , favoriteCategories : ReloadableWebData () (List Category)
+    , viewport : Viewport
     }
 
 
@@ -54,6 +58,8 @@ type Msg
     | LinkClicked Browser.UrlRequest
     | LoadFavoriteCompleted (ReloadableWebData () (List Category))
     | PageMsg PageMsg
+    | Resized
+    | ViewPortUpdated Viewport
 
 
 type PageMsg
@@ -65,7 +71,7 @@ type PageMsg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Browser.Events.onResize (\_ _ -> Resized)
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -76,10 +82,18 @@ init _ url key =
                 { key = key
                 , page = Home HomePage.initialModel
                 , favoriteCategories = ReloadableData.Loading ()
+                , viewport =
+                    { scene = { width = 0, height = 0 }
+                    , viewport = { x = 0, y = 0, width = 0, height = 0 }
+                    }
                 }
     in
     ( model
-    , Cmd.batch [ cmd, Entity.Category.favorite LoadFavoriteCompleted ]
+    , Cmd.batch
+        [ cmd
+        , Entity.Category.favorite LoadFavoriteCompleted
+        , Browser.Dom.getViewport |> Task.perform ViewPortUpdated
+        ]
     )
 
 
@@ -88,6 +102,14 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        Resized ->
+            ( model
+            , Browser.Dom.getViewport |> Task.perform ViewPortUpdated
+            )
+
+        ViewPortUpdated viewport ->
+            ( { model | viewport = viewport }, Cmd.none )
 
         LoadFavoriteCompleted data ->
             ( { model | favoriteCategories = data }, Cmd.none )
@@ -152,7 +174,7 @@ view model =
                 |> mapPage (PageMsg << PublicationMsg)
 
         Read readModel ->
-            ReadPage.view readModel
+            ReadPage.view model.viewport readModel
                 |> mapPage (PageMsg << ReadMsg)
 
         Problem text ->

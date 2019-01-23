@@ -3,17 +3,58 @@ class EpubViewer extends HTMLElement {
     super();
   }
 
+  static get observedAttributes() {
+    return ["width", "height"];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (this.rendition) {
+      const width = this.getAttribute("width");
+      const height = this.getAttribute("height");
+      this.rendition.resize(width, height);
+    }
+  }
+
   connectedCallback() {
     const shadow = this.attachShadow({ mode: "open" });
-    const info = document.createElement("div");
+    const bookContainer = document.createElement("div");
     const location = this.getAttribute("epub");
-    console.log(location);
+    const width = this.getAttribute("width");
+    const height = this.getAttribute("height");
 
-    shadow.appendChild(info);
+    shadow.appendChild(bookContainer);
 
-    const book = ePub(location);
-    const rendition = book.renderTo(info, { width: 600, height: 400 });
-    const displayed = rendition.display();
+    this.book = ePub(location);
+    this.rendition = this.book.renderTo(bookContainer, {
+      flow: "paginated",
+      width: width,
+      height: height
+    });
+    this.displayed = this.rendition.display();
+
+    this.book.ready.then(() => {
+      const prevButton = document.getElementById("prevButton");
+      const nextButton = document.getElementById("nextButton");
+
+      prevButton.addEventListener(
+        "click",
+        e => {
+          this.book.package.metadata.direction === "rtl"
+            ? this.rendition.next()
+            : this.rendition.prev();
+        },
+        false
+      );
+      nextButton.addEventListener(
+        "click",
+        e => {
+          this.book.package.metadata.direction === "rtl"
+            ? this.rendition.prev()
+            : this.rendition.next();
+        },
+        false
+      );
+    });
   }
 }
 
