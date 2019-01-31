@@ -24,7 +24,7 @@ import UI.Loading
 import UI.Menu
 import UI.Nav.Side
 import UI.Parts.Search
-import UI.Thumbnail as UI
+import UI.Poster as UI
 
 
 type alias Model =

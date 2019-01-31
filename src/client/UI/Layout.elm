@@ -21,6 +21,7 @@ withSideNav { title, sideNav, content } =
                     :: [ el
                             [ width fill
                             , height fill
+                            , padding 20
                             ]
                             content
                        ]

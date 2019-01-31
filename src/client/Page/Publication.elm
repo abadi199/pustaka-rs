@@ -23,6 +23,7 @@ import Tree exposing (Tree)
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Search
+import UI.Poster as UI
 import UI.ReloadableData
 
 
@@ -43,8 +44,7 @@ view categoryData model =
 
 publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
-    row
-        []
+    column []
         [ el [ Region.heading 2 ] (text publication.title)
         , posterView publication.id publication.thumbnail publication.title
         ]
@@ -52,17 +52,12 @@ publicationView publication =
 
 posterView : Int -> Maybe String -> String -> Element Msg
 posterView publicationId maybePoster title =
-    case maybePoster of
-        Just poster ->
-            el []
-                (link MenuItemClicked
-                    []
-                    (Route.readUrl publicationId)
-                    (image [] { src = poster, description = title })
-                )
-
-        Nothing ->
-            el [] none
+    el []
+        (link MenuItemClicked
+            []
+            (Route.readUrl publicationId)
+            (UI.poster title maybePoster)
+        )
 
 
 update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
