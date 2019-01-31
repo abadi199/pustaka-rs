@@ -1,12 +1,11 @@
-module Tree
-    exposing
-        ( Node
-        , Tree
-        , flatten
-        , map
-        , node
-        , roots
-        )
+module Tree exposing
+    ( Node
+    , Tree
+    , flatten
+    , map
+    , node
+    , roots
+    )
 
 
 type alias Tree n =
@@ -39,7 +38,13 @@ map f t =
         |> List.map (\(Node n c) -> Node (f n) (map f c))
 
 
-flatten : (n -> List m -> m) -> Tree n -> List m
+flatten : (Int -> n -> List m -> m) -> Tree n -> List m
 flatten f t =
     t
-        |> List.map (\(Node n c) -> f n (flatten f c))
+        |> List.map (\(Node n c) -> f 0 n (flattenChildren 1 f c))
+
+
+flattenChildren : Int -> (Int -> n -> List m -> m) -> Tree n -> List m
+flattenChildren level f t =
+    t
+        |> List.map (\(Node n c) -> f level n (flattenChildren (level + 1) f c))

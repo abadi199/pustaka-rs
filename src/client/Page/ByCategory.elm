@@ -67,9 +67,7 @@ view key categories model =
             categories
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , content =
-            [ categorySliderView key model
-            ]
+        , content = categorySliderView key model
         }
 
 

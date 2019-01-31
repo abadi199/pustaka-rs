@@ -14,13 +14,18 @@ import Tree exposing (Tree)
 
 view : Tree { text : String, link : Link msg, selected : Bool } -> Element msg
 view items =
-    row []
+    column []
         (items
             |> Tree.map viewItem
             |> Tree.flatten
-                (\n c ->
-                    row
-                        []
+                (\level n c ->
+                    column
+                        [ if level == 0 then
+                            padding 0
+
+                          else
+                            paddingEach { top = 0, right = 0, bottom = 0, left = 15 }
+                        ]
                         (n ++ c)
                 )
         )

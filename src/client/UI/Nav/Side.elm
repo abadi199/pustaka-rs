@@ -7,9 +7,10 @@ module UI.Nav.Side exposing
     )
 
 import Browser.Navigation as Nav
-import Css exposing (..)
 import Css.Global exposing (a, global)
 import Element as E exposing (..)
+import Element.Background as Background
+import Element.Border as Border
 import Entity.Category exposing (Category)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
@@ -39,7 +40,11 @@ type SelectedItem
 toElement : SideNav msg -> Element msg
 toElement sideNav =
     E.column
-        []
+        [ alignTop
+        , height fill
+        , Background.color (rgba 0 0 0 0.125)
+        , padding 20
+        ]
         (case sideNav of
             SideNav element ->
                 element

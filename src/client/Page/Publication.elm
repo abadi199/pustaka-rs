@@ -35,10 +35,9 @@ view categoryData model =
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.NoSelection
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
-            [ UI.ReloadableData.view
+            UI.ReloadableData.view
                 publicationView
                 model.publication
-            ]
         }
 
 

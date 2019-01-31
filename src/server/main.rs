@@ -50,10 +50,10 @@ fn main() {
                 .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
         ]
     })
-    .bind("0.0.0.0:8080")
+    .bind("0.0.0.0:8081")
     .unwrap()
     .start();
 
-    println!("Started pustaka server at 0.0.0.0:8080");
+    println!("Started pustaka server at 0.0.0.0:8081");
     let _ = sys.run();
 }

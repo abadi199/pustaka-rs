@@ -24,6 +24,7 @@ import UI.Loading
 import UI.Menu
 import UI.Nav.Side
 import UI.Parts.Search
+import UI.Thumbnail as UI
 
 
 type alias Model =
@@ -109,7 +110,7 @@ view key categories model =
             categories
                 |> UI.Nav.Side.view MenuItemClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , content = [ mainSection model.publications ]
+        , content = mainSection model.publications
         }
 
 
@@ -139,24 +140,19 @@ mainSection data =
 
 publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    row []
+    row [ padding 40 ]
         (publications |> List.map publicationView)
 
 
 publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
+    let
+        url =
+            Route.publicationUrl publication.id
+    in
     UI.Card.view
-        [ link [] { url = "", label = text publication.title }
-        , link []
-            { url = Route.publicationUrl publication.id
-            , label =
-                publication.thumbnail
-                    |> Maybe.map (\thumbnail -> image [] { src = thumbnail, description = publication.title })
-                    |> Maybe.withDefault emptyThumbnail
+        [ link [ width fill ]
+            { url = url
+            , label = UI.thumbnail publication.title publication.thumbnail
             }
         ]
-
-
-emptyThumbnail : Element msg
-emptyThumbnail =
-    el [] (text "N/A")

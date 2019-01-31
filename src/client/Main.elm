@@ -4,6 +4,7 @@ import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
+import Element as E
 import Entity.Category exposing (Category)
 import Html exposing (..)
 import Page.ByCategory as ByCategoryPage
@@ -189,7 +190,7 @@ view model =
                     model.favoriteCategories
                         |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
                         |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-                , content = []
+                , content = E.none
                 }
 
         ByCategory byCategoryModel ->
