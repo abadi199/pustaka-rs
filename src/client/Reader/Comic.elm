@@ -1,45 +1,51 @@
 module Reader.Comic exposing (reader)
 
 import Css exposing (..)
+import Element as E exposing (..)
 import Entity.Publication as Publication
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
+import Html as H
+import Html.Attributes as HA
 import Reader exposing (PageView(..))
 
 
-reader : Publication.Data -> PageView -> Html msg
+reader : Publication.Data -> PageView -> Element msg
 reader pub pageView =
     let
         imgStyle =
             batch [ Css.height (pct 100) ]
     in
-    div
-        [ css
-            [ flex (int 1)
-            , displayFlex
-            , flexDirection row
-            , Css.height (pct 100)
-            ]
-        ]
+    el []
         (case pageView of
             DoublePage pageNum ->
-                [ img
-                    [ css [ imgStyle ]
-                    , src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt pageNum
+                E.row []
+                    [ E.html <|
+                        H.img
+                            [ HA.src <|
+                                "/api/publication/read/"
+                                    ++ String.fromInt pub.id
+                                    ++ "/page/"
+                                    ++ String.fromInt pageNum
+                            ]
+                            []
+                    , E.html <|
+                        H.img
+                            [ HA.src <|
+                                "/api/publication/read/"
+                                    ++ String.fromInt pub.id
+                                    ++ "/page/"
+                                    ++ String.fromInt (pageNum + 1)
+                            ]
+                            []
                     ]
-                    []
-                , img
-                    [ css [ imgStyle ]
-                    , src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt (pageNum + 1)
-                    ]
-                    []
-                ]
 
             SinglePage pageNum ->
-                [ img
-                    [ css [ imgStyle ]
-                    , src <| "/api/publication/read/" ++ String.fromInt pub.id ++ "/page/" ++ String.fromInt pageNum
-                    ]
-                    []
-                ]
+                E.html <|
+                    H.img
+                        [ HA.src <|
+                            "/api/publication/read/"
+                                ++ String.fromInt pub.id
+                                ++ "/page/"
+                                ++ String.fromInt pageNum
+                        ]
+                        []
         )

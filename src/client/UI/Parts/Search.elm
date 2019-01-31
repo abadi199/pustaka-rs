@@ -1,89 +1,31 @@
-module UI.Parts.Search exposing (Search, toHtml, view)
+module UI.Parts.Search exposing (Search, toElement, view)
 
 import Css exposing (..)
 import Css.Global
 import Css.Transitions
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
+import Element as E exposing (..)
+import Element.Input as Input
 
 
 type Search msg
-    = Search (Html msg)
+    = Search (Element msg)
 
 
 type State
     = State { focused : Bool, value : String }
 
 
-toHtml : Search msg -> Html msg
-toHtml (Search html) =
-    html
+toElement : Search msg -> Element msg
+toElement (Search element) =
+    element
 
 
-view : (String -> msg) -> Search msg
-view msg =
-    let
-        animationSpeed =
-            100
-
-        transitions =
-            Css.Transitions.transition
-                [ Css.Transitions.color animationSpeed
-                , Css.Transitions.transform animationSpeed
-                , Css.Transitions.padding animationSpeed
-                , Css.Transitions.fontSize animationSpeed
-                ]
-
-        searchStyle =
-            [ position relative
-            , Css.property "display" "grid"
-            ]
-
-        labelStyle =
-            [ position absolute
-            , color (rgba 0 0 0 0.5)
-            , Css.height (pct 100)
-            , displayFlex
-            , alignItems center
-            , paddingLeft (px 16)
-            , transitions
-            , fontSize (px 20)
-            ]
-
-        floatLabelStyle =
-            [ Css.Global.generalSiblings
-                [ Css.Global.selector "span"
-                    [ transform (translate3d zero (pct -25) zero)
-                    , fontSize (px 12)
-                    ]
-                ]
-
-            -- , paddingTop (Css.em 2)
-            ]
-
-        inputStyle =
-            [ boxShadow5 inset (px 2) (px 2) (px 5) (rgba 0 0 0 0.5)
-            , border zero
-            , borderRadius zero
-            , padding4 (px 20) (px 16) (px 10) (px 16)
-            , transitions
-            , fontSize (Css.em 1)
-            , focus floatLabelStyle
-            , pseudoClass "not(:placeholder-shown)" floatLabelStyle
-            ]
-    in
-    label
-        [ css searchStyle
-        ]
-        [ input
-            [ type_ "text"
-            , css inputStyle
-            , placeholder " "
-            ]
-            []
-        , span
-            [ css labelStyle
-            ]
-            [ text "Search" ]
-        ]
+view : (String -> msg) -> String -> Search msg
+view msg value =
+    Input.text []
+        { onChange = msg
+        , text = value
+        , placeholder = Nothing
+        , label = Input.labelAbove [] (text "Search")
+        }
         |> Search

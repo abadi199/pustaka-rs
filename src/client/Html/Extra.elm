@@ -1,18 +1,16 @@
 module Html.Extra exposing (link)
 
 import Css exposing (..)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (css, href)
-import Html.Styled.Events exposing (..)
+import Element as E exposing (..)
+import Element.Events exposing (onClick)
+import Html as H
 import Json.Decode as JD
 
 
-link : (String -> msg) -> String -> List (Attribute msg) -> List (Html msg) -> Html msg
-link msg url attrs children =
-    a
-        (href url
-            :: preventDefaultOn "click" (JD.succeed ( msg url, True ))
-            :: css [ color unset ]
-            :: attrs
-        )
-        children
+link : (String -> msg) -> List (Attribute msg) -> String -> Element msg -> E.Element msg
+link msg attrs url label =
+    E.link
+        [ onClick (msg url) ]
+        { url = url
+        , label = label
+        }

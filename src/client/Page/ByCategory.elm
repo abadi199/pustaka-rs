@@ -8,11 +8,9 @@ module Page.ByCategory exposing
 
 import Browser
 import Browser.Navigation as Nav
-import Css exposing (..)
+import Element as E exposing (..)
 import Entity.Category exposing (Category)
 import Html.Extra
-import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Set
@@ -28,6 +26,7 @@ import UI.ReloadableData
 type alias Model =
     { categories : ReloadableWebData () (List Category)
     , selectedCategoryId : Maybe Int
+    , searchText : String
     }
 
 
@@ -41,6 +40,7 @@ init : Maybe Int -> ( Model, Cmd Msg )
 init selectedCategoryId =
     ( { categories = ReloadableData.Loading ()
       , selectedCategoryId = selectedCategoryId
+      , searchText = ""
       }
     , Entity.Category.list LoadCategoryCompleted
     )
@@ -66,57 +66,38 @@ view key categories model =
         , sideNav =
             categories
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             [ categorySliderView key model
             ]
         }
 
 
-categorySliderView : Nav.Key -> Model -> Html Msg
+categorySliderView : Nav.Key -> Model -> Element Msg
 categorySliderView key model =
-    div
-        [ css
-            [ position absolute
-            , top zero
-            , left zero
-            , Css.width (pct 100)
-            , backgroundColor (rgba 255 255 255 0.73)
-            , UI.Css.Basics.containerShadow
-            ]
-        ]
-        [ div
-            [ css
-                [ margin (rem 1)
-                , displayFlex
-                , flexDirection row
-                , justifyContent spaceBetween
-                , alignItems flexEnd
-                ]
-            ]
+    el
+        []
+        (row
+            []
             (UI.ReloadableData.view (categoriesView key model) model.categories
-                ++ [ Html.Extra.link MenuItemClicked
+                :: [ Html.Extra.link MenuItemClicked
+                        []
                         ""
-                        [ css [ whiteSpace noWrap, displayFlex, alignItems center ] ]
-                        [ UI.Icon.Navigation.expandMore
-                        , Html.text "All Categories"
-                        ]
+                        (row
+                            []
+                            [ UI.Icon.Navigation.expandMore
+                            , text "All Categories"
+                            ]
+                        )
                    ]
             )
-        ]
+        )
 
 
-categoriesView : Nav.Key -> Model -> List Category -> Html Msg
+categoriesView : Nav.Key -> Model -> List Category -> Element Msg
 categoriesView key model categories =
-    ul
-        [ css
-            [ listStyle none
-            , padding zero
-            , margin zero
-            , displayFlex
-            , flexWrap Css.wrap
-            ]
-        ]
+    row
+        []
         (categoryView key model "All" Nothing
             :: (categories
                     |> List.take 5
@@ -125,40 +106,19 @@ categoriesView key model categories =
         )
 
 
-categoryView : Nav.Key -> Model -> String -> Maybe Int -> Html Msg
+categoryView : Nav.Key -> Model -> String -> Maybe Int -> Element Msg
 categoryView key model categoryName maybeCategoryId =
-    let
-        listItemStyle =
-            batch
-                [ padding2 zero (rem 0.5)
-                , borderRight3 (px 1) solid UI.Css.Color.black
-                , color UI.Css.Color.black
-                , lastOfType [ borderRight zero ]
-                ]
-
-        currentStyle =
-            batch [ fontWeight bold ]
-    in
-    li
-        [ css
-            [ listItemStyle
-            , if model.selectedCategoryId == maybeCategoryId then
-                currentStyle
-
-              else
-                batch []
-            ]
-        ]
-        [ case maybeCategoryId of
+    el []
+        (case maybeCategoryId of
             Just categoryId ->
                 Html.Extra.link MenuItemClicked
+                    []
                     (Route.browseByCategoryIdUrl categoryId)
-                    [ css [ color unset ] ]
-                    [ text categoryName ]
+                    (text categoryName)
 
             Nothing ->
                 Html.Extra.link MenuItemClicked
+                    []
                     Route.browseByCategoryUrl
-                    [ css [ color unset ] ]
-                    [ text categoryName ]
-        ]
+                    (text categoryName)
+        )

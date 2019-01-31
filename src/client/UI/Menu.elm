@@ -6,70 +6,37 @@ module UI.Menu exposing
     , view
     )
 
-import Css exposing (..)
+import Element as E exposing (..)
 import Html.Events exposing (..)
 import Html.Extra exposing (link)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 import Tree exposing (Tree)
 
 
-view : Tree { text : String, link : Link msg, selected : Bool } -> Html msg
+view : Tree { text : String, link : Link msg, selected : Bool } -> Element msg
 view items =
-    nav []
+    row []
         (items
             |> Tree.map viewItem
             |> Tree.flatten
                 (\n c ->
-                    ul
-                        [ css
-                            [ margin zero
-                            , padding4 zero (rem 1) zero (rem 1)
-                            ]
-                        ]
+                    row
+                        []
                         (n ++ c)
                 )
         )
 
 
-viewItem : { text : String, link : Link msg, selected : Bool } -> List (Html msg)
+viewItem : { text : String, link : Link msg, selected : Bool } -> List (Element msg)
 viewItem item =
-    let
-        itemStyles =
-            if item.selected then
-                [ css
-                    [ fontWeight bold
-                    , cursor pointer
-                    ]
-                ]
+    case item.link of
+        External url ->
+            [ E.link [] { url = url, label = text item.text } ]
 
-            else
-                [ css [ cursor pointer ] ]
+        Internal msg url ->
+            [ E.link [] { url = url, label = text item.text } ]
 
-        linkStyles =
-            css [ color unset, textDecoration unset ]
-    in
-    [ li
-        (itemStyles
-            ++ [ css
-                    [ listStyleType none
-                    , padding zero
-                    , margin zero
-                    ]
-               ]
-        )
-        (case item.link of
-            External url ->
-                [ a [ linkStyles, href url ] [ text item.text ] ]
-
-            Internal msg url ->
-                [ link msg url [ linkStyles ] [ text item.text ]
-                ]
-
-            NoLink ->
-                [ span [ linkStyles ] [ text item.text ] ]
-        )
-    ]
+        NoLink ->
+            [ el [] (text item.text) ]
 
 
 externalLink : String -> Link msg

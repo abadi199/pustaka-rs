@@ -1,28 +1,28 @@
 module UI.ReloadableData exposing (view)
 
-import Html.Styled exposing (..)
+import Element as E exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import UI.Error
 import UI.Loading
 
 
-view : (a -> Html msg) -> ReloadableWebData i a -> List (Html msg)
-view successView reloadableData =
+view : (a -> Element msg) -> ReloadableWebData i a -> Element msg
+view successElement reloadableData =
     case reloadableData of
         NotAsked _ ->
-            []
+            E.none
 
         Loading _ ->
-            [ UI.Loading.view ]
+            UI.Loading.view
 
         Reloading publications ->
-            [ UI.Loading.view, successView publications ]
+            el [ inFront UI.Loading.view ] (successElement publications)
 
         Success publications ->
-            [ successView publications ]
+            successElement publications
 
         Failure error _ ->
-            [ UI.Error.view <| Debug.toString error ]
+            UI.Error.view <| Debug.toString error
 
         FailureWithData error publications ->
-            [ successView publications, UI.Error.view <| Debug.toString error ]
+            el [ inFront <| UI.Error.view <| Debug.toString error ] (successElement publications)

@@ -1,11 +1,16 @@
-module UI.Nav.Side exposing (SelectedItem(..), SideNav, toHtml, view, withSearch)
+module UI.Nav.Side exposing
+    ( SelectedItem(..)
+    , SideNav
+    , toElement
+    , view
+    , withSearch
+    )
 
 import Browser.Navigation as Nav
 import Css exposing (..)
 import Css.Global exposing (a, global)
+import Element as E exposing (..)
 import Entity.Category exposing (Category)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
@@ -18,8 +23,8 @@ import UI.Parts.Search exposing (Search)
 
 
 type SideNav msg
-    = SideNav (List (Html msg))
-    | SideNavWithSearch (Search msg) (List (Html msg))
+    = SideNav (List (Element msg))
+    | SideNavWithSearch (Search msg) (List (Element msg))
 
 
 type SelectedItem
@@ -31,30 +36,24 @@ type SelectedItem
     | Settings
 
 
-toHtml : SideNav msg -> Html msg
-toHtml sideNav =
-    div
-        [ css
-            [ backgroundColor (rgba 0 0 0 0.2)
-            , color (rgba 255 255 255 1)
-            , padding (rem 1)
-            , UI.Css.Basics.containerShadow
-            ]
-        ]
+toElement : SideNav msg -> Element msg
+toElement sideNav =
+    E.column
+        []
         (case sideNav of
-            SideNav html ->
-                html
+            SideNav element ->
+                element
 
-            SideNavWithSearch search html ->
-                UI.Parts.Search.toHtml search :: html
+            SideNavWithSearch search element ->
+                UI.Parts.Search.toElement search :: element
         )
 
 
 withSearch : Search msg -> SideNav msg -> SideNav msg
 withSearch search sideNav =
     case sideNav of
-        SideNav html ->
-            SideNavWithSearch search html
+        SideNav element ->
+            SideNavWithSearch search element
 
         SideNavWithSearch _ _ ->
             sideNav
@@ -94,35 +93,10 @@ isSelectedCategoryId categoryId selectedItem =
             False
 
 
-categoriesView : (String -> msg) -> SelectedItem -> List Category -> Html msg
+categoriesView : (String -> msg) -> SelectedItem -> List Category -> Element msg
 categoriesView onLinkClicked selectedItem categories =
-    div
-        [ css
-            [ marginTop (rem 4)
-            , minWidth (px 300)
-            , color (rgba 255 255 255 0.7)
-            , Css.Global.descendants
-                [ Css.Global.typeSelector "li"
-                    [ margin2 (Css.em 0.5) zero ]
-                ]
-            , Css.Global.children
-                [ Css.Global.typeSelector "nav"
-                    [ Css.Global.children
-                        [ Css.Global.typeSelector "ul"
-                            [ padding zero
-                            , Css.Global.children
-                                [ Css.Global.typeSelector "li"
-                                    [ margin3 (Css.em 2) zero (Css.em 1)
-                                    , fontSize (px 20)
-                                    , fontWeight bold
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
+    E.column
+        []
         [ UI.Menu.view
             [ Tree.node
                 { text = "Home"

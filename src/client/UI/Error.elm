@@ -1,8 +1,8 @@
 module UI.Error exposing (view)
 
-import Html.Styled exposing (..)
+import Element exposing (..)
 
 
-view : String -> Html msg
+view : String -> Element msg
 view error =
-    div [] [ text error ]
+    el [] (text error)

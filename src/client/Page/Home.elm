@@ -10,11 +10,9 @@ module Page.Home exposing
 
 import Browser
 import Browser.Navigation as Nav
-import Css exposing (..)
+import Element as E exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
@@ -31,6 +29,7 @@ import UI.Parts.Search
 type alias Model =
     { selectedCategoryId : Maybe Int
     , publications : ReloadableWebData () (List Publication.MetaData)
+    , searchText : String
     }
 
 
@@ -43,6 +42,7 @@ initialModel : Model
 initialModel =
     { selectedCategoryId = Nothing
     , publications = ReloadableData.NotAsked ()
+    , searchText = ""
     }
 
 
@@ -108,56 +108,55 @@ view key categories model =
         , sideNav =
             categories
                 |> UI.Nav.Side.view MenuItemClicked (selectedItem model.selectedCategoryId)
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = [ mainSection model.publications ]
         }
 
 
-mainSection : ReloadableWebData () (List Publication.MetaData) -> Html Msg
+mainSection : ReloadableWebData () (List Publication.MetaData) -> Element Msg
 mainSection data =
-    div []
+    el []
         (case data of
             NotAsked _ ->
-                []
+                E.none
 
             Loading _ ->
-                [ UI.Loading.view ]
+                UI.Loading.view
 
             Reloading publications ->
-                [ UI.Loading.view, publicationsView publications ]
+                el [ inFront UI.Loading.view ] (publicationsView publications)
 
             Success publications ->
-                [ publicationsView publications ]
+                publicationsView publications
 
             Failure error _ ->
-                [ UI.Error.view <| Debug.toString error ]
+                UI.Error.view <| Debug.toString error
 
             FailureWithData error publications ->
-                [ publicationsView publications, UI.Error.view <| Debug.toString error ]
+                el [ inFront <| UI.Error.view <| Debug.toString error ] (publicationsView publications)
         )
 
 
-publicationsView : List Publication.MetaData -> Html Msg
+publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    div [ style "display" "flex", style "flex-wrap" "wrap" ]
+    row []
         (publications |> List.map publicationView)
 
 
-publicationView : Publication.MetaData -> Html Msg
+publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
     UI.Card.view
-        [ a [] [ text publication.title ]
-        , a [ href <| Route.publicationUrl publication.id ]
-            [ publication.thumbnail
-                |> Maybe.map (\thumbnail -> img [ src thumbnail, style "max-width" "100px" ] [])
-                |> Maybe.withDefault emptyThumbnail
-            ]
+        [ link [] { url = "", label = text publication.title }
+        , link []
+            { url = Route.publicationUrl publication.id
+            , label =
+                publication.thumbnail
+                    |> Maybe.map (\thumbnail -> image [] { src = thumbnail, description = publication.title })
+                    |> Maybe.withDefault emptyThumbnail
+            }
         ]
 
 
-emptyThumbnail : Html msg
+emptyThumbnail : Element msg
 emptyThumbnail =
-    div
-        [ css [ displayFlex, alignItems center, justifyContent center, maxHeight (pct 100) ]
-        ]
-        [ text "N/A" ]
+    el [] (text "N/A")

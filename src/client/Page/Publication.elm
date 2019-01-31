@@ -9,11 +9,11 @@ module Page.Publication exposing
 
 import Browser
 import Browser.Navigation as Nav
+import Element as E exposing (..)
+import Element.Region as Region
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import Html.Extra exposing (link)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set
@@ -33,41 +33,37 @@ view categoryData model =
         , sideNav =
             categoryData
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.NoSelection
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
-            [ div []
-                (UI.ReloadableData.view
-                    publicationView
-                    model.publication
-                )
+            [ UI.ReloadableData.view
+                publicationView
+                model.publication
             ]
         }
 
 
-publicationView : Publication.MetaData -> Html Msg
+publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
-    div
-        [ style "display" "flex"
-        , style "flex-direction" "column"
-        ]
-        [ h2 [] [ text publication.title ]
-        , posterView publication.id publication.thumbnail
+    row
+        []
+        [ el [ Region.heading 2 ] (text publication.title)
+        , posterView publication.id publication.thumbnail publication.title
         ]
 
 
-posterView : Int -> Maybe String -> Html Msg
-posterView publicationId maybePoster =
+posterView : Int -> Maybe String -> String -> Element Msg
+posterView publicationId maybePoster title =
     case maybePoster of
         Just poster ->
-            div []
-                [ link MenuItemClicked
-                    (Route.readUrl publicationId)
+            el []
+                (link MenuItemClicked
                     []
-                    [ img [ src poster ] [] ]
-                ]
+                    (Route.readUrl publicationId)
+                    (image [] { src = poster, description = title })
+                )
 
         Nothing ->
-            div [] []
+            el [] none
 
 
 update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
@@ -87,7 +83,9 @@ update key msg model =
 
 
 type alias Model =
-    { publication : ReloadableWebData Int Publication.MetaData }
+    { publication : ReloadableWebData Int Publication.MetaData
+    , searchText : String
+    }
 
 
 init : Int -> ( Model, Cmd Msg )
@@ -99,7 +97,9 @@ init publicationId =
 
 initialModel : Int -> Model
 initialModel publicationId =
-    { publication = ReloadableData.Loading publicationId }
+    { publication = ReloadableData.Loading publicationId
+    , searchText = ""
+    }
 
 
 type Msg

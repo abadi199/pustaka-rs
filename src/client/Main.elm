@@ -40,6 +40,7 @@ type alias Model =
     , page : Page
     , favoriteCategories : ReloadableWebData () (List Category)
     , viewport : Viewport
+    , searchText : String
     }
 
 
@@ -86,6 +87,7 @@ init _ url key =
                     { scene = { width = 0, height = 0 }
                     , viewport = { x = 0, y = 0, width = 0, height = 0 }
                     }
+                , searchText = ""
                 }
     in
     ( model
@@ -186,7 +188,7 @@ view model =
                 , sideNav =
                     model.favoriteCategories
                         |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
-                        |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp))
+                        |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
                 , content = []
                 }
 
