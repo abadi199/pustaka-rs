@@ -3,15 +3,17 @@ module Page.Read exposing
     , Msg
     , init
     , initialModel
+    , subscriptions
     , update
     , view
     )
 
 import Browser
 import Browser.Dom exposing (Viewport)
+import Browser.Events
 import Element as E exposing (..)
 import Element.Border as Border exposing (shadow)
-import Element.Events as Events exposing (onClick)
+import Element.Events as Events exposing (onClick, onMouseEnter)
 import Element.Font as Font
 import Entity.Publication as Publication exposing (MediaFormat(..))
 import Html exposing (Html)
@@ -30,7 +32,18 @@ type alias Model =
     { publication : ReloadableWebData Int Publication.Data
     , currentPage : PageView
     , previousUrl : Maybe String
+    , headerVisibility : HeaderVisibility
     }
+
+
+type HeaderVisibility
+    = Hidden
+    | Visible { counter : Float }
+
+
+headerVisibleDuration : Float
+headerVisibleDuration =
+    2000
 
 
 type Msg
@@ -38,6 +51,8 @@ type Msg
     | NextPage
     | PreviousPage
     | BackLinkClicked
+    | Tick Float
+    | ReaderClicked
 
 
 init : Int -> Maybe String -> ( Model, Cmd Msg )
@@ -52,7 +67,13 @@ initialModel pubId previousUrl =
     { publication = Loading pubId
     , currentPage = DoublePage 1
     , previousUrl = previousUrl
+    , headerVisibility = Visible { counter = headerVisibleDuration }
     }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Browser.Events.onAnimationFrameDelta Tick
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -69,6 +90,26 @@ update msg model =
 
         BackLinkClicked ->
             ( model, Cmd.none )
+
+        Tick delta ->
+            ( updateHeaderVisibility delta model, Cmd.none )
+
+        ReaderClicked ->
+            ( { model | headerVisibility = Visible { counter = headerVisibleDuration } }, Cmd.none )
+
+
+updateHeaderVisibility : Float -> Model -> Model
+updateHeaderVisibility delta model =
+    case model.headerVisibility of
+        Hidden ->
+            model
+
+        Visible { counter } ->
+            if counter - delta <= 0 then
+                { model | headerVisibility = Hidden }
+
+            else
+                { model | headerVisibility = Visible { counter = counter - delta } }
 
 
 view : Viewport -> Model -> Browser.Document Msg
@@ -94,23 +135,29 @@ view viewport model =
 
 header : Publication.Data -> Model -> Element Msg
 header pub model =
-    row
-        [ width fill
-        , Border.shadow
-            { offset = ( 0, 0 )
-            , size = 0
-            , blur = 10
-            , color = rgba 0 0 0 0.5
-            }
-        ]
-        [ Html.Extra.link (always BackLinkClicked)
-            []
-            (model.previousUrl
-                |> Maybe.withDefault (Route.publicationUrl pub.id)
-            )
-            "<< Back"
-        , el [ width fill, centerX, Font.center ] (text pub.title)
-        ]
+    case model.headerVisibility of
+        Hidden ->
+            none
+
+        Visible _ ->
+            row
+                [ width fill
+                , Border.shadow
+                    { offset = ( 0, 0 )
+                    , size = 0
+                    , blur = 10
+                    , color = rgba 0 0 0 0.5
+                    }
+                , padding 10
+                ]
+                [ Html.Extra.link (always BackLinkClicked)
+                    []
+                    (model.previousUrl
+                        |> Maybe.withDefault (Route.publicationUrl pub.id)
+                    )
+                    (text "<< Back")
+                , el [ width fill, centerX, Font.center ] (text pub.title)
+                ]
 
 
 left : Publication.Data -> Maybe String -> Element Msg
@@ -126,7 +173,11 @@ left pub previousUrl =
 
 pages : Viewport -> Publication.Data -> PageView -> Element Msg
 pages viewport pub pageView =
-    el [ centerX ] <|
+    el
+        [ centerX
+        , onMouseEnter ReaderClicked
+        ]
+    <|
         case pub.mediaFormat of
             CBZ ->
                 Comic.reader pub pageView

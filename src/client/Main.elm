@@ -73,7 +73,16 @@ type PageMsg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Browser.Events.onResize (\_ _ -> Resized)
+    Sub.batch
+        [ Browser.Events.onResize (\_ _ -> Resized)
+        , case model.page of
+            Read readModel ->
+                ReadPage.subscriptions readModel
+                    |> Sub.map (ReadMsg >> PageMsg)
+
+            _ ->
+                Sub.none
+        ]
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
