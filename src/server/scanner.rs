@@ -1,80 +1,92 @@
-extern crate actix;
-extern crate diesel;
-extern crate futures;
 extern crate pustaka;
-extern crate r2d2;
-extern crate r2d2_diesel;
-extern crate tokio;
+extern crate strsim;
 
-use actix::prelude::{Actor, Addr, Request, Response, SyncArbiter, System};
-use futures::future::Future;
 use pustaka::config;
-use pustaka::db::executor::DbExecutor;
-use pustaka::db::publication;
-use pustaka::models::{NewPublication, Publication};
-use std::fs;
+use pustaka::models::Category;
+use std::fs::{self, DirEntry};
 use std::io;
 use std::path::Path;
+use strsim::jaro_winkler;
+
+#[derive(Debug)]
+enum ScannerError {
+    EmptyCategoryError,
+    NoMatchCategory,
+}
 
 fn main() {
-    System::run(|| {
-        let pool = pustaka::db::create_db_pool();
-        let db = SyncArbiter::start(1, move || DbExecutor(pool.clone()));
+    println!("Scanning folder...");
 
-        let config = config::get_config();
-        println!("Config: {:?}", config);
-        let files: Vec<String> = scan_path(config.publication_path).expect("scan_path error");
-        let _ = insert_publications(&files, db);
-    });
+    let config = config::get_config();
+    println!("{:?}", config);
+    let path = Path::new(&config.publication_path);
+    let categories: &[Category] = &[
+        Category {
+            id: 1,
+            name: "Comics".to_string(),
+            parent_id: None,
+        },
+        Category {
+            id: 1,
+            name: "Programming".to_string(),
+            parent_id: None,
+        },
+    ];
+    visit_dirs(path, &|dir| process_file(categories, dir)).expect("Unable to scan directory");
 }
 
-fn scan_path(publication_path: String) -> io::Result<Vec<String>> {
-    let path = Path::new(&publication_path);
+fn process_file<'a>(categories: &'a [Category], dir: &DirEntry) {
+    let path = dir.path();
+    let extension = path.extension();
+    let category = process_category(&path, categories);
+    println!("{:?}", category);
+}
 
-    let files = &mut vec![];
-    if path.is_dir() {
-        for entry in try!(fs::read_dir(path)) {
-            let entry_dir = entry?;
-            let dir_path = entry_dir.path();
-            let next_path = dir_path.as_path();
-            let next_path_str = dir_path.to_str().unwrap_or_default().to_string();
-            if next_path.is_dir() {
-                let next_files = &mut scan_path(next_path_str)?;
-                files.append(next_files);
+fn process_category<'a>(
+    file: &Path,
+    categories: &'a [Category],
+) -> Result<&'a Category, ScannerError> {
+    match categories.len() == 0 {
+        true => Err(ScannerError::EmptyCategoryError),
+        false => {
+            let matched_category = categories
+                .iter()
+                .map(|category| (match_category(category, file), category))
+                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+                .map(|(rank, cat)| cat);
+            matched_category.ok_or(ScannerError::NoMatchCategory)
+        }
+    }
+}
+
+fn match_category(category: &Category, file: &Path) -> f64 {
+    let highest_score = file
+        .components()
+        .fold(0_f64, |current_highest_score, current| {
+            let score = strsim::normalized_damerau_levenshtein(
+                &category.name,
+                &current.as_os_str().to_str().unwrap_or(""),
+            );
+            if score > current_highest_score {
+                return score;
+            }
+
+            current_highest_score
+        });
+    highest_score
+}
+
+fn visit_dirs(dir: &Path, cb: &Fn(&DirEntry)) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                visit_dirs(&path, cb)?;
             } else {
-                files.push(next_path_str);
+                cb(&entry);
             }
         }
-    } else {
-        files.push(publication_path.clone());
     }
-
-    Ok(files.to_vec())
-}
-
-fn insert_publications<'a>(
-    files: &'a [String],
-    db: Addr<DbExecutor>,
-) -> Result<Vec<NewPublication>, String> {
-    let new_publications: Vec<NewPublication> = files
-        .iter()
-        .map(|file| NewPublication {
-            isbn: "".to_string(),
-            title: "".to_string(),
-            media_type_id: 2,
-            author_id: 1,
-            thumbnail: None,
-            file: file.clone(),
-        }).collect();
-    let result: Request<DbExecutor, publication::Create> =
-        db.send(publication::Create::Batch(new_publications));
-    tokio::spawn(
-        result
-            .and_then(move |_| db.send(publication::Get { publication_id: 1 }))
-            .map(|res| {
-                println!("Done inserting publication: {:?}", res);
-                System::current().stop();
-            }).map_err(|_| ()),
-    );
-    Ok(vec![])
+    Ok(())
 }

@@ -13,6 +13,10 @@ name = "seed"
 path = "src/server/seed.rs"
 
 [[bin]]
+name = "scan"
+path = "src/server/scan.rs"
+
+[[bin]]
 name = "scanner"
 path = "src/server/scanner.rs"
 
@@ -38,3 +42,4 @@ tokio = "0.1.11"
 epub = "1.2.0"
 failure = "0.1.2"
 zip = "0.5.0"
+strsim = "0.8.0"

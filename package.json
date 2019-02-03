@@ -13,7 +13,8 @@
     "start:server": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed",
     "start": "npm run watch",
-    "diesel:run": "diesel migration run"
+    "diesel:run": "diesel migration run",
+    "scan": "cargo run --bin scanner"
   },
   "author": "",
   "license": "ISC",
