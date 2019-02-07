@@ -1,12 +1,16 @@
+extern crate actix;
+extern crate futures;
 extern crate pustaka;
 extern crate strsim;
 
+use actix::prelude::*;
+use futures::future::Future;
 use pustaka::config;
+use pustaka::db::executor::DbExecutor;
 use pustaka::models::Category;
 use std::fs::{self, DirEntry};
 use std::io;
 use std::path::Path;
-use strsim::jaro_winkler;
 
 #[derive(Debug)]
 enum ScannerError {
@@ -15,8 +19,42 @@ enum ScannerError {
 }
 
 fn main() {
-    println!("Scanning folder...");
+    let sys = System::new("pustaka-scanner");
+    let pool = pustaka::db::create_db_pool();
+    let db_addr = SyncArbiter::start(2, move || DbExecutor(pool.clone()));
 
+    let list_category_future = db_addr.send(pustaka::db::category::List {});
+    Arbiter::spawn(
+        list_category_future
+            .map(|res| {
+                println!("{:?}", res);
+            })
+            .map_err(|err| println!("{:?}", err)),
+    );
+    sys.run();
+}
+
+struct Scanner {};
+
+impl Actor for Scanner {
+    type Context = SyncContext<Self>;
+}
+
+struct Scan {}
+impl Message for Scan {
+    type Result = Result<(), Error>;
+}
+
+impl Handle<Scan> for Scanner {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, _msg: Scan, _: &mut Self::Context ) -> Self::Result {
+        // TODO
+    }
+}
+
+fn scanning() {
+    println!("Scanning folder...");
     let config = config::get_config();
     println!("{:?}", config);
     let path = Path::new(&config.publication_path);
@@ -53,7 +91,7 @@ fn process_category<'a>(
                 .iter()
                 .map(|category| (match_category(category, file), category))
                 .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-                .map(|(rank, cat)| cat);
+                .map(|(_, cat)| cat);
             matched_category.ok_or(ScannerError::NoMatchCategory)
         }
     }
