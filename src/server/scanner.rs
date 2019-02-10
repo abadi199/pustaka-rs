@@ -9,11 +9,9 @@ use futures::future::join_all;
 use futures::future::Future;
 use pustaka::db::executor::DbExecutor;
 use pustaka::scan::{
-    actor::{Category, File, ProcessFile, Scan, Scanner},
-    error::ScannerError,
+    actor::msg::{ProcessFile, ScanFolder},
+    actor::scanner::{Category, Scanner},
 };
-use std::path::Path;
-use walkdir::DirEntry;
 
 fn main() {
     let sys = System::new("pustaka-scanner");
@@ -23,7 +21,7 @@ fn main() {
 
     let task = db
         .send(pustaka::db::category::List {})
-        .join(scanner.send(Scan {}))
+        .join(scanner.send(ScanFolder {}))
         .and_then(move |(categories, files)| {
             println!("{:?}", files);
             let files = files.unwrap();
@@ -42,7 +40,7 @@ fn main() {
             }
             join_all(batch)
         })
-        .map(|res| {
+        .map(|_| {
             println!("The End");
         });
 
