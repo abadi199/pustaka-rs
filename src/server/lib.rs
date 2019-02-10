@@ -15,12 +15,14 @@ extern crate unrar;
 extern crate zip;
 #[macro_use]
 extern crate diesel_derive_enum;
+extern crate walkdir;
 
 pub mod api;
 pub mod config;
 pub mod db;
 pub mod models;
 pub mod reader;
+pub mod scan;
 pub mod schema;
 pub mod state;
 pub mod unzip;

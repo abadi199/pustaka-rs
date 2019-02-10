@@ -12,7 +12,7 @@ pub struct NewCategory {
     pub parent_id: Option<i32>,
 }
 
-#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset, Clone)]
 #[table_name = "category"]
 pub struct Category {
     pub id: i32,
