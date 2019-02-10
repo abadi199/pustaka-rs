@@ -1,6 +1,6 @@
 use actix::prelude::*;
 use scan::actor::msg::ProcessFile;
-use scan::actor::scanner::{Category, File, Scanner};
+use scan::actor::{Category, File, Scanner};
 use scan::error::ScannerError;
 
 impl Handler<ProcessFile> for Scanner {

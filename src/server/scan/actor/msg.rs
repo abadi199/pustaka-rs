@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use scan::actor::scanner::{Category, File};
+use scan::actor::{Category, File};
 use scan::error::ScannerError;
 
 #[derive(Debug, Clone)]

@@ -10,7 +10,7 @@ use futures::future::Future;
 use pustaka::db::executor::DbExecutor;
 use pustaka::scan::{
     actor::msg::{ProcessFile, ScanFolder},
-    actor::scanner::{Category, Scanner},
+    actor::{Category, Scanner},
 };
 
 fn main() {
@@ -23,7 +23,6 @@ fn main() {
         .send(pustaka::db::category::List {})
         .join(scanner.send(ScanFolder {}))
         .and_then(move |(categories, files)| {
-            println!("{:?}", files);
             let files = files.unwrap();
             let mut batch = Vec::new();
             let categories: Vec<Category> = categories

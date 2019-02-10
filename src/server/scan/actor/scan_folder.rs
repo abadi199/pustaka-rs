@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use config;
 use scan::actor::msg::ScanFolder;
-use scan::actor::scanner::{File, Scanner};
+use scan::actor::{File, Scanner};
 use scan::error::ScannerError;
 use walkdir::DirEntry;
 use walkdir::WalkDir;
