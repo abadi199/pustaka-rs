@@ -3,6 +3,7 @@ use actix_web::{
     error::ErrorBadRequest, fs::NamedFile, middleware, App, AsyncResponder, FutureResponse,
     HttpRequest, HttpResponse, Json, Path, Result, State,
 };
+use config::Config;
 use db::publication::{Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
@@ -204,19 +205,25 @@ fn get_thumbnail(state: State<AppState>, publication_id: Path<i32>) -> FutureRes
 fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
     let publication_id: i32 = req.match_info().query("publication_id").unwrap();
     let file: PathBuf = req.match_info().query("tail").unwrap();
+    let state: &AppState = req.state();
+    let config = state.config.clone();
     req.state()
         .db
         .send(Get {
             publication_id: publication_id,
         })
         .from_err()
-        .and_then(|res| res.and_then(|publication| download_file(&publication, file)))
+        .and_then(move |res| res.and_then(|publication| download_file(&config, &publication, file)))
         .responder()
 }
 
-fn download_file(the_publication: &Publication, path: PathBuf) -> Result<NamedFile> {
+fn download_file(
+    config: &Config,
+    the_publication: &Publication,
+    path: PathBuf,
+) -> Result<NamedFile> {
     if the_publication.media_format == EPUB {
-        return epub::file(the_publication, path).map_err(|err| err.into());
+        return epub::file(config, the_publication, path).map_err(|err| err.into());
     }
 
     Err(ErrorBadRequest(PublicationError::InvalidMediaFormat))

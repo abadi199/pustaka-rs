@@ -13,7 +13,6 @@ use pustaka::db::publication::Create;
 use pustaka::models::NewPublication;
 use pustaka::scan::actor::{
     process_file::ProcessFile,
-    save_file::SaveFile,
     scan_folder::ScanFolder,
     {Category, CategoryId, File, FileId, Scanner},
 };
@@ -83,5 +82,6 @@ fn save_files(
             _ => {}
         }
     }
+
     db.send(Create::Batch(batch))
 }

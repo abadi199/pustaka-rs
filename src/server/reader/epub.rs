@@ -1,13 +1,9 @@
 use actix_web::{fs::NamedFile, ResponseError};
+use config::Config;
 use epub::doc::EpubDoc;
 use models::Publication;
 use reader::models::Data;
-use std::{
-    convert::From,
-    error::Error,
-    fmt,
-    path::{Path, PathBuf},
-};
+use std::{convert::From, error::Error, fmt, path::PathBuf};
 use unzip;
 use zip::result::ZipError;
 
@@ -46,7 +42,6 @@ impl ResponseError for EpubError {}
 
 pub fn open(the_publication: &Publication) -> Result<Data, EpubError> {
     let doc = EpubDoc::new(&the_publication.file)?;
-    println!("{:?}", doc.get_num_pages());
     Ok(Data {
         id: the_publication.id,
         isbn: the_publication.isbn.clone(),
@@ -66,15 +61,25 @@ pub fn page(the_publication: &Publication, page_number: usize) -> Result<String,
     doc.get_current_str().map_err(|e| EpubError::EpubError(e))
 }
 
-const EXTRACT_LOCATION: &str = "/home/abadi199/Temp/test";
+const EXTRACT_LOCATION: &str = "cache";
 
-pub fn file(the_publication: &Publication, path: PathBuf) -> Result<NamedFile, EpubError> {
-    println!("epub::file {:?}", path);
-    let extract_location = &format!("{}/{}", EXTRACT_LOCATION, the_publication.id.to_string());
-    let mut filepath = PathBuf::from(extract_location);
+pub fn file(
+    config: &Config,
+    the_publication: &Publication,
+    path: PathBuf,
+) -> Result<NamedFile, EpubError> {
+    let mut extract_location = PathBuf::from(config.pustaka_home.clone());
+    extract_location.push(EXTRACT_LOCATION);
+    extract_location.push(the_publication.id.to_string());
+
+    let mut filepath = PathBuf::from(extract_location.clone());
     filepath.push(path);
+
     if !filepath.exists() {
-        unzip::unzip(&the_publication.file, extract_location)
+        let extract_location_str: &str = extract_location.to_str().ok_or(
+            EpubError::GenericError("Unable to get extract location path".to_string()),
+        )?;
+        unzip::unzip(&the_publication.file, extract_location_str)
             .map_err(|err| EpubError::ZipError(err))?;
     }
 

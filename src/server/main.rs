@@ -7,6 +7,7 @@ use actix::prelude::*;
 use actix_web::{fs::NamedFile, http, server, App, HttpRequest, Result};
 use http::Method;
 use pustaka::api::{author, category, media_type, publication, tag};
+use pustaka::config;
 use pustaka::db::executor::DbExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
@@ -33,8 +34,10 @@ fn main() {
 
     // start db executor
     let pool = pustaka::db::create_db_pool();
+    let config = config::get_config();
     let state = AppState {
         db: SyncArbiter::start(3, move || DbExecutor(pool.clone())),
+        config: config,
     };
 
     // start http server
