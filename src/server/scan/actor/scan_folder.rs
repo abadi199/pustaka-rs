@@ -1,17 +1,14 @@
 use actix::prelude::*;
 use config;
-use scan::actor::msg::ScanFolder;
 use scan::actor::{File, Scanner};
 use scan::error::ScannerError;
 use walkdir::DirEntry;
 use walkdir::WalkDir;
 
-fn ignore_dotfile(dir: &DirEntry) -> bool {
-    !dir.file_name().to_str().unwrap_or("").starts_with(".")
-}
-
-fn accept_file(dir: &DirEntry) -> bool {
-    dir.file_type().is_file()
+#[derive(Debug, Clone)]
+pub struct ScanFolder;
+impl Message for ScanFolder {
+    type Result = Result<Vec<File>, ScannerError>;
 }
 
 impl Handler<ScanFolder> for Scanner {
@@ -27,4 +24,12 @@ impl Handler<ScanFolder> for Scanner {
             .map(|dir| File::from(&dir))
             .collect())
     }
+}
+
+fn ignore_dotfile(dir: &DirEntry) -> bool {
+    !dir.file_name().to_str().unwrap_or("").starts_with(".")
+}
+
+fn accept_file(dir: &DirEntry) -> bool {
+    dir.file_type().is_file()
 }

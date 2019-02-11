@@ -1,17 +1,24 @@
 use actix::prelude::*;
-use scan::actor::msg::ProcessFile;
-use scan::actor::{Category, File, Scanner};
+use scan::actor::{Category, CategoryId, File, Scanner};
 use scan::error::ScannerError;
 
+#[derive(Debug, Clone)]
+pub struct ProcessFile {
+    pub categories: Vec<Category>,
+    pub file: File,
+}
+impl Message for ProcessFile {
+    type Result = Result<(File, CategoryId), ScannerError>;
+}
+
 impl Handler<ProcessFile> for Scanner {
-    type Result = Result<(), ScannerError>;
+    type Result = Result<(File, CategoryId), ScannerError>;
 
     fn handle(&mut self, msg: ProcessFile, _: &mut Self::Context) -> Self::Result {
         let file = msg.file;
         let categories = msg.categories;
-        let matched_category = process_category(&file, &categories);
-        println!("matched_category: {:?}", matched_category);
-        Ok(())
+        let matched_category = process_category(&file, &categories)?;
+        Ok((file, matched_category.id))
     }
 }
 

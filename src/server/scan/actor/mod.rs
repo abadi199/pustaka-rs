@@ -1,38 +1,33 @@
 use actix::prelude::*;
-use config;
 use models;
-use scan::error::ScannerError;
-use std::boxed::Box;
 use walkdir::DirEntry;
-use walkdir::WalkDir;
 
-pub mod actor;
-pub mod msg;
 pub mod process_file;
 pub mod scan_folder;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Scanner;
 
 impl Actor for Scanner {
     type Context = SyncContext<Self>;
 }
-
+pub type CategoryId = i32;
 #[derive(Debug, Clone)]
 pub struct Category {
-    pub id: i32,
+    pub id: CategoryId,
     pub name: String,
 }
 
 impl Category {
     pub fn from(category: &models::Category) -> Self {
         Self {
-            id: category.id.clone(),
+            id: category.id,
             name: category.name.clone(),
         }
     }
 }
 
+pub type FileId = i32;
 #[derive(Debug, Clone)]
 pub struct File {
     pub name: String,
