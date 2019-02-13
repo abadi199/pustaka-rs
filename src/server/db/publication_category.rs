@@ -5,80 +5,70 @@ use diesel::prelude::*;
 
 use actix::prelude::*;
 use db::executor::DbExecutor;
-use models::{Category, CategoryId, NewPublication, Publication, PublicationCategory};
-use schema::publication::dsl::*;
+use models::{CategoryId, PublicationCategory, PublicationId};
+use schema::publication_category::dsl::*;
 
-pub struct List {}
+pub struct List {
+    pub publication_id: PublicationId,
+}
 impl Message for List {
-    type Result = Result<Vec<Publication>, Error>;
+    type Result = Result<Vec<PublicationCategory>, Error>;
 }
 impl Handler<List> for DbExecutor {
-    type Result = Result<Vec<Publication>, Error>;
+    type Result = Result<Vec<PublicationCategory>, Error>;
 
-    fn handle(&mut self, _msg: List, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: List, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let publications = publication
-            .load::<Publication>(&*connection)
+        let publication_categories = publication_category
+            .filter(publication_id.eq(msg.publication_id))
+            .load::<PublicationCategory>(&*connection)
             .expect("Error loading publications");
-        Ok(publications)
+        Ok(publication_categories)
     }
 }
 
 #[derive(Debug)]
 pub struct Create {
-    pub new_publication: NewPublication,
+    pub new_publication_category: PublicationCategory,
 }
 impl Message for Create {
-    type Result = Result<Publication, Error>;
+    type Result = Result<(), Error>;
 }
 impl Handler<Create> for DbExecutor {
-    type Result = Result<Publication, Error>;
+    type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publication = msg.new_publication;
-        let file_name = new_publication.file.clone();
-        diesel::insert_into(publication)
-            .values(new_publication)
+        let new_publication_category = msg.new_publication_category;
+        diesel::insert_into(publication_category)
+            .values(new_publication_category)
             .execute(&*connection)
-            .expect("Error inserting publication");
-        let the_publication = publication
-            .filter(file.eq(file_name))
-            .first::<Publication>(&*connection)
-            .expect("Unable to query new publication");
-        Ok(the_publication)
+            .expect("Error inserting publication category");
+        Ok(())
     }
 }
 
 #[derive(Debug)]
 pub struct CreateBatch {
-    pub new_publications: Vec<NewPublication>,
+    new_publication_categories: Vec<PublicationCategory>,
 }
-
 impl Message for CreateBatch {
-    type Result = Result<Vec<Publication>, Error>;
+    type Result = Result<(), Error>;
 }
 impl Handler<CreateBatch> for DbExecutor {
-    type Result = Result<Vec<Publication>, Error>;
+    type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: CreateBatch, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publications = msg.new_publications;
-        let filenames: Vec<String> = new_publications
-            .iter()
-            .map(|publ| publ.file.to_string())
-            .collect();
-        diesel::insert_into(publication)
-            .values(new_publications)
+        let new_publication_categories = msg.new_publication_categories;
+        diesel::insert_into(publication_category)
+            .values(new_publication_categories)
             .execute(&*connection)
-            .expect("Error inserting publication");
-        let publications = publication
-            .filter(file.eq_any(filenames))
-            .load::<Publication>(&*connection)
-            .expect("Unable to query new publications");
-        Ok(publications)
+            .expect("Error inserting publication categories");
+        Ok(())
     }
 }
+/*
 pub struct Update {
     pub publication: Publication,
 }
@@ -230,3 +220,4 @@ fn get_descendant_rec(
     categories.append(&mut grandchildren);
     Ok(categories)
 }
+*/

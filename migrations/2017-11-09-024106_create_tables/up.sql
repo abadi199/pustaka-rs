@@ -22,10 +22,10 @@ CREATE TABLE author (
 
 CREATE TABLE publication (
   id INTEGER NOT NULL PRIMARY KEY,
-  isbn VARCHAR NOT NULL,
+  isb VARCHAR NOT NULL,
   title VARCHAR NOT NULL,
   media_type_id INTEGER NOT NULL,
-  media_format TEXT CHECK(media_format IN ('cbr', 'epub')) NOT NULL,
+  media_format TEXT CHECK(media_format IN ('cbr', 'cbz', 'epub')) NOT NULL,
   author_id INTEGER NOT NULL,
   thumbnail VARCHAR NULL,
   file VARCHAR NOT NULL,

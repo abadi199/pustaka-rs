@@ -5,6 +5,8 @@ use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
 
+pub type CategoryId = i32;
+
 #[derive(Debug, Insertable, Deserialize)]
 #[table_name = "category"]
 pub struct NewCategory {
@@ -15,7 +17,7 @@ pub struct NewCategory {
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset, Clone)]
 #[table_name = "category"]
 pub struct Category {
-    pub id: i32,
+    pub id: CategoryId,
     pub name: String,
     pub parent_id: Option<i32>,
 }
@@ -26,10 +28,12 @@ pub struct NewMediaType {
     pub name: String,
 }
 
+pub type MediaTypeId = i32;
+
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "media_type"]
 pub struct MediaType {
-    pub id: i32,
+    pub id: MediaTypeId,
     pub name: String,
 }
 
@@ -39,10 +43,12 @@ pub struct NewAuthor {
     pub name: String,
 }
 
+pub type AuthorId = i32;
+
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "author"]
 pub struct Author {
-    pub id: i32,
+    pub id: AuthorId,
     pub name: String,
 }
 
@@ -58,12 +64,14 @@ pub struct NewPublication {
     pub file: String,
 }
 
+pub type PublicationId = i32;
+
 #[derive(Identifiable, Debug, Queryable, Deserialize, Associations, AsChangeset)]
 #[belongs_to(MediaType)]
 #[belongs_to(Author)]
 #[table_name = "publication"]
 pub struct Publication {
-    pub id: i32,
+    pub id: PublicationId,
     pub isbn: String,
     pub title: String,
     pub media_type_id: i32,
@@ -107,8 +115,8 @@ impl Serialize for Publication {
 #[table_name = "publication_category"]
 #[primary_key(publication_id, category_id)]
 pub struct PublicationCategory {
-    pub publication_id: i32,
-    pub category_id: i32,
+    pub publication_id: PublicationId,
+    pub category_id: CategoryId,
 }
 
 #[derive(Debug, Insertable, Deserialize)]
@@ -117,10 +125,12 @@ pub struct NewTag {
     pub name: String,
 }
 
+pub type TagId = i32;
+
 #[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "tag"]
 pub struct Tag {
-    pub id: i32,
+    pub id: TagId,
     pub name: String,
 }
 
@@ -129,5 +139,5 @@ pub struct Tag {
 #[table_name = "favorite_category"]
 #[primary_key(category_id)]
 pub struct FavoriteCategory {
-    pub category_id: i32,
+    pub category_id: CategoryId,
 }

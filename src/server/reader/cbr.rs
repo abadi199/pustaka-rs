@@ -1,8 +1,10 @@
 use actix_web::ResponseError;
+use config::Config;
 use models::Publication;
 use reader::models::Data;
 use std::error::Error;
 use std::fmt;
+use std::path::PathBuf;
 use unrar::Archive;
 
 #[derive(Debug)]
@@ -28,7 +30,7 @@ impl Error for CbrError {}
 
 impl ResponseError for CbrError {}
 
-const EXTRACT_LOCATION: &str = "/home/abadi199/Temp/test";
+const EXTRACT_LOCATION: &str = "cache";
 
 pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
     use reader::cbr::CbrError::*;
@@ -50,11 +52,23 @@ pub fn open(the_publication: &Publication) -> Result<Data, CbrError> {
     })
 }
 
-pub fn page(the_publication: &Publication, page_number: usize) -> Result<String, CbrError> {
+pub fn page(
+    config: &Config,
+    the_publication: &Publication,
+    page_number: usize,
+) -> Result<String, CbrError> {
     use reader::cbr::CbrError::*;
 
+    let mut extract_location = PathBuf::from(config.pustaka_home.clone());
+    extract_location.push(EXTRACT_LOCATION);
+    extract_location.push(the_publication.id.to_string());
+
+    let extract_location = extract_location.to_str().ok_or(CbrError::GenericError(
+        "Unable to get extract location path".to_string(),
+    ))?;
+
     let mut open_archive = Archive::new(the_publication.file.clone())
-        .extract_to(EXTRACT_LOCATION.to_string())
+        .extract_to(extract_location.to_string())
         .map_err(|_err| RarError)?;
 
     match open_archive.nth(page_number) {

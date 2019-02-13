@@ -6,11 +6,11 @@ extern crate strsim;
 extern crate walkdir;
 
 use actix::prelude::*;
-use futures::future::Future;
 use futures::future::{join_all, JoinAll};
+use futures::future::{AndThen, Future};
 use pustaka::db::executor::DbExecutor;
-use pustaka::db::publication::Create;
-use pustaka::models::NewPublication;
+use pustaka::db::{publication, publication_category};
+use pustaka::models::{NewPublication, PublicationCategory};
 use pustaka::scan::actor::{
     process_file::ProcessFile,
     scan_folder::ScanFolder,
@@ -28,7 +28,7 @@ fn main() {
         .send(pustaka::db::category::List {})
         .join(scanner.clone().send(ScanFolder {}))
         .and_then(move |(categories, files)| process_files(scanner.clone(), categories, files))
-        .and_then(move |files| save_files(db.clone(), files))
+        .and_then(move |files| save_publication(db.clone(), files))
         .map(|res| {
             println!("{:?}", res);
             println!("The End");
@@ -60,10 +60,10 @@ fn process_files(
     join_all(batch)
 }
 
-fn save_files(
+fn save_publication(
     db: Addr<DbExecutor>,
     files: Vec<Result<(File, CategoryId), ScannerError>>,
-) -> Request<DbExecutor, Create> {
+) -> Request<DbExecutor, publication::CreateBatch> {
     let mut batch = Vec::new();
     for result in files.iter() {
         match result {
@@ -83,5 +83,21 @@ fn save_files(
         }
     }
 
-    db.send(Create::Batch(batch))
+    db.send(publication::CreateBatch {
+        new_publications: batch,
+    })
+}
+
+fn save_publication_categories() {
+    let publication_categories: Vec<PublicationCategory> = publications
+        .expect("")
+        .iter()
+        .map(|publication| PublicationCategory {
+            publication_id: publication.id,
+            category_id: 1,
+        })
+        .collect();
+    db.send(publication_category::CreateBatch {
+        new_publication_categories: publication_categories,
+    })
 }

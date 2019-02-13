@@ -51,7 +51,9 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
 fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<HttpResponse> {
     state
         .db
-        .send(Create::Single(json.into_inner()))
+        .send(Create {
+            new_publication: json.into_inner(),
+        })
         .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),
@@ -131,6 +133,7 @@ fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error
 }
 
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
+    let config = state.config.clone();
     state
         .db
         .send(Get {
@@ -139,8 +142,7 @@ fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureRespon
         .from_err()
         .and_then(move |res| {
             res.and_then(|publication| match publication.media_format.as_ref() {
-                CBR => read_page_cbr(&publication, params.1),
-                EPUB => read_page_epub(&publication, params.1),
+                CBR => read_page_cbr(&config, &publication, params.1),
                 _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
             })
         })
@@ -148,20 +150,12 @@ fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureRespon
 }
 
 fn read_page_cbr(
+    config: &Config,
     publication: &Publication,
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
-    let filename = cbr::page(&publication, page_num).expect("Unable to read page");
+    let filename = cbr::page(config, &publication, page_num).expect("Unable to read page");
     let file = NamedFile::open(filename);
-    file.map_err(|err| err.into())
-}
-
-fn read_page_epub(
-    publication: &Publication,
-    page_num: usize,
-) -> Result<NamedFile, actix_web::Error> {
-    let content = epub::page(&publication, page_num).expect("Unable to read page");
-    let file = NamedFile::open("".to_string());
     file.map_err(|err| err.into())
 }
 
