@@ -7,6 +7,7 @@ extern crate walkdir;
 
 use actix::prelude::*;
 use futures::future::{join_all, AndThen, Future, JoinAll};
+use pustaka::config::{self, Config};
 use pustaka::db::executor::DbExecutor;
 use pustaka::db::{publication, publication_category};
 use pustaka::models::{NewPublication, Publication, PublicationCategory, PublicationId};
@@ -23,11 +24,14 @@ fn main() {
     let pool = pustaka::db::create_db_pool();
     let db = SyncArbiter::start(3, move || DbExecutor(pool.clone()));
     let scanner = SyncArbiter::start(5, || Scanner {});
+    let config = config::get_config();
 
     let task = db
         .send(pustaka::db::category::List {})
         .join(scanner.clone().send(ScanFolder {}))
-        .and_then(move |(categories, files)| process_files(scanner.clone(), categories, files))
+        .and_then(move |(categories, files)| {
+            process_files(scanner.clone(), &config, categories, files)
+        })
         .and_then(move |res| {
             save_publication(db.clone(), res)
                 .and_then(move |res| save_publication_categories(db.clone(), res))
@@ -44,9 +48,11 @@ fn main() {
 
 fn process_files(
     scanner: Addr<Scanner>,
+    config: &Config,
     categories: Result<Vec<pustaka::models::Category>, actix_web::Error>,
     files: Result<Vec<File>, ScannerError>,
-) -> JoinAll<Vec<Request<Scanner, ProcessFile>>> {
+) -> impl Future<Item = Vec<Result<(File, CategoryId), ScannerError>>, Error = actix::MailboxError>
+{
     let files = files.unwrap();
     let mut batch = Vec::new();
     let categories: Vec<Category> = categories
@@ -57,6 +63,7 @@ fn process_files(
 
     for file in files.iter() {
         batch.push(scanner.send(ProcessFile {
+            config: config.clone(),
             categories: categories.clone(),
             file: file.clone(),
         }));

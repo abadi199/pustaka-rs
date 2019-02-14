@@ -32,7 +32,6 @@ pub type FileId = i32;
 pub struct File {
     pub name: String,
     pub extension: String,
-    pub components: Vec<String>,
 }
 impl File {
     pub fn from(dir: &DirEntry) -> Self {
@@ -44,12 +43,6 @@ impl File {
                 .and_then(|s| s.to_str())
                 .unwrap_or("")
                 .to_string(),
-            components: dir
-                .path()
-                .iter()
-                .filter_map(|c| c.to_str())
-                .map(|c| c.to_string())
-                .collect(),
         }
     }
 }
