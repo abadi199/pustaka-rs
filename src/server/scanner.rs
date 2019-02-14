@@ -6,17 +6,17 @@ extern crate strsim;
 extern crate walkdir;
 
 use actix::prelude::*;
-use futures::future::{join_all, JoinAll};
-use futures::future::{AndThen, Future};
+use futures::future::{join_all, AndThen, Future, JoinAll};
 use pustaka::db::executor::DbExecutor;
 use pustaka::db::{publication, publication_category};
-use pustaka::models::{NewPublication, PublicationCategory};
+use pustaka::models::{NewPublication, Publication, PublicationCategory, PublicationId};
 use pustaka::scan::actor::{
     process_file::ProcessFile,
     scan_folder::ScanFolder,
     {Category, CategoryId, File, FileId, Scanner},
 };
 use pustaka::scan::error::ScannerError;
+use std::collections::HashMap;
 
 fn main() {
     let sys = System::new("pustaka-scanner");
@@ -28,13 +28,17 @@ fn main() {
         .send(pustaka::db::category::List {})
         .join(scanner.clone().send(ScanFolder {}))
         .and_then(move |(categories, files)| process_files(scanner.clone(), categories, files))
-        .and_then(move |files| save_publication(db.clone(), files))
+        .and_then(move |res| {
+            save_publication(db.clone(), res)
+                .and_then(move |res| save_publication_categories(db.clone(), res))
+        })
         .map(|res| {
             println!("{:?}", res);
             println!("The End");
-        });
+        })
+        .map_err(|err| println!("{:?}", err));
 
-    Arbiter::spawn(task.map_err(|err| println!("{:?}", err)));
+    Arbiter::spawn(task);
     sys.run();
 }
 
@@ -63,8 +67,12 @@ fn process_files(
 fn save_publication(
     db: Addr<DbExecutor>,
     files: Vec<Result<(File, CategoryId), ScannerError>>,
-) -> Request<DbExecutor, publication::CreateBatch> {
+) -> impl Future<
+    Item = Result<Vec<(PublicationId, CategoryId)>, actix_web::Error>,
+    Error = actix::MailboxError,
+> {
     let mut batch = Vec::new();
+    let mut file_map = HashMap::new();
     for result in files.iter() {
         match result {
             Ok((file, category_id)) => {
@@ -78,26 +86,36 @@ fn save_publication(
                     file: file.name.clone(),
                 };
                 batch.push(publication);
+                file_map.insert(file.name.clone(), *category_id);
             }
             _ => {}
         }
     }
 
-    db.send(publication::CreateBatch {
-        new_publications: batch,
+    db.send(publication::CreateBatch(batch)).map(move |result| {
+        result.map(|publications| {
+            publications
+                .into_iter()
+                .map(|publication| {
+                    let category_id = file_map.get(&publication.file).unwrap();
+                    (publication.id, *category_id)
+                })
+                .collect()
+        })
     })
 }
 
-fn save_publication_categories() {
+fn save_publication_categories(
+    db: Addr<DbExecutor>,
+    publications: Result<Vec<(PublicationId, CategoryId)>, actix_web::Error>,
+) -> impl Future<Item = Result<(), actix_web::Error>, Error = actix::MailboxError> {
     let publication_categories: Vec<PublicationCategory> = publications
-        .expect("")
+        .unwrap()
         .iter()
-        .map(|publication| PublicationCategory {
-            publication_id: publication.id,
-            category_id: 1,
+        .map(|(publication_id, category_id)| PublicationCategory {
+            publication_id: *publication_id,
+            category_id: *category_id,
         })
         .collect();
-    db.send(publication_category::CreateBatch {
-        new_publication_categories: publication_categories,
-    })
+    db.send(publication_category::CreateBatch(publication_categories))
 }

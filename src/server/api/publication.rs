@@ -4,7 +4,7 @@ use actix_web::{
     HttpRequest, HttpResponse, Json, Path, Result, State,
 };
 use config::Config;
-use db::publication::{Create, Delete, Get, List, ListByCategory, Update};
+use db::publication::{self, Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
 use models::{NewPublication, Publication};
 use reader::{cbr, epub};
@@ -51,9 +51,7 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
 fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<HttpResponse> {
     state
         .db
-        .send(Create {
-            new_publication: json.into_inner(),
-        })
+        .send(publication::Create(json.into_inner()))
         .from_err()
         .and_then(|res| match res {
             Ok(_) => Ok(HttpResponse::Ok().json(())),

@@ -25,9 +25,7 @@ impl Handler<List> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct Create {
-    pub new_publication: NewPublication,
-}
+pub struct Create(pub NewPublication);
 impl Message for Create {
     type Result = Result<Publication, Error>;
 }
@@ -36,7 +34,7 @@ impl Handler<Create> for DbExecutor {
 
     fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publication = msg.new_publication;
+        let new_publication = msg.0;
         let file_name = new_publication.file.clone();
         diesel::insert_into(publication)
             .values(new_publication)
@@ -51,10 +49,7 @@ impl Handler<Create> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct CreateBatch {
-    pub new_publications: Vec<NewPublication>,
-}
-
+pub struct CreateBatch(pub Vec<NewPublication>);
 impl Message for CreateBatch {
     type Result = Result<Vec<Publication>, Error>;
 }
@@ -63,7 +58,7 @@ impl Handler<CreateBatch> for DbExecutor {
 
     fn handle(&mut self, msg: CreateBatch, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publications = msg.new_publications;
+        let new_publications = msg.0;
         let filenames: Vec<String> = new_publications
             .iter()
             .map(|publ| publ.file.to_string())

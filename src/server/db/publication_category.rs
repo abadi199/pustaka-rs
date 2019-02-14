@@ -28,9 +28,7 @@ impl Handler<List> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct Create {
-    pub new_publication_category: PublicationCategory,
-}
+pub struct Create(pub PublicationCategory);
 impl Message for Create {
     type Result = Result<(), Error>;
 }
@@ -39,7 +37,7 @@ impl Handler<Create> for DbExecutor {
 
     fn handle(&mut self, msg: Create, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publication_category = msg.new_publication_category;
+        let new_publication_category = msg.0;
         diesel::insert_into(publication_category)
             .values(new_publication_category)
             .execute(&*connection)
@@ -49,9 +47,7 @@ impl Handler<Create> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct CreateBatch {
-    new_publication_categories: Vec<PublicationCategory>,
-}
+pub struct CreateBatch(pub Vec<PublicationCategory>);
 impl Message for CreateBatch {
     type Result = Result<(), Error>;
 }
@@ -60,7 +56,7 @@ impl Handler<CreateBatch> for DbExecutor {
 
     fn handle(&mut self, msg: CreateBatch, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let new_publication_categories = msg.new_publication_categories;
+        let new_publication_categories = msg.0;
         diesel::insert_into(publication_category)
             .values(new_publication_categories)
             .execute(&*connection)
