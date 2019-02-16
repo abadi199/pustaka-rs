@@ -7,6 +7,10 @@ use serde::Serializer;
 
 pub type CategoryId = i32;
 
+pub const CBR: &str = "cbr";
+pub const CBZ: &str = "cbz";
+pub const EPUB: &str = "epub";
+
 #[derive(Debug, Insertable, Deserialize)]
 #[table_name = "category"]
 pub struct NewCategory {

@@ -14,6 +14,6 @@ pub fn get_config() -> Config {
         database: env::var("DATABASE_URL").expect("DATABASE must be set in .env"),
         publication_path: env::var("PUBLICATION_PATH")
             .expect("PUBLICATION_PATH must be set in .env"),
-        pustaka_home: env::var("PUSTAKA_PATH").unwrap_or("~/.pustaka".to_string()),
+        pustaka_home: env::var("PUSTAKA_HOME").unwrap_or(".pustaka".to_string()),
     }
 }

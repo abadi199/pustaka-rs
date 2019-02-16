@@ -6,8 +6,8 @@ use actix_web::{
 use config::Config;
 use db::publication::{self, Create, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
-use models::{NewPublication, Publication};
-use reader::{cbr, epub};
+use models::{NewPublication, Publication, CBR, CBZ, EPUB};
+use reader::{comic, epub};
 use state::AppState;
 use std::{
     error::Error,
@@ -20,9 +20,6 @@ use std::{
 enum PublicationError {
     InvalidMediaFormat,
 }
-
-const CBR: &str = "cbr";
-const EPUB: &str = "epub";
 
 impl Error for PublicationError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
@@ -110,16 +107,25 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(ref cbr) if &cbr.media_format == CBR => read_cbr(&cbr),
-            Ok(ref epub) if &epub.media_format == EPUB => read_epub(&epub),
-            Ok(_) => Ok(HttpResponse::InternalServerError().into()),
+            Ok(ref publication) => match publication.media_format.as_ref() {
+                CBR => read_comic(&publication),
+                CBZ => read_cbz(&publication),
+                EPUB => read_epub(&publication),
+                _ => Ok(HttpResponse::InternalServerError().into()),
+            },
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
 }
 
-fn read_cbr(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
-    cbr::open(&publication)
+fn read_cbz(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    comic::open(&publication)
+        .map_err(|err| err.into())
+        .and_then(|data| Ok(HttpResponse::Ok().json(data)))
+}
+
+fn read_comic(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    comic::open(&publication)
         .map_err(|err| err.into())
         .and_then(|data| Ok(HttpResponse::Ok().json(data)))
 }
@@ -131,7 +137,7 @@ fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error
 }
 
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
-    let config = state.config.clone();
+    let config =static  state.config.clone();
     state
         .db
         .send(Get {
@@ -140,19 +146,20 @@ fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureRespon
         .from_err()
         .and_then(move |res| {
             res.and_then(|publication| match publication.media_format.as_ref() {
-                CBR => read_page_cbr(&config, &publication, params.1),
+                CBR => read_page_comic(&config, &publication, params.1),
+                CBZ => read_page_comic(&config, &publication, params.1),
                 _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
             })
         })
         .responder()
 }
 
-fn read_page_cbr(
+fn read_page_comic(
     config: &Config,
     publication: &Publication,
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
-    let filename = cbr::page(config, &publication, page_num).expect("Unable to read page");
+    let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
     let file = NamedFile::open(filename);
     file.map_err(|err| err.into())
 }
