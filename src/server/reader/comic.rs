@@ -81,21 +81,29 @@ pub fn page(
 }
 
 fn page_cbz(
-    the_publication: &Publication,
+    publication: &Publication,
     page_number: usize,
     extract_location: &str,
 ) -> Result<String, ComicError> {
-    use reader::comic::ComicError::*;
-
-    let read_dir = Path::new(extract_location)
-        .read_dir()
-        .map_err(|err| IOError(err))?;
-    read_dir
-
-    match unzip::unzip(&the_publication.file, extract_location) {
-        Ok(_) => Ok("".to_string()),
-        Err(_err) => Err(ZipError),
-    }
+    unzip::unzip_nth(&publication.file, extract_location, page_number)
+        .map_err(|_| ComicError::ZipError)
+    // Path::new(extract_location)
+    //     .read_dir()
+    //     .ok()
+    //     .and_then(|mut read_dir| read_dir.nth(page_number))
+    //     .and_then(|result| result.ok())
+    //     .map(|dir_entry| dir_entry.file_name())
+    //     .and_then(|os_string| {
+    //         os_string
+    //             .as_os_str()
+    //             .to_str()
+    //             .map(|file_name| file_name.to_string())
+    //     })
+    //     .ok_or(ComicError::PageError)
+    //     .or_else(|_| {
+    //         unzip::unzip_nth(&publication.file, extract_location, page_number)
+    //             .map_err(|_| ComicError::ZipError)
+    //     })
 }
 
 fn page_cbr(

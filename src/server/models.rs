@@ -5,11 +5,11 @@ use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
 
-pub type CategoryId = i32;
-
 pub const CBR: &str = "cbr";
 pub const CBZ: &str = "cbz";
 pub const EPUB: &str = "epub";
+
+pub type CategoryId = i32;
 
 #[derive(Debug, Insertable, Deserialize)]
 #[table_name = "category"]

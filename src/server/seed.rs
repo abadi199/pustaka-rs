@@ -18,7 +18,7 @@ fn main() {
     insert_category(&*connection);
     insert_media_type(&*connection);
     insert_author(&*connection);
-    insert_publication(&*connection);
+    // insert_publication(&*connection);
     insert_favorite_category(&*connection);
 }
 

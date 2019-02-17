@@ -6,15 +6,15 @@ extern crate strsim;
 extern crate walkdir;
 
 use actix::prelude::*;
-use futures::future::{join_all, AndThen, Future, JoinAll};
+use futures::future::{join_all, Future};
 use pustaka::config::{self, Config};
 use pustaka::db::executor::DbExecutor;
 use pustaka::db::{publication, publication_category};
-use pustaka::models::{NewPublication, Publication, PublicationCategory, PublicationId};
+use pustaka::models::{NewPublication, PublicationCategory, PublicationId};
 use pustaka::scan::actor::{
     process_file::ProcessFile,
     scan_folder::ScanFolder,
-    {Category, CategoryId, File, FileId, Scanner},
+    {Category, CategoryId, File, Scanner},
 };
 use pustaka::scan::error::ScannerError;
 use std::collections::HashMap;
@@ -92,6 +92,7 @@ fn save_publication(
                     thumbnail: None,
                     file: file.name.clone(),
                 };
+                println!("{:?}", publication);
                 batch.push(publication);
                 file_map.insert(file.name.clone(), *category_id);
             }

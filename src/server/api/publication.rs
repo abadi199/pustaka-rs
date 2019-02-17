@@ -4,7 +4,7 @@ use actix_web::{
     HttpRequest, HttpResponse, Json, Path, Result, State,
 };
 use config::Config;
-use db::publication::{self, Create, Delete, Get, List, ListByCategory, Update};
+use db::publication::{self, Delete, Get, List, ListByCategory, Update};
 use futures::Future;
 use models::{NewPublication, Publication, CBR, CBZ, EPUB};
 use reader::{comic, epub};
@@ -137,7 +137,7 @@ fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error
 }
 
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
-    let config =static  state.config.clone();
+    let config = state.config.clone();
     state
         .db
         .send(Get {
@@ -160,6 +160,7 @@ fn read_page_comic(
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
     let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
+    println!("{:?}", filename);
     let file = NamedFile::open(filename);
     file.map_err(|err| err.into())
 }

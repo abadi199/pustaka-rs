@@ -2,7 +2,7 @@ use actix::prelude::*;
 use config::Config;
 use scan::actor::{Category, CategoryId, File, Scanner};
 use scan::error::ScannerError;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct ProcessFile {

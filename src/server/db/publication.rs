@@ -5,7 +5,7 @@ use diesel::prelude::*;
 
 use actix::prelude::*;
 use db::executor::DbExecutor;
-use models::{Category, CategoryId, NewPublication, Publication, PublicationCategory};
+use models::{Category, NewPublication, Publication};
 use schema::publication::dsl::*;
 
 pub struct List {}
