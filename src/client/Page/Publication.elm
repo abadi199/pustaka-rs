@@ -10,6 +10,7 @@ module Page.Publication exposing
 import Browser
 import Browser.Navigation as Nav
 import Element as E exposing (..)
+import Element.Background as Background
 import Element.Region as Region
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
@@ -54,7 +55,7 @@ posterView : Int -> Maybe String -> String -> Element Msg
 posterView publicationId maybePoster title =
     el []
         (link MenuItemClicked
-            []
+            [ height fill ]
             (Route.readUrl publicationId)
             (UI.poster title maybePoster)
         )

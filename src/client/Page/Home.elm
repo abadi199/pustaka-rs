@@ -13,6 +13,7 @@ import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
+import Html.Attributes as HA
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
@@ -140,7 +141,7 @@ mainSection data =
 
 publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    row [ padding 40 ]
+    row [ padding 40, spacing 10 ]
         (publications |> List.map publicationView)
 
 
@@ -151,8 +152,27 @@ publicationView publication =
             Route.publicationUrl publication.id
     in
     UI.Card.view
-        [ link [ width fill ]
+        [ link
+            [ width fill
+            , height fill
+            ]
             { url = url
             , label = UI.thumbnail publication.title publication.thumbnail
             }
+        , publicationActionView publication.id
+        ]
+
+
+publicationActionView : Int -> Element msg
+publicationActionView publicationId =
+    row
+        [ alignRight
+        , alignBottom
+        , height shrink
+        , htmlAttribute <| HA.style "position" "absolute"
+        , htmlAttribute <| HA.style "bottom" "0"
+        , spacing 5
+        , padding 5
+        ]
+        [ link [] { url = Route.readUrl publicationId, label = text "Read" }
         ]

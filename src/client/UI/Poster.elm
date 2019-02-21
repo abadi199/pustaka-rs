@@ -2,6 +2,7 @@ module UI.Poster exposing (poster, thumbnail)
 
 import Element as E exposing (..)
 import Element.Background as Background
+import Html as H
 import Html.Attributes as HA
 
 
@@ -45,5 +46,7 @@ empty title =
         , centerX
         , centerY
         , Background.color (rgba 0 0 0 0.35)
+        , E.htmlAttribute <| HA.style "white-space" "normal"
+        , E.htmlAttribute <| HA.title title
         ]
-        (text title)
+        (E.html <| H.text title)
