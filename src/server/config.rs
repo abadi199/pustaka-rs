@@ -6,6 +6,7 @@ pub struct Config {
     pub database: String,
     pub publication_path: String,
     pub pustaka_home: String,
+    pub comicvine_api_key: Option<String>,
 }
 
 pub fn get_config() -> Config {
@@ -15,5 +16,6 @@ pub fn get_config() -> Config {
         publication_path: env::var("PUBLICATION_PATH")
             .expect("PUBLICATION_PATH must be set in .env"),
         pustaka_home: env::var("PUSTAKA_HOME").unwrap_or(".pustaka".to_string()),
+        comicvine_api_key: env::var("COMICVINE_API_KEY").ok(),
     }
 }

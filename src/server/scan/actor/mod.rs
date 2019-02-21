@@ -2,6 +2,7 @@ use actix::prelude::*;
 use models;
 use walkdir::DirEntry;
 
+pub mod load_metadata;
 pub mod process_file;
 pub mod scan_folder;
 

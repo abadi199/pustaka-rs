@@ -12,6 +12,7 @@ use pustaka::db::executor::DbExecutor;
 use pustaka::db::{publication, publication_category};
 use pustaka::models::{NewPublication, PublicationCategory, PublicationId};
 use pustaka::scan::actor::{
+    load_metadata::LoadMetadata,
     process_file::ProcessFile,
     scan_folder::ScanFolder,
     {Category, CategoryId, File, Scanner},
@@ -30,7 +31,7 @@ fn main() {
         .send(pustaka::db::category::List {})
         .join(scanner.clone().send(ScanFolder {}))
         .and_then(move |(categories, files)| {
-            process_files(scanner.clone(), &config, categories, files)
+            process_files_and_load_metadata(scanner.clone(), &config, categories, files)
         })
         .and_then(move |res| {
             save_publication(db.clone(), res)
@@ -46,57 +47,55 @@ fn main() {
     sys.run();
 }
 
-fn process_files(
+fn process_files_and_load_metadata(
     scanner: Addr<Scanner>,
     config: &Config,
     categories: Result<Vec<pustaka::models::Category>, actix_web::Error>,
     files: Result<Vec<File>, ScannerError>,
-) -> impl Future<Item = Vec<Result<(File, CategoryId), ScannerError>>, Error = actix::MailboxError>
-{
+) -> impl Future<
+    Item = Vec<Result<(NewPublication, CategoryId), ScannerError>>,
+    Error = actix::MailboxError,
+> {
     let files = files.unwrap();
-    let mut batch = Vec::new();
     let categories: Vec<Category> = categories
         .unwrap_or(vec![])
         .iter()
         .map(&Category::from)
         .collect();
-
+    let mut batch = Vec::new();
     for file in files.iter() {
-        batch.push(scanner.send(ProcessFile {
-            config: config.clone(),
-            categories: categories.clone(),
-            file: file.clone(),
-        }));
+        let scanner_clone = scanner.clone();
+        let task = scanner
+            .send(ProcessFile {
+                config: config.clone(),
+                categories: categories.clone(),
+                file: file.clone(),
+            })
+            .and_then(move |res| {
+                let (file, category_id) = res.unwrap();
+                scanner_clone.send(LoadMetadata {
+                    file: file,
+                    category_id: category_id,
+                })
+            });
+        batch.push(task);
     }
     join_all(batch)
 }
 
 fn save_publication(
     db: Addr<DbExecutor>,
-    files: Vec<Result<(File, CategoryId), ScannerError>>,
+    files: Vec<Result<(NewPublication, CategoryId), ScannerError>>,
 ) -> impl Future<
     Item = Result<Vec<(PublicationId, CategoryId)>, actix_web::Error>,
     Error = actix::MailboxError,
 > {
-    let mut batch = Vec::new();
-    let mut file_map = HashMap::new();
-    for result in files.iter() {
-        match result {
-            Ok((file, category_id)) => {
-                let publication = NewPublication {
-                    isbn: "".to_string(),
-                    title: file.name.clone(),
-                    media_type_id: 1,
-                    media_format: file.extension.clone(),
-                    author_id: 1,
-                    thumbnail: None,
-                    file: file.name.clone(),
-                };
-                println!("{:?}", publication);
-                batch.push(publication);
-                file_map.insert(file.name.clone(), *category_id);
-            }
-            _ => {}
+    let mut batch: Vec<NewPublication> = Vec::new();
+    let mut file_map: HashMap<String, CategoryId> = HashMap::new();
+    for result in files.into_iter() {
+        if let Ok((publication, category_id)) = result {
+            file_map.insert(publication.file.clone(), category_id);
+            batch.push(publication);
         }
     }
 
