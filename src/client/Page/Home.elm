@@ -141,7 +141,7 @@ mainSection data =
 
 publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    row [ padding 40, spacing 10 ]
+    wrappedRow [ padding 40, spacing 10 ]
         (publications |> List.map publicationView)
 
 

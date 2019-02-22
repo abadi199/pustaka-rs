@@ -21,11 +21,13 @@ import Set
 import String
 import Task
 import Tree exposing (Tree)
+import UI.Heading as UI
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Search
 import UI.Poster as UI
 import UI.ReloadableData
+import UI.Spacing as UI
 
 
 view : ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -45,8 +47,8 @@ view categoryData model =
 
 publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
-    column []
-        [ el [ Region.heading 2 ] (text publication.title)
+    column [ UI.spacing 1 ]
+        [ UI.heading 1 publication.title
         , posterView publication.id publication.thumbnail publication.title
         ]
 
