@@ -47,9 +47,21 @@ view categoryData model =
 
 publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
-    column [ UI.spacing 1 ]
+    column [ UI.spacing 2 ]
         [ UI.heading 1 publication.title
-        , posterView publication.id publication.thumbnail publication.title
+        , row
+            [ UI.spacing 1 ]
+            [ posterView publication.id publication.thumbnail publication.title
+            , informationView publication
+            ]
+        ]
+
+
+informationView : Publication.MetaData -> Element Msg
+informationView publication =
+    column [ alignTop ]
+        [ text "Author: J.K. Rowling"
+        , text "Genre: Science Fiction"
         ]
 
 

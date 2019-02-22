@@ -19,6 +19,7 @@ import Tree
 import UI.Css.Basics
 import UI.Error
 import UI.Loading
+import UI.Logo as Logo
 import UI.Menu
 import UI.Parts.Search exposing (Search)
 
@@ -47,10 +48,12 @@ toElement sideNav =
         ]
         (case sideNav of
             SideNav element ->
-                element
+                Logo.full :: element
 
             SideNavWithSearch search element ->
-                UI.Parts.Search.toElement search :: element
+                Logo.full
+                    -- :: UI.Parts.Search.toElement search
+                    :: element
         )
 
 
