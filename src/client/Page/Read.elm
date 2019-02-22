@@ -26,6 +26,7 @@ import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
 import UI.ReloadableData
+import UI.Spacing as UI
 
 
 type alias Model =
@@ -148,7 +149,7 @@ header pub model =
                     , blur = 10
                     , color = rgba 0 0 0 0.5
                     }
-                , padding 10
+                , UI.padding -2
                 ]
                 [ Html.Extra.link (always BackLinkClicked)
                     []

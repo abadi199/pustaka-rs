@@ -6,6 +6,7 @@ import Element.Background as Background
 import Element.Border as Border
 import UI.Nav.Side exposing (SideNav)
 import UI.Parts.Search exposing (Search)
+import UI.Spacing as UI
 
 
 withSideNav : { title : String, sideNav : SideNav msg, content : Element msg } -> Browser.Document msg
@@ -21,7 +22,7 @@ withSideNav { title, sideNav, content } =
                     :: [ el
                             [ width fill
                             , height fill
-                            , padding 20
+                            , UI.padding 1
                             ]
                             content
                        ]

@@ -26,6 +26,7 @@ import UI.Menu
 import UI.Nav.Side
 import UI.Parts.Search
 import UI.Poster as UI
+import UI.Spacing as UI
 
 
 type alias Model =
@@ -141,7 +142,7 @@ mainSection data =
 
 publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    wrappedRow [ padding 40, spacing 10 ]
+    wrappedRow [ UI.padding 1, UI.spacing 1 ]
         (publications |> List.map publicationView)
 
 
@@ -171,8 +172,8 @@ publicationActionView publicationId =
         , height shrink
         , htmlAttribute <| HA.style "position" "absolute"
         , htmlAttribute <| HA.style "bottom" "0"
-        , spacing 5
-        , padding 5
+        , UI.spacing -5
+        , UI.padding -5
         ]
         [ link [] { url = Route.readUrl publicationId, label = text "Read" }
         ]

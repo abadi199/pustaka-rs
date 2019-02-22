@@ -10,6 +10,7 @@ import Element as E exposing (..)
 import Html.Events exposing (..)
 import Html.Extra exposing (link)
 import Tree exposing (Tree)
+import UI.Spacing as UI
 
 
 view : Tree { text : String, link : Link msg, selected : Bool } -> Element msg
@@ -21,10 +22,15 @@ view items =
                 (\level n c ->
                     column
                         [ if level == 0 then
-                            padding 0
+                            UI.padding -5
 
                           else
-                            paddingEach { top = 0, right = 0, bottom = 0, left = 15 }
+                            UI.paddingEach
+                                { top = -5
+                                , right = -20
+                                , bottom = -20
+                                , left = -5
+                                }
                         ]
                         (n ++ c)
                 )
