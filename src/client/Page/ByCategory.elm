@@ -16,7 +16,7 @@ import Route
 import Set
 import UI.Css.Basics
 import UI.Css.Color
-import UI.Icon.Navigation
+import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Search
@@ -83,7 +83,7 @@ categorySliderView key model =
                         ""
                         (row
                             []
-                            [ UI.Icon.Navigation.expandMore
+                            [ Icon.expandMore
                             , text "All Categories"
                             ]
                         )

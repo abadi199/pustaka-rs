@@ -21,9 +21,14 @@ import Set
 import String
 import Task
 import Tree exposing (Tree)
+import UI.Action as Action
+import UI.Background as Background
+import UI.Card as Card
 import UI.Heading as UI
+import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
+import UI.Parts.Information as Information
 import UI.Parts.Search
 import UI.Poster as UI
 import UI.ReloadableData
@@ -47,10 +52,10 @@ view categoryData model =
 
 publicationView : Publication.MetaData -> Element Msg
 publicationView publication =
-    column [ UI.spacing 2 ]
-        [ UI.heading 1 publication.title
+    column [ UI.spacing 2, width fill ]
+        [ row [] [ text "Comics/Graphics Novel / Battlestar Galactica" ]
         , row
-            [ UI.spacing 1 ]
+            [ UI.spacing 1, width fill ]
             [ posterView publication.id publication.thumbnail publication.title
             , informationView publication
             ]
@@ -59,20 +64,27 @@ publicationView publication =
 
 informationView : Publication.MetaData -> Element Msg
 informationView publication =
-    column [ alignTop ]
-        [ text "Author: J.K. Rowling"
-        , text "Genre: Science Fiction"
-        ]
+    Information.panel
+        { title = publication.title
+        , informationList =
+            [ { term = "Author", details = "N/A", onClick = NoOp }
+            , { term = "ISBN", details = publication.isbn, onClick = NoOp }
+            ]
+        , actions =
+            [ Action.large { text = "Edit", icon = Icon.edit, onClick = NoOp }
+            , Action.large { text = "Read", icon = Icon.edit, onClick = NoOp }
+            ]
+        }
 
 
 posterView : Int -> Maybe String -> String -> Element Msg
 posterView publicationId maybePoster title =
-    el []
-        (link MenuItemClicked
+    Card.bordered [ alignTop ]
+        [ link MenuItemClicked
             [ height fill ]
             (Route.readUrl publicationId)
             (UI.poster title maybePoster)
-        )
+        ]
 
 
 update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )

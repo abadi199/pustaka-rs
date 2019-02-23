@@ -1,4 +1,4 @@
-module UI.Poster exposing (poster, thumbnail)
+module UI.Poster exposing (dimensionForHeight, poster, thumbnail)
 
 import Element as E exposing (..)
 import Element.Background as Background
@@ -19,7 +19,7 @@ thumbnail : String -> Maybe String -> Element msg
 thumbnail title cover =
     let
         { height, width } =
-            dimensionForHeight 300
+            dimensionForHeight 200
     in
     cover
         |> Maybe.map
@@ -31,14 +31,20 @@ thumbnail title cover =
                     , title = title
                     }
             )
-        |> Maybe.withDefault (empty title)
+        |> Maybe.withDefault
+            (empty
+                { width = width
+                , height = height
+                }
+                title
+            )
 
 
 poster : String -> Maybe String -> Element msg
 poster title cover =
     let
         { width, height } =
-            dimensionForHeight 500
+            dimensionForHeight 300
     in
     cover
         |> Maybe.map
@@ -55,11 +61,17 @@ poster title cover =
                 [ E.height <| px <| height
                 , E.width <| px <| width
                 ]
-                (empty title)
+                (empty { width = width, height = height } title)
             )
 
 
-posterImage : { width : Int, height : Int, image : String, title : String } -> Element msg
+posterImage :
+    { width : Int
+    , height : Int
+    , image : String
+    , title : String
+    }
+    -> Element msg
 posterImage { width, height, title, image } =
     E.image
         [ E.height (px height)
@@ -69,11 +81,11 @@ posterImage { width, height, title, image } =
         { src = image, description = title }
 
 
-empty : String -> Element msg
-empty title =
+empty : { width : Int, height : Int } -> String -> Element msg
+empty { width, height } title =
     el
-        [ width fill
-        , height fill
+        [ E.width (px width)
+        , E.height (px height)
         , centerX
         , centerY
         , Background.color (rgba 0 0 0 0.35)

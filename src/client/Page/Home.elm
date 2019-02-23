@@ -18,7 +18,7 @@ import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
 import Tree exposing (Tree)
-import UI.Card
+import UI.Card as Card
 import UI.Error
 import UI.Layout
 import UI.Loading
@@ -152,7 +152,7 @@ publicationView publication =
         url =
             Route.publicationUrl publication.id
     in
-    UI.Card.view
+    Card.bordered []
         [ link
             [ width fill
             , height fill
