@@ -28,6 +28,7 @@ import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
 import UI.Nav.Side
+import UI.Parts.BreadCrumb as UI
 import UI.Parts.Information as Information
 import UI.Parts.Search
 import UI.Poster as UI
@@ -60,14 +61,13 @@ initialModel publicationId =
 
 
 
--- MSG
+-- MESSAGE
 
 
 type Msg
-    = MenuItemClicked String
+    = LinkClicked String
     | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)
     | PublicationClicked Int
-    | ReadLinkClicked String
     | NoOp
 
 
@@ -81,19 +81,19 @@ view categoryData model =
         { title = "Pustaka - Publication"
         , sideNav =
             categoryData
-                |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.NoSelection
+                |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
-                publicationView
+                viewPublication
                 model.publication
         }
 
 
-publicationView : Publication.MetaData -> Element Msg
-publicationView publication =
+viewPublication : Publication.MetaData -> Element Msg
+viewPublication publication =
     column [ UI.spacing 2, width fill ]
-        [ row [] [ text "Breadcrumb / Navigation" ]
+        [ UI.breadCrumb []
         , row
             [ UI.spacing 1, width fill ]
             [ posterView publication.id publication.thumbnail publication.title
@@ -111,8 +111,8 @@ informationView publication =
             , { term = "ISBN", details = publication.isbn, onClick = NoOp }
             ]
         , actions =
-            [ Action.large <| Action.link { text = "Edit", icon = Icon.edit, url = "", onClick = always NoOp }
-            , Action.large <| Action.link { text = "Read", icon = Icon.edit, url = Route.readUrl publication.id, onClick = ReadLinkClicked }
+            [ Action.large <| Action.link { text = "Edit", icon = Icon.edit, url = Route.publicationEditUrl publication.id, onClick = LinkClicked }
+            , Action.large <| Action.link { text = "Read", icon = Icon.edit, url = Route.readUrl publication.id, onClick = LinkClicked }
             ]
         }
 
@@ -122,7 +122,7 @@ posterView publicationId maybePoster title =
     Card.bordered [ alignTop ]
         [ UI.link
             [ height fill ]
-            { msg = MenuItemClicked
+            { msg = LinkClicked
             , url = Route.readUrl publicationId
             , label = UI.poster title maybePoster
             }
@@ -139,7 +139,7 @@ update key msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        MenuItemClicked url ->
+        LinkClicked url ->
             ( model, Nav.pushUrl key url )
 
         GetPublicationCompleted data ->
@@ -147,6 +147,3 @@ update key msg model =
 
         PublicationClicked pubId ->
             ( model, Nav.pushUrl key <| Route.readUrl pubId )
-
-        ReadLinkClicked url ->
-            ( model, Nav.pushUrl key url )

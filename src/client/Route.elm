@@ -4,6 +4,7 @@ module Route exposing
     , browseByMediaTypeUrl
     , categoryUrl
     , homeUrl
+    , publicationEditUrl
     , publicationUrl
     , readUrl
     )
@@ -32,6 +33,11 @@ categoryUrl id =
 publicationUrl : Int -> String
 publicationUrl id =
     baseUrl ++ "/pub/" ++ String.fromInt id
+
+
+publicationEditUrl : Int -> String
+publicationEditUrl id =
+    baseUrl ++ "/pub/edit/" ++ String.fromInt id
 
 
 readUrl : Int -> String
