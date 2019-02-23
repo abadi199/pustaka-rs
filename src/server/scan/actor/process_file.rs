@@ -49,8 +49,8 @@ fn process_category<'a>(
 }
 
 fn rank_category(publication_path: &str, category: &Category, file: &File) -> f64 {
-    let file_name = file.name.replace(publication_path, "");
-    let file_path = Path::new(&file_name);
+    let file_absolute_path = file.path.replace(publication_path, "");
+    let file_path = Path::new(&file_absolute_path);
     let highest_score = file_path
         .iter()
         .fold(0_f64, |current_highest_score, current| {

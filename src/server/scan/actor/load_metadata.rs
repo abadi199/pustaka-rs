@@ -26,7 +26,7 @@ impl Handler<LoadMetadata> for Scanner {
             media_format: file.extension.clone(),
             author_id: 1,
             thumbnail: None,
-            file: file.name.clone(),
+            file: file.path.clone(),
         };
         println!("{:?}", publication);
 

@@ -29,15 +29,18 @@ impl Category {
 }
 
 pub type FileId = i32;
+
 #[derive(Debug, Clone)]
 pub struct File {
     pub name: String,
+    pub path: String,
     pub extension: String,
 }
 impl File {
     pub fn from(dir: &DirEntry) -> Self {
         Self {
-            name: dir.path().to_str().unwrap_or("").to_string(),
+            name: dir.file_name().to_str().unwrap_or("").to_string(),
+            path: dir.path().to_str().unwrap_or("").to_string(),
             extension: dir
                 .path()
                 .extension()

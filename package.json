@@ -15,7 +15,8 @@
     "start": "npm run watch",
     "diesel:install": "cargo install diesel_cli --no-default-features --features sqlite",
     "diesel:run": "diesel migration run",
-    "scan": "cargo run --bin scanner"
+    "scan": "cargo run --bin scanner",
+    "clean:db": "sqlite3 pustaka.db 'delete from publication_category' && sqlite3 pustaka.db 'delete from publication'"
   },
   "author": "",
   "license": "ISC",
