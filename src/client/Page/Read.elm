@@ -18,13 +18,13 @@ import Element.Font as Font
 import Entity.Publication as Publication exposing (MediaFormat(..))
 import Html exposing (Html)
 import Html.Attributes as HA
-import Html.Extra
 import Reader exposing (PageView(..))
 import Reader.Comic as Comic
 import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
+import UI.Link as UI
 import UI.ReloadableData
 import UI.Spacing as UI
 
@@ -151,12 +151,15 @@ header pub model =
                     }
                 , UI.padding -2
                 ]
-                [ Html.Extra.link (always BackLinkClicked)
+                [ UI.link
                     []
-                    (model.previousUrl
-                        |> Maybe.withDefault (Route.publicationUrl pub.id)
-                    )
-                    (text "<< Back")
+                    { url =
+                        model.previousUrl
+                            |> Maybe.withDefault (Route.publicationUrl pub.id)
+                    , label =
+                        text "<< Back"
+                    , msg = always BackLinkClicked
+                    }
                 , el [ width fill, centerX, Font.center ] (text pub.title)
                 ]
 

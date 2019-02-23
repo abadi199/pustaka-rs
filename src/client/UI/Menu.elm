@@ -8,8 +8,8 @@ module UI.Menu exposing
 
 import Element as E exposing (..)
 import Html.Events exposing (..)
-import Html.Extra exposing (link)
 import Tree exposing (Tree)
+import UI.Link as UI
 import UI.Spacing as UI
 
 
@@ -44,7 +44,7 @@ viewItem item =
             [ E.link [] { url = url, label = text item.text } ]
 
         Internal msg url ->
-            [ E.link [] { url = url, label = text item.text } ]
+            [ UI.link [] { url = url, label = text item.text, msg = msg } ]
 
         NoLink ->
             [ el [] (text item.text) ]

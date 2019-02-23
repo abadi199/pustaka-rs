@@ -24,7 +24,8 @@ panel { title, informationList, actions } =
         , UI.padding -2
         ]
         [ column
-            [ UI.spacing 1
+            [ UI.spacing -2
+            , width fill
             ]
             [ UI.heading 1 title
             , UI.List.dl (informationList |> List.map viewDescription)

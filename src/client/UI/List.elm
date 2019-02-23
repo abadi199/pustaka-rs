@@ -8,12 +8,13 @@ import Html.Events exposing (onClick)
 
 dl : List ( DT msg, DD msg ) -> Element msg
 dl list =
-    html
-        (Html.dl resetStyles
-            [ column [] (list |> List.map viewDescription)
-                |> layoutWith { options = [ noStaticStyleSheet ] } []
-            ]
-        )
+    el [] <|
+        html
+            (Html.dl resetStyles
+                [ column [] (list |> List.map viewDescription)
+                    |> layoutWith { options = [ noStaticStyleSheet ] } []
+                ]
+            )
 
 
 viewDescription : ( DT msg, DD msg ) -> Element msg

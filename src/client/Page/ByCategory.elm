@@ -10,7 +10,6 @@ import Browser
 import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Entity.Category exposing (Category)
-import Html.Extra
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Set
@@ -18,6 +17,7 @@ import UI.Css.Basics
 import UI.Css.Color
 import UI.Icon as Icon
 import UI.Layout
+import UI.Link as UI
 import UI.Nav.Side
 import UI.Parts.Search
 import UI.ReloadableData
@@ -78,15 +78,17 @@ categorySliderView key model =
         (row
             []
             (UI.ReloadableData.view (categoriesView key model) model.categories
-                :: [ Html.Extra.link MenuItemClicked
+                :: [ UI.link
                         []
-                        ""
-                        (row
-                            []
-                            [ Icon.expandMore
-                            , text "All Categories"
-                            ]
-                        )
+                        { msg = MenuItemClicked
+                        , url = ""
+                        , label =
+                            row
+                                []
+                                [ Icon.expandMore
+                                , text "All Categories"
+                                ]
+                        }
                    ]
             )
         )
@@ -109,14 +111,18 @@ categoryView key model categoryName maybeCategoryId =
     el []
         (case maybeCategoryId of
             Just categoryId ->
-                Html.Extra.link MenuItemClicked
+                UI.link
                     []
-                    (Route.browseByCategoryIdUrl categoryId)
-                    (text categoryName)
+                    { msg = MenuItemClicked
+                    , url = Route.browseByCategoryIdUrl categoryId
+                    , label = text categoryName
+                    }
 
             Nothing ->
-                Html.Extra.link MenuItemClicked
+                UI.link
                     []
-                    Route.browseByCategoryUrl
-                    (text categoryName)
+                    { msg = MenuItemClicked
+                    , url = Route.browseByCategoryUrl
+                    , label = text categoryName
+                    }
         )
