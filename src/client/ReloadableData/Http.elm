@@ -22,7 +22,7 @@ toReloadableWebData i result =
             ReloadableData.Failure err i
 
         Ok data ->
-            ReloadableData.Success data
+            ReloadableData.Success i data
 
 
 get : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> Cmd msg
@@ -35,7 +35,7 @@ getTask : i -> String -> JD.Decoder a -> Task Never (ReloadableWebData i a)
 getTask i url decoder =
     getRequest url decoder
         |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success a))
+        |> Task.andThen (\a -> Task.succeed (Success i a))
         |> Task.onError (\err -> Task.succeed (Failure err i))
 
 
@@ -54,7 +54,7 @@ postTask : i -> String -> JD.Decoder a -> JE.Value -> Task Never (ReloadableWebD
 postTask i url decoder json =
     Http.post url (Http.jsonBody json) decoder
         |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success a))
+        |> Task.andThen (\a -> Task.succeed (Success i a))
         |> Task.onError (\err -> Task.succeed (Failure err i))
 
 
@@ -84,7 +84,7 @@ putTask i url decoder json =
         , expect = Http.expectJson decoder
         }
         |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success a))
+        |> Task.andThen (\a -> Task.succeed (Success i a))
         |> Task.onError (\err -> Task.succeed (Failure err i))
 
 

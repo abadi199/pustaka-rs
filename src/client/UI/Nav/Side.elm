@@ -76,16 +76,16 @@ view onLinkClicked selectedItem data =
         Loading _ ->
             [ UI.Loading.view ]
 
-        Reloading categories ->
+        Reloading _ categories ->
             [ UI.Loading.view, categoriesView onLinkClicked selectedItem categories ]
 
-        Success categories ->
+        Success _ categories ->
             [ categoriesView onLinkClicked selectedItem categories ]
 
         Failure error _ ->
             [ UI.Error.view <| Debug.toString error ]
 
-        FailureWithData error categories ->
+        FailureWithData error _ categories ->
             [ categoriesView onLinkClicked selectedItem categories, UI.Error.view <| Debug.toString error ]
     )
         |> SideNav

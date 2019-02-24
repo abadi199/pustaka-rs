@@ -126,16 +126,16 @@ mainSection data =
             Loading _ ->
                 UI.Loading.view
 
-            Reloading publications ->
+            Reloading _ publications ->
                 el [ inFront UI.Loading.view ] (publicationsView publications)
 
-            Success publications ->
+            Success _ publications ->
                 publicationsView publications
 
             Failure error _ ->
                 UI.Error.view <| Debug.toString error
 
-            FailureWithData error publications ->
+            FailureWithData error _ publications ->
                 el [ inFront <| UI.Error.view <| Debug.toString error ] (publicationsView publications)
         )
 

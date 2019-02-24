@@ -1,14 +1,14 @@
-module ReloadableData
-    exposing
-        ( ReloadableData(..)
-        , ReloadableWebData
-        , join
-        , loading
-        , map
-        , refresh
-        , toMaybe
-        , toResult
-        )
+module ReloadableData exposing
+    ( ReloadableData(..)
+    , ReloadableWebData
+    , error
+    , join
+    , loading
+    , map
+    , refresh
+    , setError
+    , toMaybe
+    )
 
 import Http
 
@@ -20,19 +20,22 @@ type alias ReloadableWebData i a =
 type ReloadableData e i a
     = NotAsked i
     | Loading i
-    | Reloading a
-    | Success a
+    | Reloading i a
+    | Success i a
     | Failure e i
-    | FailureWithData e a
+    | FailureWithData e i a
 
 
 loading : ReloadableData e i a -> ReloadableData e i a
-loading remoteData =
-    remoteData
-        |> toResult
-        |> Result.map Reloading
-        |> Result.mapError Loading
-        |> join
+loading reloadableData =
+    let
+        i =
+            initial reloadableData
+    in
+    reloadableData
+        |> toMaybe
+        |> Maybe.map (Reloading i)
+        |> Maybe.withDefault (Loading i)
 
 
 join : Result a a -> a
@@ -48,13 +51,13 @@ join result =
 toMaybe : ReloadableData e i a -> Maybe a
 toMaybe reloadableData =
     case reloadableData of
-        Success a ->
+        Success i a ->
             Just a
 
-        Reloading a ->
+        Reloading i a ->
             Just a
 
-        FailureWithData e a ->
+        FailureWithData e i a ->
             Just a
 
         NotAsked _ ->
@@ -67,28 +70,6 @@ toMaybe reloadableData =
             Nothing
 
 
-toResult : ReloadableData e i a -> Result i a
-toResult reloadableData =
-    case reloadableData of
-        Success a ->
-            Ok a
-
-        Reloading a ->
-            Ok a
-
-        FailureWithData e a ->
-            Ok a
-
-        NotAsked i ->
-            Err i
-
-        Loading i ->
-            Err i
-
-        Failure _ i ->
-            Err i
-
-
 refresh : ReloadableData e i a -> ReloadableData e i a -> ReloadableData e i a
 refresh prev next =
     case toMaybe prev of
@@ -97,20 +78,20 @@ refresh prev next =
                 NotAsked i ->
                     NotAsked i
 
-                Reloading a ->
-                    Reloading a
+                Reloading i a ->
+                    Reloading i a
 
-                Loading _ ->
-                    Reloading prevData
+                Loading i ->
+                    Reloading i prevData
 
-                Success a ->
-                    Success a
+                Success i a ->
+                    Success i a
 
-                Failure e _ ->
-                    FailureWithData e prevData
+                Failure e i ->
+                    FailureWithData e i prevData
 
-                FailureWithData e a ->
-                    FailureWithData e a
+                FailureWithData e i a ->
+                    FailureWithData e i a
 
         Nothing ->
             next
@@ -119,14 +100,14 @@ refresh prev next =
 map : (a -> b) -> ReloadableData e i a -> ReloadableData e i b
 map f reloadableData =
     case reloadableData of
-        Success a ->
-            Success (f a)
+        Success i a ->
+            Success i (f a)
 
-        Reloading a ->
-            Reloading (f a)
+        Reloading i a ->
+            Reloading i (f a)
 
-        FailureWithData e a ->
-            FailureWithData e (f a)
+        FailureWithData e i a ->
+            FailureWithData e i (f a)
 
         NotAsked i ->
             NotAsked i
@@ -136,3 +117,59 @@ map f reloadableData =
 
         Failure e i ->
             Failure e i
+
+
+initial : ReloadableData e i a -> i
+initial reloadableData =
+    case reloadableData of
+        Success i _ ->
+            i
+
+        Reloading i _ ->
+            i
+
+        FailureWithData _ i _ ->
+            i
+
+        NotAsked i ->
+            i
+
+        Loading i ->
+            i
+
+        Failure _ i ->
+            i
+
+
+error : ReloadableData e i a -> Maybe e
+error reloadableData =
+    case reloadableData of
+        Success _ _ ->
+            Nothing
+
+        Reloading _ _ ->
+            Nothing
+
+        FailureWithData e _ _ ->
+            Just e
+
+        NotAsked _ ->
+            Nothing
+
+        Loading _ ->
+            Nothing
+
+        Failure e _ ->
+            Just e
+
+
+setError : e -> ReloadableData e i a -> ReloadableData e i a
+setError e reloadableData =
+    let
+        i =
+            initial reloadableData
+    in
+    reloadableData
+        |> toMaybe
+        |> Maybe.map (\data -> FailureWithData e i data)
+        |> Maybe.withDefault (Failure e i)

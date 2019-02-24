@@ -12,6 +12,7 @@ import Element as E exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import ReloadableData exposing (ReloadableWebData)
+import Route
 import Task
 import UI.Layout
 import UI.Nav.Side
@@ -137,7 +138,23 @@ update key msg model =
             )
 
         SubmissionCompleted reloadableData ->
-            ( model, Cmd.none )
+            reloadableData
+                |> ReloadableData.error
+                |> Maybe.map
+                    (\err ->
+                        ( { model | publication = ReloadableData.setError err model.publication }
+                        , Cmd.none
+                        )
+                    )
+                |> Maybe.withDefault ( model, navigateToPublication key model.publication )
+
+
+navigateToPublication : Nav.Key -> ReloadableWebData Int Publication.MetaData -> Cmd Msg
+navigateToPublication key reloadableData =
+    reloadableData
+        |> ReloadableData.toMaybe
+        |> Maybe.map (\publication -> Nav.pushUrl key (Route.publicationUrl publication.id))
+        |> Maybe.withDefault Cmd.none
 
 
 updatePublication : Field -> Publication.MetaData -> Publication.MetaData
