@@ -1,13 +1,15 @@
 module Entity.Publication exposing
     ( Data
-    , MediaFormat(..)
     , MetaData
     , Page
+    , emptyMetaData
     , get
     , listByCategory
     , read
+    , update
     )
 
+import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
 import Json.Decode as JD
 import Json.Encode as JE
 import ReloadableData exposing (ReloadableWebData)
@@ -19,7 +21,20 @@ type alias MetaData =
     { id : Int
     , isbn : String
     , title : String
+    , file : String
+    , mediaFormat : MediaFormat
     , thumbnail : Maybe String
+    }
+
+
+emptyMetaData : MetaData
+emptyMetaData =
+    { id = -1
+    , isbn = ""
+    , title = ""
+    , file = ""
+    , mediaFormat = MediaFormat.none
+    , thumbnail = Nothing
     }
 
 
@@ -32,12 +47,6 @@ type alias Data =
     , currentPages : List Page
     , mediaFormat : MediaFormat
     }
-
-
-type MediaFormat
-    = CBR
-    | CBZ
-    | Epub
 
 
 type alias Page =
@@ -71,12 +80,23 @@ read publicationId =
         decoder
 
 
+update : MetaData -> Task Never (ReloadableWebData Int ())
+update publication =
+    ReloadableData.Http.putTask
+        publication.id
+        "/api/publication/"
+        (JD.succeed ())
+        (encode publication)
+
+
 metaDecoder : JD.Decoder MetaData
 metaDecoder =
-    JD.map4 MetaData
+    JD.map6 MetaData
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
+        (JD.field "file" JD.string)
+        (JD.field "media_format" MediaFormat.decoder)
         (JD.field "thumbnail_url" (JD.maybe JD.string))
 
 
@@ -89,27 +109,7 @@ decoder =
         (JD.field "thumbnail_url" (JD.maybe JD.string))
         (JD.field "total_pages" JD.int)
         (JD.maybe (JD.field "pages" (JD.list pageDecoder)) |> JD.map (Maybe.withDefault []))
-        (JD.field "media_format" mediaFormatDecoder)
-
-
-mediaFormatDecoder : JD.Decoder MediaFormat
-mediaFormatDecoder =
-    JD.string
-        |> JD.andThen
-            (\str ->
-                case String.toUpper str of
-                    "CBR" ->
-                        JD.succeed CBR
-
-                    "CBZ" ->
-                        JD.succeed CBZ
-
-                    "EPUB" ->
-                        JD.succeed Epub
-
-                    _ ->
-                        JD.fail <| "Unknown Format " ++ str
-            )
+        (JD.field "media_format" MediaFormat.decoder)
 
 
 pageDecoder : JD.Decoder Page
@@ -117,3 +117,17 @@ pageDecoder =
     JD.map2 Page
         (JD.field "page_number" JD.int)
         (JD.field "url" JD.string)
+
+
+encode : MetaData -> JE.Value
+encode metaData =
+    JE.object
+        [ ( "id", JE.int metaData.id )
+        , ( "title", JE.string metaData.title )
+        , ( "isbn", JE.string metaData.isbn )
+        , ( "media_type_id", JE.int 1 )
+        , ( "media_format", MediaFormat.encode metaData.mediaFormat )
+        , ( "author_id", JE.int 1 )
+        , ( "thumbnail", JE.null )
+        , ( "file", JE.string metaData.file )
+        ]

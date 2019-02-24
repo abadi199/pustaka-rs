@@ -15,7 +15,8 @@ import Element as E exposing (..)
 import Element.Border as Border exposing (shadow)
 import Element.Events as Events exposing (onClick, onMouseEnter)
 import Element.Font as Font
-import Entity.Publication as Publication exposing (MediaFormat(..))
+import Entity.MediaFormat as MediaFormat exposing (MediaFormat(..))
+import Entity.Publication as Publication
 import Html exposing (Html)
 import Html.Attributes as HA
 import Reader exposing (PageView(..))
@@ -191,6 +192,9 @@ pages viewport pub pageView =
 
             Epub ->
                 Epub.reader viewport pub pageView
+
+            NoMediaFormat ->
+                Debug.todo "No media format"
 
 
 right : Publication.Data -> Element Msg

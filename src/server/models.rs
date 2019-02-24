@@ -106,6 +106,8 @@ impl Serialize for Publication {
         state.serialize_field("title", &self.title)?;
         state.serialize_field("media_type_id", &self.media_type_id)?;
         state.serialize_field("author_id", &self.author_id)?;
+        state.serialize_field("file", &self.file)?;
+        state.serialize_field("media_format", &self.media_format)?;
         match self.thumbnail_url() {
             Some(url) => state.serialize_field("thumbnail_url", &url)?,
             None => state.serialize_field("thumbnail_url", &self.thumbnail)?,

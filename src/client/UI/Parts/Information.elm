@@ -36,7 +36,7 @@ panel { title, informationList, actions } =
 
 viewDescription : Description msg -> ( UI.List.DT msg, UI.List.DD msg )
 viewDescription { term, details, onClick } =
-    ( UI.List.dt { term = term, onClick = onClick }
+    ( UI.List.dt { term = term ++ ":", onClick = onClick }
     , UI.List.dd { details = details, onClick = onClick }
     )
 

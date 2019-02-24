@@ -58,6 +58,7 @@ fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<
 }
 
 fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<HttpResponse> {
+    println!("{:?}", json);
     state
         .db
         .send(Update {
@@ -93,7 +94,10 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
+            Ok(publication) => {
+                println!("get_publication: {:?}", publication);
+                Ok(HttpResponse::Ok().json(publication))
+            }
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()

@@ -13,6 +13,7 @@ import Element as E exposing (..)
 import Element.Background as Background
 import Element.Region as Region
 import Entity.Category exposing (Category)
+import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
@@ -109,10 +110,23 @@ informationView publication =
         , informationList =
             [ { term = "Author", details = "N/A", onClick = NoOp }
             , { term = "ISBN", details = publication.isbn, onClick = NoOp }
+            , { term = "Format", details = MediaFormat.toString publication.mediaFormat, onClick = NoOp }
             ]
         , actions =
-            [ Action.large <| Action.link { text = "Edit", icon = Icon.edit, url = Route.publicationEditUrl publication.id, onClick = LinkClicked }
-            , Action.large <| Action.link { text = "Read", icon = Icon.edit, url = Route.readUrl publication.id, onClick = LinkClicked }
+            [ Action.large <|
+                Action.link
+                    { text = "Edit"
+                    , icon = Icon.edit
+                    , url = Route.publicationEditUrl publication.id
+                    , onClick = LinkClicked
+                    }
+            , Action.large <|
+                Action.link
+                    { text = "Read"
+                    , icon = Icon.edit
+                    , url = Route.readUrl publication.id
+                    , onClick = LinkClicked
+                    }
             ]
         }
 

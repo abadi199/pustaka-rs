@@ -16,6 +16,7 @@ import Task
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as UI
+import UI.Parts.Form as Form
 import UI.Parts.Search
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -48,6 +49,14 @@ type Msg
     = NoOp
     | LinkClicked String
     | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)
+    | PublicationChanged Field
+    | FormSubmitted
+    | SubmissionCompleted (ReloadableWebData Int ())
+
+
+type Field
+    = TitleField String
+    | ISBNField String
 
 
 
@@ -74,6 +83,21 @@ viewEdit publication =
     column [ UI.spacing 2, width fill ]
         [ UI.breadCrumb []
         , E.text "Edit Publication"
+        , Form.form
+            { fields =
+                [ Form.field
+                    { label = "Title"
+                    , value = publication.title
+                    , onChange = TitleField >> PublicationChanged
+                    }
+                , Form.field
+                    { label = "ISBN"
+                    , value = publication.isbn
+                    , onChange = ISBNField >> PublicationChanged
+                    }
+                ]
+            , onSubmit = FormSubmitted
+            }
         ]
 
 
@@ -91,4 +115,36 @@ update key msg model =
             ( model, Nav.pushUrl key url )
 
         GetPublicationCompleted reloadableData ->
-            ( { model | publication = reloadableData }, Cmd.none )
+            ( { model | publication = reloadableData }
+            , Cmd.none
+            )
+
+        PublicationChanged value ->
+            ( { model | publication = model.publication |> ReloadableData.map (updatePublication value) }
+            , Cmd.none
+            )
+
+        FormSubmitted ->
+            ( { model
+                | publication =
+                    model.publication
+                        |> ReloadableData.loading
+              }
+            , model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.map (Publication.update >> Task.perform SubmissionCompleted)
+                |> Maybe.withDefault Cmd.none
+            )
+
+        SubmissionCompleted reloadableData ->
+            ( model, Cmd.none )
+
+
+updatePublication : Field -> Publication.MetaData -> Publication.MetaData
+updatePublication field publication =
+    case field of
+        TitleField value ->
+            { publication | title = value }
+
+        ISBNField value ->
+            { publication | isbn = value }
