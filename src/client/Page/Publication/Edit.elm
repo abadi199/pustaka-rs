@@ -9,16 +9,22 @@ module Page.Publication.Edit exposing
 import Browser
 import Browser.Navigation as Nav
 import Element as E exposing (..)
+import Element.Input as Input
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
+import File exposing (File)
+import File.Select as Select
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Task
+import UI.Card as Card
+import UI.Heading as UI
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as UI
 import UI.Parts.Form as Form
 import UI.Parts.Search
+import UI.Poster as UI
 import UI.ReloadableData
 import UI.Spacing as UI
 
@@ -53,6 +59,8 @@ type Msg
     | PublicationChanged Field
     | FormSubmitted
     | SubmissionCompleted (ReloadableWebData Int ())
+    | BrowseClicked
+    | FileSelected File
 
 
 type Field
@@ -81,24 +89,37 @@ view categories model =
 
 viewEdit : Publication.MetaData -> Element Msg
 viewEdit publication =
-    column [ UI.spacing 2, width fill ]
+    column [ UI.spacing 1, width fill ]
         [ UI.breadCrumb []
-        , E.text "Edit Publication"
-        , Form.form
-            { fields =
-                [ Form.field
-                    { label = "Title"
-                    , value = publication.title
-                    , onChange = TitleField >> PublicationChanged
-                    }
-                , Form.field
-                    { label = "ISBN"
-                    , value = publication.isbn
-                    , onChange = ISBNField >> PublicationChanged
+        , row [ width fill, UI.spacing 1 ]
+            [ viewPoster publication
+            , column [ width fill, UI.spacing 1 ]
+                [ UI.heading 1 "Edit Publication"
+                , Form.form
+                    { fields =
+                        [ Form.field
+                            { label = "Title"
+                            , value = publication.title
+                            , onChange = TitleField >> PublicationChanged
+                            }
+                        , Form.field
+                            { label = "ISBN"
+                            , value = publication.isbn
+                            , onChange = ISBNField >> PublicationChanged
+                            }
+                        ]
+                    , onSubmit = FormSubmitted
                     }
                 ]
-            , onSubmit = FormSubmitted
-            }
+            ]
+        ]
+
+
+viewPoster : Publication.MetaData -> Element Msg
+viewPoster publication =
+    Card.bordered [ alignTop ]
+        [ UI.poster publication.title publication.thumbnail
+        , Input.button [ alignRight ] { onPress = Just BrowseClicked, label = text "Browse" }
         ]
 
 
@@ -147,6 +168,16 @@ update key msg model =
                         )
                     )
                 |> Maybe.withDefault ( model, navigateToPublication key model.publication )
+
+        BrowseClicked ->
+            ( model, Select.file [] FileSelected )
+
+        FileSelected file ->
+            let
+                _ =
+                    Debug.log "file" file
+            in
+            ( model, Cmd.none )
 
 
 navigateToPublication : Nav.Key -> ReloadableWebData Int Publication.MetaData -> Cmd Msg

@@ -93,18 +93,18 @@ view categoryData model =
 
 viewPublication : Publication.MetaData -> Element Msg
 viewPublication publication =
-    column [ UI.spacing 2, width fill ]
+    column [ UI.spacing 1, width fill ]
         [ UI.breadCrumb []
         , row
             [ UI.spacing 1, width fill ]
-            [ posterView publication.id publication.thumbnail publication.title
-            , informationView publication
+            [ viewPoster publication.id publication.thumbnail publication.title
+            , viewInformation publication
             ]
         ]
 
 
-informationView : Publication.MetaData -> Element Msg
-informationView publication =
+viewInformation : Publication.MetaData -> Element Msg
+viewInformation publication =
     Information.panel
         { title = publication.title
         , informationList =
@@ -133,8 +133,8 @@ informationView publication =
         }
 
 
-posterView : Int -> Maybe String -> String -> Element Msg
-posterView publicationId maybePoster title =
+viewPoster : Int -> Maybe String -> String -> Element Msg
+viewPoster publicationId maybePoster title =
     Card.bordered [ alignTop ]
         [ UI.link
             [ height fill ]
