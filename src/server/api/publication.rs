@@ -274,8 +274,9 @@ fn handle_multipart_item(
     }
 }
 
-fn upload(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
     let state: &AppState = req.state();
+    println!("upload for: {:?}", publication_id);
     Box::new(
         req.multipart()
             .map_err(error::ErrorInternalServerError)
@@ -309,5 +310,7 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             read_page,
         )
         .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
-        .resource("/thumbnail/", |r| r.method(Method::POST).with(upload))
+        .resource("/thumbnail/{publication_id}", |r| {
+            r.method(Method::POST).with(upload)
+        })
 }

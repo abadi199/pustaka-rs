@@ -9,4 +9,8 @@ full : Element msg
 full =
     el
         [ Spacing.padding -2, Font.bold ]
-        (text "Pustaka")
+        (image [ height (px 50) ]
+            { src = "/assets/logo.svg"
+            , description = "Pustaka"
+            }
+        )
