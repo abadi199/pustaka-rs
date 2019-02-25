@@ -1,18 +1,19 @@
 use actix_web::http::Method;
 use actix_web::{
-    error::ErrorBadRequest, fs::NamedFile, middleware, App, AsyncResponder, FutureResponse,
-    HttpRequest, HttpResponse, Json, Path, Result, State,
+    dev, error, error::ErrorBadRequest, fs::NamedFile, middleware, multipart, App, AsyncResponder,
+    FutureResponse, HttpMessage, HttpRequest, HttpResponse, Json, Path, Result, State,
 };
 use config::Config;
 use db::publication::{self, Delete, Get, List, ListByCategory, Update};
-use futures::Future;
+use futures::{future, Future, Stream};
 use models::{NewPublication, Publication, CBR, CBZ, EPUB};
 use reader::{comic, epub};
 use state::AppState;
 use std::{
     error::Error,
     fmt::{Display, Formatter},
-    io,
+    fs, io,
+    io::Write,
     path::PathBuf,
 };
 
@@ -233,22 +234,60 @@ fn download_file(
     Err(ErrorBadRequest(PublicationError::InvalidMediaFormat))
 }
 
+fn save_file(
+    field: multipart::Field<dev::Payload>,
+) -> Box<Future<Item = i64, Error = error::Error>> {
+    let file_path_string = "upload.png";
+    let mut file = match fs::File::create(file_path_string) {
+        Ok(file) => file,
+        Err(e) => return Box::new(future::err(actix_web::error::ErrorInternalServerError(e))),
+    };
+    Box::new(
+        field
+            .fold(0i64, move |acc, bytes| {
+                let rt = file
+                    .write_all(bytes.as_ref())
+                    .map(|_| acc + bytes.len() as i64)
+                    .map_err(|e| {
+                        println!("file.write_all failed: {:?}", e);
+                        error::MultipartError::Payload(error::PayloadError::Io(e))
+                    });
+                future::result(rt)
+            })
+            .map_err(|e| {
+                println!("save_file failed, {:?}", e);
+                error::ErrorInternalServerError(e)
+            }),
+    )
+}
+
+fn handle_multipart_item(
+    item: multipart::MultipartItem<dev::Payload>,
+) -> Box<Stream<Item = i64, Error = error::Error>> {
+    match item {
+        multipart::MultipartItem::Field(field) => Box::new(save_file(field).into_stream()),
+        multipart::MultipartItem::Nested(mp) => Box::new(
+            mp.map_err(error::ErrorInternalServerError)
+                .map(handle_multipart_item)
+                .flatten(),
+        ),
+    }
+}
+
 fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
     let state: &AppState = req.state();
-    state
-        .db
-        .send(Get {
-            publication_id: publication_id.into_inner(),
-        })
-        .from_err()
-        .and_then(|res| match res {
-            Ok(publication) => {
-                println!("get_publication: {:?}", publication);
-                Ok(HttpResponse::Ok().json(publication))
-            }
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
-        .responder()
+    Box::new(
+        req.multipart()
+            .map_err(error::ErrorInternalServerError)
+            .map(handle_multipart_item)
+            .flatten()
+            .collect()
+            .map(|sizes| HttpResponse::Ok().json(sizes))
+            .map_err(|e| {
+                println!("failed: {}", e);
+                e
+            }),
+    )
 }
 
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
