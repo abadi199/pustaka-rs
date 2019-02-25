@@ -193,7 +193,13 @@ selectCategory selectedCategoryId model =
                     ReloadableData.loading model.publications
       }
     , selectedCategoryId
-        |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
+        |> Maybe.map
+            (\id ->
+                Publication.listByCategory
+                    { categoryId = id
+                    , msg = GetPublicationCompleted
+                    }
+            )
         |> Maybe.withDefault Cmd.none
     )
 

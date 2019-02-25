@@ -18,6 +18,10 @@ import Set exposing (Set)
 import Tree exposing (Node, Tree)
 
 
+
+-- MODEL
+
+
 type alias Category =
     { id : Int
     , name : String
@@ -29,6 +33,10 @@ type alias NewCategory =
     { name : String, parent_id : Maybe Int }
 
 
+
+-- DECODER
+
+
 decoder : JD.Decoder Category
 decoder =
     JD.map3 Category
@@ -37,31 +45,8 @@ decoder =
         (JD.field "parent_id" (JD.nullable JD.int))
 
 
-list : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
-list msg =
-    ReloadableData.Http.get
-        ()
-        "/api/category/"
-        msg
-        (JD.list decoder)
 
-
-tree : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
-tree msg =
-    ReloadableData.Http.get
-        ()
-        "/api/category/"
-        msg
-        (JD.list decoder |> JD.map toTree)
-
-
-favorite : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
-favorite msg =
-    ReloadableData.Http.get
-        ()
-        "/api/category/favorite/"
-        msg
-        (JD.list decoder)
+-- HELPER
 
 
 toTree : List Category -> Tree Category
@@ -97,54 +82,94 @@ parentExists category set =
         |> Maybe.withDefault False
 
 
-get : (ReloadableWebData () Category -> msg) -> Int -> Cmd msg
-get msg id =
+
+-- HTTP
+
+
+get : { msg : ReloadableWebData () Category -> msg, categoryId : Int } -> Cmd msg
+get { msg, categoryId } =
     ReloadableData.Http.get
-        ()
-        ("/api/category/" ++ String.fromInt id)
-        msg
-        decoder
+        { initial = ()
+        , url = "/api/category/" ++ String.fromInt categoryId
+        , msg = msg
+        , decoder = decoder
+        }
 
 
-create : (ReloadableWebData () Category -> msg) -> NewCategory -> Cmd msg
-create msg newCategory =
+create : { msg : ReloadableWebData () Category -> msg, newCategory : NewCategory } -> Cmd msg
+create { msg, newCategory } =
     ReloadableData.Http.post
-        ()
-        "/api/category/"
-        msg
-        decoder
-        (JE.object
-            [ ( "name", JE.string newCategory.name )
-            , ( "parent_id"
-              , newCategory.parent_id
-                    |> Maybe.map JE.int
-                    |> Maybe.withDefault JE.null
-              )
-            ]
-        )
+        { initial = ()
+        , url = "/api/category/"
+        , msg = msg
+        , decoder = decoder
+        , json =
+            JE.object
+                [ ( "name", JE.string newCategory.name )
+                , ( "parent_id"
+                  , newCategory.parent_id
+                        |> Maybe.map JE.int
+                        |> Maybe.withDefault JE.null
+                  )
+                ]
+        }
 
 
-delete : (ReloadableWebData () () -> msg) -> Int -> Cmd msg
-delete msg id =
-    ReloadableData.Http.delete "/api/category"
-        (ReloadableData.map (always ()) >> msg)
-        (JE.int id)
+delete : { msg : ReloadableWebData () () -> msg, categoryId : Int } -> Cmd msg
+delete { msg, categoryId } =
+    ReloadableData.Http.delete
+        { initial = ()
+        , url = "/api/category"
+        , msg = msg
+        , json = JE.int categoryId
+        }
 
 
-update : (ReloadableWebData () Category -> msg) -> Category -> Cmd msg
-update msg category =
+update : { msg : ReloadableWebData () Category -> msg, category : Category } -> Cmd msg
+update { msg, category } =
     ReloadableData.Http.put
-        ()
-        "/api/category"
-        msg
-        decoder
-        (JE.object
-            [ ( "id", JE.int category.id )
-            , ( "name", JE.string category.name )
-            , ( "parent_id"
-              , category.parentId
-                    |> Maybe.map JE.int
-                    |> Maybe.withDefault JE.null
-              )
-            ]
-        )
+        { initial = ()
+        , url = "/api/category"
+        , msg = msg
+        , decoder = decoder
+        , json =
+            JE.object
+                [ ( "id", JE.int category.id )
+                , ( "name", JE.string category.name )
+                , ( "parent_id"
+                  , category.parentId
+                        |> Maybe.map JE.int
+                        |> Maybe.withDefault JE.null
+                  )
+                ]
+        }
+
+
+list : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
+list msg =
+    ReloadableData.Http.get
+        { initial = ()
+        , url = "/api/category/"
+        , msg = msg
+        , decoder = JD.list decoder
+        }
+
+
+tree : (ReloadableWebData () (Tree Category) -> msg) -> Cmd msg
+tree msg =
+    ReloadableData.Http.get
+        { initial = ()
+        , url = "/api/category/"
+        , msg = msg
+        , decoder = JD.list decoder |> JD.map toTree
+        }
+
+
+favorite : (ReloadableWebData () (List Category) -> msg) -> Cmd msg
+favorite msg =
+    ReloadableData.Http.get
+        { initial = ()
+        , url = "/api/category/favorite/"
+        , msg = msg
+        , decoder = JD.list decoder
+        }

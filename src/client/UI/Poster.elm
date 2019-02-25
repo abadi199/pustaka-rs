@@ -2,6 +2,7 @@ module UI.Poster exposing (dimensionForHeight, poster, thumbnail)
 
 import Element as E exposing (..)
 import Element.Background as Background
+import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
 import Html as H
 import Html.Attributes as HA
 
@@ -15,13 +16,14 @@ dimensionForHeight height =
     { width = width, height = height }
 
 
-thumbnail : String -> Maybe String -> Element msg
+thumbnail : String -> Thumbnail -> Element msg
 thumbnail title cover =
     let
         { height, width } =
             dimensionForHeight 200
     in
     cover
+        |> Thumbnail.toUrl
         |> Maybe.map
             (\image ->
                 posterImage
@@ -40,13 +42,14 @@ thumbnail title cover =
             )
 
 
-poster : String -> Maybe String -> Element msg
+poster : String -> Thumbnail -> Element msg
 poster title cover =
     let
         { width, height } =
             dimensionForHeight 300
     in
     cover
+        |> Thumbnail.toUrl
         |> Maybe.map
             (\image ->
                 posterImage

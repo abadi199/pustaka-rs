@@ -44,7 +44,7 @@ init publicationId =
     ( { searchText = ""
       , publication = ReloadableData.Loading publicationId
       }
-    , Publication.get publicationId |> Task.perform GetPublicationCompleted
+    , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
 
 
@@ -61,6 +61,7 @@ type Msg
     | SubmissionCompleted (ReloadableWebData Int ())
     | BrowseClicked
     | FileSelected File
+    | UploadCompleted (ReloadableWebData Int ())
 
 
 type Field
@@ -154,7 +155,13 @@ update key msg model =
               }
             , model.publication
                 |> ReloadableData.toMaybe
-                |> Maybe.map (Publication.update >> Task.perform SubmissionCompleted)
+                |> Maybe.map
+                    (\publication ->
+                        Publication.update
+                            { publication = publication
+                            , msg = SubmissionCompleted
+                            }
+                    )
                 |> Maybe.withDefault Cmd.none
             )
 
@@ -173,9 +180,25 @@ update key msg model =
             ( model, Select.file [] FileSelected )
 
         FileSelected file ->
+            ( model
+            , model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.map
+                    (\publication ->
+                        Publication.uploadThumbnail
+                            { publicationId = publication.id
+                            , fileName = "thumbnail"
+                            , file = file
+                            , msg = UploadCompleted
+                            }
+                    )
+                |> Maybe.withDefault Cmd.none
+            )
+
+        UploadCompleted remoteData ->
             let
                 _ =
-                    Debug.log "file" file
+                    Debug.log "UploadCompleted" remoteData
             in
             ( model, Cmd.none )
 

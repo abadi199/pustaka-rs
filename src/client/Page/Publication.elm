@@ -15,6 +15,7 @@ import Element.Region as Region
 import Entity.Category exposing (Category)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
+import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set
@@ -50,7 +51,7 @@ type alias Model =
 init : Int -> ( Model, Cmd Msg )
 init publicationId =
     ( initialModel publicationId
-    , Publication.get publicationId |> Task.perform GetPublicationCompleted
+    , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
 
 
@@ -133,14 +134,14 @@ viewInformation publication =
         }
 
 
-viewPoster : Int -> Maybe String -> String -> Element Msg
-viewPoster publicationId maybePoster title =
+viewPoster : Int -> Thumbnail -> String -> Element Msg
+viewPoster publicationId thumbnail title =
     Card.bordered [ alignTop ]
         [ UI.link
             [ height fill ]
             { msg = LinkClicked
             , url = Route.readUrl publicationId
-            , label = UI.poster title maybePoster
+            , label = UI.poster title thumbnail
             }
         ]
 

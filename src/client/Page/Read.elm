@@ -60,7 +60,7 @@ type Msg
 init : Int -> Maybe String -> ( Model, Cmd Msg )
 init pubId previousUrl =
     ( initialModel pubId previousUrl
-    , Publication.read pubId |> Task.perform GetDataCompleted
+    , Publication.read { publicationId = pubId, msg = GetDataCompleted }
     )
 
 

@@ -7,14 +7,21 @@ module Entity.Publication exposing
     , listByCategory
     , read
     , update
+    , uploadThumbnail
     )
 
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
+import Entity.Thumbnail as Thumbnail exposing (Thumbnail, thumbnailDecoder)
+import File exposing (File)
 import Json.Decode as JD
 import Json.Encode as JE
 import ReloadableData exposing (ReloadableWebData)
 import ReloadableData.Http
 import Task exposing (Task)
+
+
+
+-- MODEL
 
 
 type alias MetaData =
@@ -23,7 +30,7 @@ type alias MetaData =
     , title : String
     , file : String
     , mediaFormat : MediaFormat
-    , thumbnail : Maybe String
+    , thumbnail : Thumbnail
     }
 
 
@@ -34,7 +41,7 @@ emptyMetaData =
     , title = ""
     , file = ""
     , mediaFormat = MediaFormat.none
-    , thumbnail = Nothing
+    , thumbnail = Thumbnail.none
     }
 
 
@@ -42,7 +49,7 @@ type alias Data =
     { id : Int
     , isbn : String
     , title : String
-    , thumbnail : Maybe String
+    , thumbnail : Thumbnail
     , totalPages : Int
     , currentPages : List Page
     , mediaFormat : MediaFormat
@@ -55,49 +62,75 @@ type alias Page =
     }
 
 
-listByCategory : Int -> (ReloadableWebData () (List MetaData) -> msg) -> Cmd msg
-listByCategory categoryId msg =
+
+-- HTTP
+
+
+listByCategory : { categoryId : Int, msg : ReloadableWebData () (List MetaData) -> msg } -> Cmd msg
+listByCategory { categoryId, msg } =
     ReloadableData.Http.get
-        ()
-        ("/api/publication/category/" ++ String.fromInt categoryId)
-        msg
-        (JD.list metaDecoder)
+        { initial = ()
+        , url = "/api/publication/category/" ++ String.fromInt categoryId
+        , msg = msg
+        , decoder = JD.list metaDataDecoder
+        }
 
 
-get : Int -> Task Never (ReloadableWebData Int MetaData)
-get publicationId =
-    ReloadableData.Http.getTask
-        publicationId
-        ("/api/publication/" ++ String.fromInt publicationId)
-        metaDecoder
+get : { publicationId : Int, msg : ReloadableWebData Int MetaData -> msg } -> Cmd msg
+get { publicationId, msg } =
+    ReloadableData.Http.get
+        { initial = publicationId
+        , url = "/api/publication/" ++ String.fromInt publicationId
+        , msg = msg
+        , decoder = metaDataDecoder
+        }
 
 
-read : Int -> Task Never (ReloadableWebData Int Data)
-read publicationId =
-    ReloadableData.Http.getTask
-        publicationId
-        ("/api/publication/read/" ++ String.fromInt publicationId)
-        decoder
+read : { publicationId : Int, msg : ReloadableWebData Int Data -> msg } -> Cmd msg
+read { publicationId, msg } =
+    ReloadableData.Http.get
+        { initial = publicationId
+        , url = "/api/publication/read/" ++ String.fromInt publicationId
+        , msg = msg
+        , decoder = decoder
+        }
 
 
-update : MetaData -> Task Never (ReloadableWebData Int ())
-update publication =
-    ReloadableData.Http.putTask
-        publication.id
-        "/api/publication/"
-        (JD.succeed ())
-        (encode publication)
+update : { publication : MetaData, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+update { publication, msg } =
+    ReloadableData.Http.put
+        { initial = publication.id
+        , url = "/api/publication/"
+        , decoder = JD.succeed ()
+        , json = encode publication
+        , msg = msg
+        }
 
 
-metaDecoder : JD.Decoder MetaData
-metaDecoder =
+uploadThumbnail : { publicationId : Int, fileName : String, file : File, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+uploadThumbnail { publicationId, fileName, file, msg } =
+    ReloadableData.Http.upload
+        { initial = publicationId
+        , url = "/api/publication/thumbnail/"
+        , msg = msg
+        , fileName = fileName
+        , file = file
+        }
+
+
+
+-- DECODER
+
+
+metaDataDecoder : JD.Decoder MetaData
+metaDataDecoder =
     JD.map6 MetaData
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
         (JD.field "file" JD.string)
         (JD.field "media_format" MediaFormat.decoder)
-        (JD.field "thumbnail_url" (JD.maybe JD.string))
+        (JD.field "thumbnail_url" thumbnailDecoder)
 
 
 decoder : JD.Decoder Data
@@ -106,7 +139,7 @@ decoder =
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
-        (JD.field "thumbnail_url" (JD.maybe JD.string))
+        (JD.field "thumbnail_url" thumbnailDecoder)
         (JD.field "total_pages" JD.int)
         (JD.maybe (JD.field "pages" (JD.list pageDecoder)) |> JD.map (Maybe.withDefault []))
         (JD.field "media_format" MediaFormat.decoder)
@@ -117,6 +150,10 @@ pageDecoder =
     JD.map2 Page
         (JD.field "page_number" JD.int)
         (JD.field "url" JD.string)
+
+
+
+-- ENCODER
 
 
 encode : MetaData -> JE.Value

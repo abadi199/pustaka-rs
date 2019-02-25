@@ -1,18 +1,110 @@
 module ReloadableData.Http exposing
     ( delete
     , get
-    , getTask
     , post
-    , postTask
     , put
-    , putTask
+    , upload
     )
 
+import File exposing (File)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Task exposing (Task)
+
+
+
+-- CMD
+
+
+get :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i a -> msg
+    , decoder : JD.Decoder a
+    }
+    -> Cmd msg
+get { initial, url, msg, decoder } =
+    Http.get
+        { url = url
+        , expect = Http.expectJson (toResultMsg initial msg) decoder
+        }
+
+
+post :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i a -> msg
+    , decoder : JD.Decoder a
+    , json : JE.Value
+    }
+    -> Cmd msg
+post { initial, url, msg, decoder, json } =
+    Http.post
+        { url = url
+        , body = Http.jsonBody json
+        , expect = Http.expectJson (toResultMsg initial msg) decoder
+        }
+
+
+put :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i a -> msg
+    , decoder : JD.Decoder a
+    , json : JE.Value
+    }
+    -> Cmd msg
+put { initial, url, msg, decoder, json } =
+    Http.request
+        { method = "PUT"
+        , headers = []
+        , url = url
+        , body = Http.jsonBody json
+        , timeout = Nothing
+        , expect = Http.expectJson (toResultMsg initial msg) decoder
+        , tracker = Nothing
+        }
+
+
+delete :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i () -> msg
+    , json : JE.Value
+    }
+    -> Cmd msg
+delete { initial, url, msg, json } =
+    Http.request
+        { method = "DELETE"
+        , headers = []
+        , url = url
+        , body = Http.jsonBody json
+        , timeout = Nothing
+        , expect = Http.expectWhatever (toResultMsg initial msg)
+        , tracker = Nothing
+        }
+
+
+upload :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i () -> msg
+    , fileName : String
+    , file : File
+    }
+    -> Cmd msg
+upload { initial, url, msg, fileName, file } =
+    Http.post
+        { url = url
+        , body = Http.multipartBody [ Http.filePart fileName file ]
+        , expect = Http.expectWhatever (toResultMsg initial msg)
+        }
+
+
+
+-- MISC
 
 
 toReloadableWebData : i -> Result Http.Error a -> ReloadableWebData i a
@@ -25,78 +117,6 @@ toReloadableWebData i result =
             ReloadableData.Success i data
 
 
-get : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> Cmd msg
-get i url msg decoder =
-    getRequest url decoder
-        |> Http.send (toReloadableWebData i >> msg)
-
-
-getTask : i -> String -> JD.Decoder a -> Task Never (ReloadableWebData i a)
-getTask i url decoder =
-    getRequest url decoder
-        |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success i a))
-        |> Task.onError (\err -> Task.succeed (Failure err i))
-
-
-getRequest : String -> JD.Decoder a -> Http.Request a
-getRequest url decoder =
-    Http.get url decoder
-
-
-post : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> JE.Value -> Cmd msg
-post i url msg decoder json =
-    Http.post url (Http.jsonBody json) decoder
-        |> Http.send (toReloadableWebData i >> msg)
-
-
-postTask : i -> String -> JD.Decoder a -> JE.Value -> Task Never (ReloadableWebData i a)
-postTask i url decoder json =
-    Http.post url (Http.jsonBody json) decoder
-        |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success i a))
-        |> Task.onError (\err -> Task.succeed (Failure err i))
-
-
-put : i -> String -> (ReloadableWebData i a -> msg) -> JD.Decoder a -> JE.Value -> Cmd msg
-put i url msg decoder json =
-    Http.request
-        { method = "PUT"
-        , headers = []
-        , url = url
-        , body = Http.jsonBody json
-        , timeout = Nothing
-        , withCredentials = False
-        , expect = Http.expectJson decoder
-        }
-        |> Http.send (toReloadableWebData i >> msg)
-
-
-putTask : i -> String -> JD.Decoder a -> JE.Value -> Task Never (ReloadableWebData i a)
-putTask i url decoder json =
-    Http.request
-        { method = "PUT"
-        , headers = []
-        , url = url
-        , body = Http.jsonBody json
-        , timeout = Nothing
-        , withCredentials = False
-        , expect = Http.expectJson decoder
-        }
-        |> Http.toTask
-        |> Task.andThen (\a -> Task.succeed (Success i a))
-        |> Task.onError (\err -> Task.succeed (Failure err i))
-
-
-delete : String -> (ReloadableWebData () () -> msg) -> JE.Value -> Cmd msg
-delete url msg json =
-    Http.request
-        { method = "DELETE"
-        , headers = []
-        , url = url
-        , body = Http.jsonBody json
-        , timeout = Nothing
-        , withCredentials = False
-        , expect = Http.expectStringResponse (\_ -> Ok ())
-        }
-        |> Http.send (toReloadableWebData () >> msg)
+toResultMsg : i -> (ReloadableWebData i a -> msg) -> (Result Http.Error a -> msg)
+toResultMsg i msg =
+    \result -> msg (toReloadableWebData i result)
