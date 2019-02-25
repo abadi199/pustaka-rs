@@ -123,7 +123,7 @@ informationView publication =
             , Action.large <|
                 Action.link
                     { text = "Read"
-                    , icon = Icon.edit
+                    , icon = Icon.read
                     , url = Route.readUrl publication.id
                     , onClick = LinkClicked
                     }

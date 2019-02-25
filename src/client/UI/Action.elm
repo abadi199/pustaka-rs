@@ -65,10 +65,10 @@ viewCompact : ActionType msg -> Element msg
 viewCompact actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [] { url = url, msg = onClick, label = icon }
+            UI.link [ pointer ] { url = url, msg = onClick, label = icon }
 
         Clickable { text, icon, onClick } ->
-            el [ EV.onClick onClick ] icon
+            el [ pointer, EV.onClick onClick ] icon
 
         Disable { text, icon } ->
             el [] icon
@@ -78,10 +78,10 @@ viewLarge : ActionType msg -> Element msg
 viewLarge actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [] { url = url, msg = onClick, label = row [] [ icon, E.text text ] }
+            UI.link [ pointer ] { url = url, msg = onClick, label = row [] [ icon, E.text text ] }
 
         Clickable { text, icon, onClick } ->
-            row [ EV.onClick onClick ] [ icon, E.text text ]
+            row [ pointer, EV.onClick onClick ] [ icon, E.text text ]
 
         Disable { text, icon } ->
             row [] [ icon, E.text text ]

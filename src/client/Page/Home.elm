@@ -18,8 +18,10 @@ import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
 import Tree exposing (Tree)
+import UI.Action as Action
 import UI.Card as Card
 import UI.Error
+import UI.Icon as Icon
 import UI.Layout
 import UI.Loading
 import UI.Menu
@@ -27,6 +29,10 @@ import UI.Nav.Side
 import UI.Parts.Search
 import UI.Poster as UI
 import UI.Spacing as UI
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -49,59 +55,19 @@ initialModel =
     }
 
 
+
+-- MESSAGE
+
+
 type Msg
     = NoOp
-    | MenuItemClicked String
+    | LinkClicked String
     | CategorySelected (Maybe Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
 
 
-update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
-update key msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none )
 
-        MenuItemClicked url ->
-            ( model
-            , Nav.pushUrl key url
-            )
-
-        CategorySelected selectedCategoryId ->
-            selectCategory selectedCategoryId model
-
-        GetPublicationCompleted publications ->
-            ( { model | publications = publications }
-            , Cmd.none
-            )
-
-
-selectCategory : Maybe Int -> Model -> ( Model, Cmd Msg )
-selectCategory selectedCategoryId model =
-    ( { model
-        | selectedCategoryId = selectedCategoryId
-        , publications =
-            case selectedCategoryId of
-                Nothing ->
-                    ReloadableData.NotAsked ()
-
-                Just _ ->
-                    ReloadableData.loading model.publications
-      }
-    , selectedCategoryId
-        |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
-        |> Maybe.withDefault Cmd.none
-    )
-
-
-selectedItem : Maybe Int -> UI.Nav.Side.SelectedItem
-selectedItem selectedCategoryId =
-    case selectedCategoryId of
-        Just id ->
-            UI.Nav.Side.CategoryId id
-
-        Nothing ->
-            UI.Nav.Side.NoSelection
+-- VIEw
 
 
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -110,7 +76,7 @@ view key categories model =
         { title = "Pustaka - Main"
         , sideNav =
             categories
-                |> UI.Nav.Side.view MenuItemClicked (selectedItem model.selectedCategoryId)
+                |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = mainSection model.publications
         }
@@ -164,7 +130,7 @@ publicationView publication =
         ]
 
 
-publicationActionView : Int -> Element msg
+publicationActionView : Int -> Element Msg
 publicationActionView publicationId =
     row
         [ alignRight
@@ -173,7 +139,66 @@ publicationActionView publicationId =
         , htmlAttribute <| HA.style "position" "absolute"
         , htmlAttribute <| HA.style "bottom" "0"
         , UI.spacing -5
-        , UI.padding -5
+        , UI.padding -10
         ]
-        [ link [] { url = Route.readUrl publicationId, label = text "Read" }
+        [ Action.toElement <|
+            Action.compact <|
+                Action.link
+                    { text = "Read"
+                    , icon = Icon.read
+                    , url = Route.readUrl publicationId
+                    , onClick = LinkClicked
+                    }
         ]
+
+
+
+-- UPDATE
+
+
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        LinkClicked url ->
+            ( model
+            , Nav.pushUrl key url
+            )
+
+        CategorySelected selectedCategoryId ->
+            selectCategory selectedCategoryId model
+
+        GetPublicationCompleted publications ->
+            ( { model | publications = publications }
+            , Cmd.none
+            )
+
+
+selectCategory : Maybe Int -> Model -> ( Model, Cmd Msg )
+selectCategory selectedCategoryId model =
+    ( { model
+        | selectedCategoryId = selectedCategoryId
+        , publications =
+            case selectedCategoryId of
+                Nothing ->
+                    ReloadableData.NotAsked ()
+
+                Just _ ->
+                    ReloadableData.loading model.publications
+      }
+    , selectedCategoryId
+        |> Maybe.map (\id -> Publication.listByCategory id GetPublicationCompleted)
+        |> Maybe.withDefault Cmd.none
+    )
+
+
+selectedItem : Maybe Int -> UI.Nav.Side.SelectedItem
+selectedItem selectedCategoryId =
+    case selectedCategoryId of
+        Just id ->
+            UI.Nav.Side.CategoryId id
+
+        Nothing ->
+            UI.Nav.Side.NoSelection
