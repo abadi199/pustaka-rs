@@ -22,7 +22,7 @@ baseUrl =
 
 homeUrl : String
 homeUrl =
-    baseUrl
+    baseUrl ++ "/"
 
 
 categoryUrl : Int -> String

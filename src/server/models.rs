@@ -99,8 +99,7 @@ impl Serialize for Publication {
     where
         S: Serializer,
     {
-        // 3 is the number of fields in the struct.
-        let mut state = serializer.serialize_struct("Publication", 6)?;
+        let mut state = serializer.serialize_struct("Publication", 8)?;
         state.serialize_field("id", &self.id)?;
         state.serialize_field("isbn", &self.isbn)?;
         state.serialize_field("title", &self.title)?;

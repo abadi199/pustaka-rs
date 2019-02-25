@@ -111,6 +111,8 @@ informationView publication =
             [ { term = "Author", details = "N/A", onClick = NoOp }
             , { term = "ISBN", details = publication.isbn, onClick = NoOp }
             , { term = "Format", details = MediaFormat.toString publication.mediaFormat, onClick = NoOp }
+            , { term = "Media", details = "N/A", onClick = NoOp }
+            , { term = "File", details = publication.file, onClick = NoOp }
             ]
         , actions =
             [ Action.large <|
