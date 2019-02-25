@@ -86,11 +86,13 @@ empty { width, height } title =
     el
         [ E.width (px width)
         , E.height (px height)
-        , centerX
-        , centerY
+        , alignBottom
         , Background.color (rgba 0 0 0 0.35)
+        , E.htmlAttribute <| HA.title title
         , E.htmlAttribute <| HA.style "white-space" "normal"
         , E.htmlAttribute <| HA.style "overflow" "hidden"
-        , E.htmlAttribute <| HA.title title
+        , E.htmlAttribute <| HA.style "justify-content" "center"
+        , E.htmlAttribute <| HA.style "align-items" "center"
+        , E.htmlAttribute <| HA.style "text-align" "center"
         ]
         (E.html <| H.text title)

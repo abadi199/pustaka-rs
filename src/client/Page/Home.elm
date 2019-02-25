@@ -26,6 +26,7 @@ import UI.Layout
 import UI.Loading
 import UI.Menu
 import UI.Nav.Side
+import UI.Parts.BreadCrumb as BreadCrumb
 import UI.Parts.Search
 import UI.Poster as UI
 import UI.Spacing as UI
@@ -108,8 +109,11 @@ mainSection data =
 
 publicationsView : List Publication.MetaData -> Element Msg
 publicationsView publications =
-    wrappedRow [ UI.padding 1, UI.spacing 1 ]
-        (publications |> List.map publicationView)
+    column [ width fill ]
+        [ BreadCrumb.breadCrumb []
+        , wrappedRow [ UI.padding 1, UI.spacing 1 ]
+            (publications |> List.map publicationView)
+        ]
 
 
 publicationView : Publication.MetaData -> Element Msg
