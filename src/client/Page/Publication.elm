@@ -141,7 +141,7 @@ viewPoster publicationId thumbnail title =
             [ height fill ]
             { msg = LinkClicked
             , url = Route.readUrl publicationId
-            , label = UI.poster title thumbnail
+            , label = UI.poster { title = title, thumbnail = thumbnail }
             }
         ]
 

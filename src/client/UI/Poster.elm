@@ -16,9 +16,15 @@ dimensionForHeight height =
     { width = width, height = height }
 
 
-thumbnail : String -> Thumbnail -> Element msg
-thumbnail title cover =
+thumbnail : { title : String, thumbnail : Thumbnail } -> Element msg
+thumbnail args =
     let
+        title =
+            args.title
+
+        cover =
+            args.thumbnail
+
         { height, width } =
             dimensionForHeight 200
     in
@@ -42,9 +48,15 @@ thumbnail title cover =
             )
 
 
-poster : String -> Thumbnail -> Element msg
-poster title cover =
+poster : { title : String, thumbnail : Thumbnail } -> Element msg
+poster args =
     let
+        title =
+            args.title
+
+        cover =
+            args.thumbnail
+
         { width, height } =
             dimensionForHeight 300
     in

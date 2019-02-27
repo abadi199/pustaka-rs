@@ -9,12 +9,18 @@ module Page.Publication.Edit exposing
 import Browser
 import Browser.Navigation as Nav
 import Element as E exposing (..)
+import Element.Background as Background
+import Element.Font as Font
 import Element.Input as Input
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
 import File exposing (File)
 import File.Select as Select
+import Html as H
+import Html.Attributes as HA
+import Html.Events as HE
+import Json.Decode as JD
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Task
@@ -37,6 +43,7 @@ import UI.Spacing as UI
 type alias Model =
     { searchText : String
     , publication : ReloadableWebData Int Publication.MetaData
+    , thumbnailHover : Bool
     }
 
 
@@ -44,6 +51,7 @@ init : Int -> ( Model, Cmd Msg )
 init publicationId =
     ( { searchText = ""
       , publication = ReloadableData.Loading publicationId
+      , thumbnailHover = False
       }
     , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
@@ -62,7 +70,10 @@ type Msg
     | SubmissionCompleted (ReloadableWebData Int ())
     | BrowseClicked
     | FileSelected File
+    | FilesDropped File (List File)
     | UploadCompleted (ReloadableWebData Int String)
+    | DragEnter
+    | DragLeave
 
 
 type Field
@@ -84,17 +95,17 @@ view categories model =
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
-                viewEdit
+                (\publication -> viewEdit { publication = publication, isHover = model.thumbnailHover })
                 model.publication
         }
 
 
-viewEdit : Publication.MetaData -> Element Msg
-viewEdit publication =
+viewEdit : { isHover : Bool, publication : Publication.MetaData } -> Element Msg
+viewEdit ({ isHover, publication } as args) =
     column [ UI.spacing 1, width fill ]
         [ UI.breadCrumb []
         , row [ width fill, UI.spacing 1 ]
-            [ viewPoster publication
+            [ viewPoster args
             , column [ width fill, UI.spacing 1 ]
                 [ UI.heading 1 "Edit Publication"
                 , Form.form
@@ -117,12 +128,48 @@ viewEdit publication =
         ]
 
 
-viewPoster : Publication.MetaData -> Element Msg
-viewPoster publication =
+viewPoster : { isHover : Bool, publication : Publication.MetaData } -> Element Msg
+viewPoster { isHover, publication } =
     Card.bordered [ alignTop ]
-        [ UI.poster publication.title publication.thumbnail
-        , Input.button [ alignRight ] { onPress = Just BrowseClicked, label = text "Browse" }
+        [ el [ inFront (dropZone isHover) ] <| UI.poster { title = publication.title, thumbnail = publication.thumbnail }
+        , Input.button [ centerX ] { onPress = Just BrowseClicked, label = text "Browse" }
         ]
+
+
+dropZone : Bool -> Element Msg
+dropZone isHover =
+    html <|
+        H.div
+            [ HA.style "background" "rgba(255, 255, 255, 0.5)"
+            , HA.style "display" "flex"
+            , if isHover then
+                HA.style "border" "5px dotted rgba(0, 0, 0, 0.75)"
+
+              else
+                HA.style "border" "none"
+            , HA.style "width" "100%"
+            , HA.style "height" "100%"
+            , hijackOn "drop" dropDecoder
+            , hijackOn "dragenter" (JD.succeed DragEnter)
+            , hijackOn "dragover" (JD.succeed DragEnter)
+            , hijackOn "dragleave" (JD.succeed DragLeave)
+            ]
+            [ H.text "Drop file here" ]
+
+
+hijackOn : String -> JD.Decoder msg -> H.Attribute msg
+hijackOn event decoder =
+    HE.preventDefaultOn event (JD.map hijack decoder)
+
+
+hijack : msg -> ( msg, Bool )
+hijack msg =
+    ( msg, True )
+
+
+dropDecoder : JD.Decoder Msg
+dropDecoder =
+    JD.at [ "dataTransfer", "files" ] (JD.oneOrMore FilesDropped File.decoder)
 
 
 
@@ -181,20 +228,7 @@ update key msg model =
             ( model, Select.file [] FileSelected )
 
         FileSelected file ->
-            ( model
-            , model.publication
-                |> ReloadableData.toMaybe
-                |> Maybe.map
-                    (\publication ->
-                        Publication.uploadThumbnail
-                            { publicationId = publication.id
-                            , fileName = "thumbnail"
-                            , file = file
-                            , msg = UploadCompleted
-                            }
-                    )
-                |> Maybe.withDefault Cmd.none
-            )
+            uploadFile file model
 
         UploadCompleted remoteData ->
             remoteData
@@ -213,6 +247,33 @@ update key msg model =
                         )
                     )
                 |> Maybe.withDefault ( model, Cmd.none )
+
+        FilesDropped file _ ->
+            uploadFile file model
+
+        DragEnter ->
+            ( { model | thumbnailHover = True }, Cmd.none )
+
+        DragLeave ->
+            ( { model | thumbnailHover = False }, Cmd.none )
+
+
+uploadFile : File -> Model -> ( Model, Cmd Msg )
+uploadFile file model =
+    ( { model | thumbnailHover = False }
+    , model.publication
+        |> ReloadableData.toMaybe
+        |> Maybe.map
+            (\publication ->
+                Publication.uploadThumbnail
+                    { publicationId = publication.id
+                    , fileName = "thumbnail"
+                    , file = file
+                    , msg = UploadCompleted
+                    }
+            )
+        |> Maybe.withDefault Cmd.none
+    )
 
 
 navigateToPublication : Nav.Key -> ReloadableWebData Int Publication.MetaData -> Cmd Msg

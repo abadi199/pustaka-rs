@@ -128,7 +128,7 @@ publicationView publication =
             , height fill
             ]
             { url = url
-            , label = UI.thumbnail publication.title publication.thumbnail
+            , label = UI.thumbnail { title = publication.title, thumbnail = publication.thumbnail }
             }
         , publicationActionView publication.id
         ]
