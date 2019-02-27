@@ -44,7 +44,7 @@ fn main() {
     server::new(move || {
         vec![
             category::create_app(state.clone(), "/api/category"),
-            publication::create_app(state.clone(), "/api/publication"),
+            publication::create_app(state.clone(), publication::BASE_PATH),
             author::create_app(state.clone(), "/api/author"),
             media_type::create_app(state.clone(), "/api/media_type"),
             tag::create_app(state.clone(), "/api/tag"),

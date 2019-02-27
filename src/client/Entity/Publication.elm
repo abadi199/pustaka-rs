@@ -111,7 +111,7 @@ uploadThumbnail : { publicationId : Int, fileName : String, file : File, msg : R
 uploadThumbnail { publicationId, fileName, file, msg } =
     ReloadableData.Http.upload
         { initial = publicationId
-        , url = "/api/publication/thumbnail/"
+        , url = "/api/publication/thumbnail/" ++ String.fromInt publicationId
         , msg = msg
         , fileName = fileName
         , file = file

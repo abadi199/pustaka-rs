@@ -1,11 +1,14 @@
+use actix::prelude::Addr;
 use actix_web::http::Method;
 use actix_web::{
     dev, error, error::ErrorBadRequest, fs::NamedFile, middleware, multipart, App, AsyncResponder,
     FutureResponse, HttpMessage, HttpRequest, HttpResponse, Json, Path, Result, State,
 };
 use config::Config;
-use db::publication::{self, Delete, Get, List, ListByCategory, Update};
-use futures::{future, Future, Stream};
+use db::executor::DbExecutor;
+use db::publication::{self, Delete, Get, List, ListByCategory, Update, UpdateThumbnail};
+use futures::{future, stream, Future, Stream};
+use mime;
 use models::{NewPublication, Publication, CBR, CBZ, EPUB};
 use reader::{comic, epub};
 use state::AppState;
@@ -17,9 +20,13 @@ use std::{
     path::PathBuf,
 };
 
+pub const BASE_PATH: &str = "/api/publication";
+const THUMBNAIL_LOCATION: &str = "thumbnail";
+
 #[derive(Debug)]
 enum PublicationError {
     InvalidMediaFormat,
+    IoError(io::Error),
 }
 
 impl Error for PublicationError {
@@ -187,7 +194,10 @@ fn list_by_category(
         .responder()
 }
 
-fn get_thumbnail(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<NamedFile> {
+fn generate_thumbnail(
+    state: State<AppState>,
+    publication_id: Path<i32>,
+) -> FutureResponse<NamedFile> {
     state
         .db
         .send(Get {
@@ -234,56 +244,125 @@ fn download_file(
     Err(ErrorBadRequest(PublicationError::InvalidMediaFormat))
 }
 
+fn generate_thumbnail_location(home_path: &str, publication_id: i32) -> PathBuf {
+    let mut thumbnail_location = PathBuf::from(home_path.clone());
+    thumbnail_location.push(THUMBNAIL_LOCATION);
+    thumbnail_location.push(publication_id.to_string());
+
+    thumbnail_location
+}
+
+fn generate_thumbnail_url(publication_id: i32) -> String {
+    format!("{}/{}", BASE_PATH, publication_id.to_string())
+}
+
 fn save_file(
+    home_path: String,
+    publication_id: i32,
     field: multipart::Field<dev::Payload>,
-) -> Box<Future<Item = i64, Error = error::Error>> {
-    let file_path_string = "upload.png";
-    let mut file = match fs::File::create(file_path_string) {
+) -> Box<Future<Item = String, Error = error::Error>> {
+    let thumbnail_location = generate_thumbnail_location(&home_path, publication_id);
+    let file_name: &str;
+    {
+        let content_type = field.content_type();
+        file_name = match (content_type.type_(), content_type.subtype()) {
+            (mime::IMAGE, mime::PNG) => "thumbnail.png",
+            (mime::IMAGE, mime::BMP) => "thumbnail.bmp",
+            (mime::IMAGE, mime::JPEG) => "thumbnail.jpg",
+            (mime::IMAGE, mime::GIF) => "thumbnail.gif",
+            _ => {
+                return Box::new(future::err(actix_web::error::ErrorInternalServerError(
+                    format!("Unsupported mime type: {:?}", content_type),
+                )))
+            }
+        };
+    }
+
+    match fs::create_dir_all(thumbnail_location) {
+        Err(e) => return Box::new(future::err(actix_web::error::ErrorInternalServerError(e))),
+        Ok(_) => {}
+    }
+
+    let mut file_path = generate_thumbnail_location(&home_path, publication_id);
+    file_path.push(file_name);
+
+    let mut file = match fs::File::create(file_path.clone()) {
         Ok(file) => file,
         Err(e) => return Box::new(future::err(actix_web::error::ErrorInternalServerError(e))),
     };
+
     Box::new(
         field
             .fold(0i64, move |acc, bytes| {
                 let rt = file
                     .write_all(bytes.as_ref())
                     .map(|_| acc + bytes.len() as i64)
-                    .map_err(|e| {
-                        println!("file.write_all failed: {:?}", e);
-                        error::MultipartError::Payload(error::PayloadError::Io(e))
-                    });
+                    .map_err(|e| error::MultipartError::Payload(error::PayloadError::Io(e)));
                 future::result(rt)
             })
-            .map_err(|e| {
-                println!("save_file failed, {:?}", e);
-                error::ErrorInternalServerError(e)
-            }),
+            .map(move |_| file_path.to_str().unwrap_or("").to_string())
+            .map_err(|e| error::ErrorInternalServerError(e)),
+    )
+}
+
+fn update_publication_thumbnail(
+    db: Addr<DbExecutor>,
+    publication_id: i32,
+    file_path: String,
+) -> Box<Future<Item = String, Error = error::Error>> {
+    Box::new(
+        db.send(UpdateThumbnail {
+            publication_id: publication_id,
+            thumbnail: file_path,
+        })
+        .from_err()
+        .and_then(move |res| match res {
+            Ok(_) => future::result(Ok(generate_thumbnail_url(publication_id))),
+            Err(err) => future::err(actix_web::error::ErrorInternalServerError(err)),
+        }),
     )
 }
 
 fn handle_multipart_item(
+    home_path: String,
+    publication_id: i32,
     item: multipart::MultipartItem<dev::Payload>,
-) -> Box<Stream<Item = i64, Error = error::Error>> {
+) -> Box<Stream<Item = String, Error = error::Error>> {
     match item {
-        multipart::MultipartItem::Field(field) => Box::new(save_file(field).into_stream()),
+        multipart::MultipartItem::Field(field) => {
+            Box::new(save_file(home_path, publication_id, field).into_stream())
+        }
         multipart::MultipartItem::Nested(mp) => Box::new(
             mp.map_err(error::ErrorInternalServerError)
-                .map(handle_multipart_item)
+                .map(move |item| handle_multipart_item(home_path.clone(), publication_id, item))
                 .flatten(),
         ),
     }
 }
 
 fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
-    let state: &AppState = req.state();
-    println!("upload for: {:?}", publication_id);
+    let state = req.state();
+    let config = state.config.clone();
+    let db = state.db.clone();
+    let publication_id: i32 = publication_id.into_inner();
+    println!("{:?}", req);
     Box::new(
         req.multipart()
             .map_err(error::ErrorInternalServerError)
-            .map(handle_multipart_item)
+            .map(move |item| {
+                handle_multipart_item(config.pustaka_home.clone(), publication_id, item)
+            })
             .flatten()
             .collect()
-            .map(|sizes| HttpResponse::Ok().json(sizes))
+            .and_then(move |file_path| match file_path.last() {
+                Some(file_path) => {
+                    update_publication_thumbnail(db, publication_id, file_path.to_string())
+                }
+                None => Box::new(future::err(error::ErrorInternalServerError(
+                    "No file found",
+                ))),
+            })
+            .map(|image_url| HttpResponse::Ok().json(image_url))
             .map_err(|e| {
                 println!("failed: {}", e);
                 e
@@ -302,15 +381,17 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
         .route("/category/{category_id}", Method::GET, list_by_category)
-        .route("/thumbnail/{publication_id}", Method::GET, get_thumbnail)
+        .route(
+            "/thumbnail/{publication_id}",
+            Method::GET,
+            generate_thumbnail,
+        )
         .route("/read/{publication_id}", Method::GET, read)
         .route(
             "/read/{publication_id}/page/{page_number}",
             Method::GET,
             read_page,
         )
+        .route("/thumbnail/{publication_id}", Method::POST, upload)
         .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
-        .resource("/thumbnail/{publication_id}", |r| {
-            r.method(Method::POST).with(upload)
-        })
 }

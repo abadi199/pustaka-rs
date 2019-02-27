@@ -93,6 +93,26 @@ impl Handler<Update> for DbExecutor {
     }
 }
 
+pub struct UpdateThumbnail {
+    pub publication_id: i32,
+    pub thumbnail: String,
+}
+impl Message for UpdateThumbnail {
+    type Result = Result<(), Error>;
+}
+impl Handler<UpdateThumbnail> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: UpdateThumbnail, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        diesel::update(publication.filter(id.eq(msg.publication_id)))
+            .set(thumbnail.eq(Some(msg.thumbnail)))
+            .execute(&*connection)
+            .expect("Error updating thumbnail");
+        Ok(())
+    }
+}
+
 pub struct Delete {
     pub publication_id: i32,
 }

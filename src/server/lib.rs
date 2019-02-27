@@ -12,6 +12,7 @@ extern crate epub;
 extern crate futures;
 #[macro_use]
 extern crate lazy_static;
+extern crate mime;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate unrar;
