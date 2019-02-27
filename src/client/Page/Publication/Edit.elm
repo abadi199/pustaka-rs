@@ -12,6 +12,7 @@ import Element as E exposing (..)
 import Element.Input as Input
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
+import Entity.Thumbnail as Thumbnail
 import File exposing (File)
 import File.Select as Select
 import ReloadableData exposing (ReloadableWebData)
@@ -61,7 +62,7 @@ type Msg
     | SubmissionCompleted (ReloadableWebData Int ())
     | BrowseClicked
     | FileSelected File
-    | UploadCompleted (ReloadableWebData Int ())
+    | UploadCompleted (ReloadableWebData Int String)
 
 
 type Field
@@ -196,11 +197,22 @@ update key msg model =
             )
 
         UploadCompleted remoteData ->
-            let
-                _ =
-                    Debug.log "UploadCompleted" remoteData
-            in
-            ( model, Cmd.none )
+            remoteData
+                |> ReloadableData.toMaybe
+                |> Maybe.map
+                    (\url ->
+                        ( { model
+                            | publication =
+                                model.publication
+                                    |> ReloadableData.map
+                                        (\publication ->
+                                            { publication | thumbnail = Thumbnail.url url }
+                                        )
+                          }
+                        , Cmd.none
+                        )
+                    )
+                |> Maybe.withDefault ( model, Cmd.none )
 
 
 navigateToPublication : Nav.Key -> ReloadableWebData Int Publication.MetaData -> Cmd Msg

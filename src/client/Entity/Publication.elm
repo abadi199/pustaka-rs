@@ -107,7 +107,13 @@ update { publication, msg } =
         }
 
 
-uploadThumbnail : { publicationId : Int, fileName : String, file : File, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+uploadThumbnail :
+    { publicationId : Int
+    , fileName : String
+    , file : File
+    , msg : ReloadableWebData Int String -> msg
+    }
+    -> Cmd msg
 uploadThumbnail { publicationId, fileName, file, msg } =
     ReloadableData.Http.upload
         { initial = publicationId
@@ -115,6 +121,7 @@ uploadThumbnail { publicationId, fileName, file, msg } =
         , msg = msg
         , fileName = fileName
         , file = file
+        , decoder = JD.string
         }
 
 

@@ -102,10 +102,7 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
         })
         .from_err()
         .and_then(|res| match res {
-            Ok(publication) => {
-                println!("get_publication: {:?}", publication);
-                Ok(HttpResponse::Ok().json(publication))
-            }
+            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
@@ -253,7 +250,7 @@ fn generate_thumbnail_location(home_path: &str, publication_id: i32) -> PathBuf 
 }
 
 fn generate_thumbnail_url(publication_id: i32) -> String {
-    format!("{}/{}", BASE_PATH, publication_id.to_string())
+    format!("{}/thumbnail/{}", BASE_PATH, publication_id.to_string())
 }
 
 fn save_file(

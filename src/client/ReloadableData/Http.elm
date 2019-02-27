@@ -90,12 +90,13 @@ delete { initial, url, msg, json } =
 upload :
     { initial : i
     , url : String
-    , msg : ReloadableWebData i () -> msg
+    , msg : ReloadableWebData i a -> msg
     , fileName : String
     , file : File
+    , decoder : JD.Decoder a
     }
     -> Cmd msg
-upload { initial, url, msg, fileName, file } =
+upload { initial, url, msg, fileName, file, decoder } =
     let
         _ =
             Debug.log "File.mime" (File.mime file)
@@ -103,7 +104,7 @@ upload { initial, url, msg, fileName, file } =
     Http.post
         { url = url
         , body = Http.multipartBody [ Http.filePart fileName file ]
-        , expect = Http.expectWhatever (toResultMsg initial msg)
+        , expect = Http.expectJson (toResultMsg initial msg) decoder
         }
 
 

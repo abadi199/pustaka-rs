@@ -88,6 +88,7 @@ pub struct Publication {
 impl Publication {
     pub fn thumbnail_url(&self) -> Option<String> {
         match self.thumbnail {
+            Some(ref file) if file == "" => None,
             Some(_) => Some(format!("/api/publication/thumbnail/{}", &self.id)),
             None => None,
         }
