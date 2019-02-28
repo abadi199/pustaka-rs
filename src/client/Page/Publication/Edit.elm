@@ -11,6 +11,7 @@ import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Background as Background
 import Element.Border as Border
+import Element.Events as Events exposing (onClick)
 import Element.Font as Font
 import Element.Input as Input
 import Entity.Category exposing (Category)
@@ -185,8 +186,15 @@ dropZone isHover =
         , hijackOn "dragenter" (JD.succeed DragEnter)
         , hijackOn "dragover" (JD.succeed DragEnter)
         , hijackOn "dragleave" (JD.succeed DragLeave)
+        , onClick BrowseClicked
+        , pointer
         ]
-        (el [ centerX, centerY ] (text "Drop file here"))
+        (column [ centerX, centerY, UI.spacing -10 ]
+            [ el [ centerX ] (text "Drop file here")
+            , el [ centerX ] (text "or")
+            , el [ centerX ] (text "click to browse")
+            ]
+        )
 
 
 hijackOn : String -> JD.Decoder msg -> Attribute msg
