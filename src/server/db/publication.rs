@@ -122,18 +122,27 @@ pub struct DeleteThumbnail {
     pub publication_id: i32,
 }
 impl Message for DeleteThumbnail {
-    type Result = Result<(), Error>;
+    type Result = Result<Option<String>, Error>;
 }
 impl Handler<DeleteThumbnail> for DbExecutor {
-    type Result = Result<(), Error>;
+    type Result = Result<Option<String>, Error>;
 
     fn handle(&mut self, msg: DeleteThumbnail, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        diesel::update(publication.filter(id.eq(msg.publication_id)))
-            .set(thumbnail.eq::<Option<&str>>(None))
-            .execute(&*connection)
-            .expect("Error deleting thumbnail");
-        Ok(())
+        let the_thumbnail: Option<String> = get_publication(connection, msg.publication_id)
+            .map(|the_publication: Publication| the_publication.thumbnail)
+            .map_err(actix_web::error::ErrorInternalServerError)?;
+
+        match the_thumbnail {
+            Some(_) => {
+                diesel::update(publication.filter(id.eq(msg.publication_id)))
+                    .set(thumbnail.eq::<Option<&str>>(None))
+                    .execute(&*connection)
+                    .map_err(actix_web::error::ErrorInternalServerError)?;
+                Ok(the_thumbnail)
+            }
+            None => Ok(the_thumbnail),
+        }
     }
 }
 #[derive(Debug)]
@@ -170,22 +179,8 @@ impl Handler<Get> for DbExecutor {
 
     fn handle(&mut self, msg: Get, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let mut row = publication
-            .filter(id.eq(msg.publication_id))
-            .limit(1)
-            .load(&*connection)
-            .expect(&format!(
-                "Error loading publication with id {}",
-                msg.publication_id
-            ));
-
-        match row.is_empty() {
-            true => panic!(format!(
-                "publication with id of {} can't be found",
-                msg.publication_id
-            )),
-            false => Ok(row.remove(0)),
-        }
+        get_publication(connection, msg.publication_id)
+            .map_err(actix_web::error::ErrorInternalServerError)
     }
 }
 
@@ -270,4 +265,23 @@ fn get_descendant_rec(
 
     categories.append(&mut grandchildren);
     Ok(categories)
+}
+
+fn get_publication(
+    connection: &SqliteConnection,
+    publication_id: i32,
+) -> Result<Publication, String> {
+    let mut row = publication
+        .filter(id.eq(publication_id))
+        .limit(1)
+        .load(&*connection)
+        .map_err(|_| format!("Error loading publication with id {}", publication_id))?;
+
+    match row.is_empty() {
+        true => Err(format!(
+            "publication with id of {} can't be found",
+            publication_id
+        )),
+        false => Ok(row.remove(0)),
+    }
 }

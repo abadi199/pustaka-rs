@@ -9,6 +9,7 @@ use http::Method;
 use pustaka::api::{author, category, media_type, publication, tag};
 use pustaka::config;
 use pustaka::db::executor::DbExecutor;
+use pustaka::fs::executor::FsExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
 
@@ -37,6 +38,7 @@ fn main() {
     let config = config::get_config();
     let state = AppState {
         db: SyncArbiter::start(3, move || DbExecutor(pool.clone())),
+        fs: SyncArbiter::start(3, move || FsExecutor()),
         config: config,
     };
 

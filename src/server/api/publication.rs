@@ -1,4 +1,4 @@
-use actix::prelude::Addr;
+use actix::prelude::{Addr, Request};
 use actix_web::http::Method;
 use actix_web::{
     dev, error, error::ErrorBadRequest, fs::NamedFile, middleware, multipart, App, AsyncResponder,
@@ -9,7 +9,8 @@ use db::executor::DbExecutor;
 use db::publication::{
     self, Delete, DeleteThumbnail, Get, List, ListByCategory, Update, UpdateThumbnail,
 };
-use futures::{future, stream, Future, Stream};
+use fs::executor::{DeleteFile, FsExecutor};
+use futures::{future, stream, Future, IntoFuture, Stream};
 use mime;
 use models::{NewPublication, Publication, CBR, CBZ, EPUB};
 use reader::{comic, epub};
@@ -374,17 +375,44 @@ fn delete_thumbnail(
     publication_id: Path<i32>,
 ) -> FutureResponse<HttpResponse> {
     let state = req.state();
-    state
-        .db
-        .send(DeleteThumbnail {
-            publication_id: publication_id.into_inner(),
-        })
-        .from_err()
-        .and_then(|res| match res {
-            Ok(_) => Ok(HttpResponse::Ok().json(())),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+    let db = state.db.clone();
+    let fs = state.fs.clone();
+    let publication_id = publication_id.into_inner();
+    let delete_thumbnail_from_db: Box<Future<Item = Option<String>, Error = actix_web::Error>> =
+        Box::new(
+            db.send(DeleteThumbnail {
+                publication_id: publication_id,
+            })
+            .into_future()
+            .map_err(actix_web::error::ErrorInternalServerError)
+            .and_then(|res| res.into_future()),
+        );
+
+    delete_thumbnail_from_db
+        .and_then(|res| delete_thumbnail_file(fs, res))
+        .map_err(actix_web::error::ErrorInternalServerError)
+        .and_then(|res| Ok(HttpResponse::Ok().json(res).into()))
         .responder()
+}
+
+fn delete_thumbnail_file(
+    fs: Addr<FsExecutor>,
+    option: Option<String>,
+) -> Box<Future<Item = (), Error = actix_web::Error>> {
+    match option {
+        Some(thumbnail_path) => Box::new(
+            fs.send(DeleteFile {
+                path: thumbnail_path,
+            })
+            .into_future()
+            .map_err(actix_web::error::ErrorInternalServerError)
+            .and_then(|res| {
+                res.map_err(actix_web::error::ErrorInternalServerError)
+                    .into_future()
+            }),
+        ),
+        None => Box::new(future::ok(())),
+    }
 }
 
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
