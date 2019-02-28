@@ -8,6 +8,7 @@ use db::executor::DbExecutor;
 use models::{Category, NewPublication, Publication};
 use schema::publication::dsl::*;
 
+#[derive(Debug)]
 pub struct List {}
 impl Message for List {
     type Result = Result<Vec<Publication>, Error>;
@@ -74,6 +75,8 @@ impl Handler<CreateBatch> for DbExecutor {
         Ok(publications)
     }
 }
+
+#[derive(Debug)]
 pub struct Update {
     pub publication: Publication,
 }
@@ -93,6 +96,7 @@ impl Handler<Update> for DbExecutor {
     }
 }
 
+#[derive(Debug)]
 pub struct UpdateThumbnail {
     pub publication_id: i32,
     pub thumbnail: String,
@@ -113,6 +117,26 @@ impl Handler<UpdateThumbnail> for DbExecutor {
     }
 }
 
+#[derive(Debug)]
+pub struct DeleteThumbnail {
+    pub publication_id: i32,
+}
+impl Message for DeleteThumbnail {
+    type Result = Result<(), Error>;
+}
+impl Handler<DeleteThumbnail> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: DeleteThumbnail, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        diesel::update(publication.filter(id.eq(msg.publication_id)))
+            .set(thumbnail.eq::<Option<&str>>(None))
+            .execute(&*connection)
+            .expect("Error deleting thumbnail");
+        Ok(())
+    }
+}
+#[derive(Debug)]
 pub struct Delete {
     pub publication_id: i32,
 }
@@ -134,6 +158,7 @@ impl Handler<Delete> for DbExecutor {
     }
 }
 
+#[derive(Debug)]
 pub struct Get {
     pub publication_id: i32,
 }
@@ -164,6 +189,7 @@ impl Handler<Get> for DbExecutor {
     }
 }
 
+#[derive(Debug)]
 pub struct ListByCategory {
     pub category_id: i32,
 }

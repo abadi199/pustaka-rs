@@ -1,4 +1,10 @@
-module UI.Poster exposing (dimensionForHeight, poster, thumbnail)
+module UI.Poster exposing
+    ( dimensionForHeight
+    , poster
+    , posterDimension
+    , thumbnail
+    , thumbnailDimension
+    )
 
 import Element as E exposing (..)
 import Element.Background as Background
@@ -16,6 +22,16 @@ dimensionForHeight height =
     { width = width, height = height }
 
 
+posterDimension : { width : Int, height : Int }
+posterDimension =
+    dimensionForHeight 300
+
+
+thumbnailDimension : { width : Int, height : Int }
+thumbnailDimension =
+    dimensionForHeight 200
+
+
 thumbnail : { title : String, thumbnail : Thumbnail } -> Element msg
 thumbnail args =
     let
@@ -26,7 +42,7 @@ thumbnail args =
             args.thumbnail
 
         { height, width } =
-            dimensionForHeight 200
+            thumbnailDimension
     in
     cover
         |> Thumbnail.toUrl
@@ -58,7 +74,7 @@ poster args =
             args.thumbnail
 
         { width, height } =
-            dimensionForHeight 300
+            posterDimension
     in
     cover
         |> Thumbnail.toUrl

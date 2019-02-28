@@ -6,7 +6,9 @@ use actix_web::{
 };
 use config::Config;
 use db::executor::DbExecutor;
-use db::publication::{self, Delete, Get, List, ListByCategory, Update, UpdateThumbnail};
+use db::publication::{
+    self, Delete, DeleteThumbnail, Get, List, ListByCategory, Update, UpdateThumbnail,
+};
 use futures::{future, stream, Future, Stream};
 use mime;
 use models::{NewPublication, Publication, CBR, CBZ, EPUB};
@@ -367,6 +369,24 @@ fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureRespon
     )
 }
 
+fn delete_thumbnail(
+    req: HttpRequest<AppState>,
+    publication_id: Path<i32>,
+) -> FutureResponse<HttpResponse> {
+    let state = req.state();
+    state
+        .db
+        .send(DeleteThumbnail {
+            publication_id: publication_id.into_inner(),
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => Ok(HttpResponse::Ok().json(())),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
+}
+
 pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
     App::with_state(state)
         .middleware(middleware::Logger::default())
@@ -390,5 +410,10 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             read_page,
         )
         .route("/thumbnail/{publication_id}", Method::POST, upload)
+        .route(
+            "/thumbnail/{publication_id}",
+            Method::DELETE,
+            delete_thumbnail,
+        )
         .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
 }

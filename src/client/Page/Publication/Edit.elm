@@ -166,6 +166,10 @@ viewPoster { isHover, publication } =
 
 dropZone : Bool -> Element Msg
 dropZone isHover =
+    let
+        { width, height } =
+            UI.posterDimension
+    in
     el
         [ Background.color (rgba 0 0 0 0.25)
         , Border.color (rgba255 223 52 92 1)
@@ -175,14 +179,14 @@ dropZone isHover =
 
           else
             Border.width 0
-        , width fill
-        , height fill
+        , E.width (px width)
+        , E.height (px height)
         , hijackOn "drop" dropDecoder
         , hijackOn "dragenter" (JD.succeed DragEnter)
         , hijackOn "dragover" (JD.succeed DragEnter)
         , hijackOn "dragleave" (JD.succeed DragLeave)
         ]
-        (text "Drop file here")
+        (el [ centerX, centerY ] (text "Drop file here"))
 
 
 hijackOn : String -> JD.Decoder msg -> Attribute msg
