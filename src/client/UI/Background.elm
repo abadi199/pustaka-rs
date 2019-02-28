@@ -1,7 +1,12 @@
-module UI.Background exposing (dark, light, medium)
+module UI.Background exposing (dark, light, medium, white)
 
 import Element exposing (..)
 import Element.Background exposing (color)
+
+
+white : Attribute msg
+white =
+    color (rgba 1 1 1 1)
 
 
 light : Attribute msg

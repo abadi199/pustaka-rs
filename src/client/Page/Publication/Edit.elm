@@ -10,6 +10,7 @@ import Browser
 import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Entity.Category exposing (Category)
@@ -24,11 +25,14 @@ import Json.Decode as JD
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Task
+import UI.Action as Action
 import UI.Card as Card
 import UI.Heading as UI
+import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as UI
+import UI.Parts.Dialog as Dialog exposing (Dialog)
 import UI.Parts.Form as Form
 import UI.Parts.Search
 import UI.Poster as UI
@@ -44,6 +48,7 @@ type alias Model =
     { searchText : String
     , publication : ReloadableWebData Int Publication.MetaData
     , thumbnailHover : Bool
+    , deleteConfirmation : Dialog Msg
     }
 
 
@@ -52,6 +57,7 @@ init publicationId =
     ( { searchText = ""
       , publication = ReloadableData.Loading publicationId
       , thumbnailHover = False
+      , deleteConfirmation = Dialog.none
       }
     , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
@@ -71,9 +77,12 @@ type Msg
     | BrowseClicked
     | FileSelected File
     | FilesDropped File (List File)
-    | UploadCompleted (ReloadableWebData Int String)
+    | ThumbnailUpdated (ReloadableWebData Int (Maybe String))
     | DragEnter
     | DragLeave
+    | DeleteClicked
+    | DeleteConfirmed
+    | DeleteCancelled
 
 
 type Field
@@ -97,6 +106,7 @@ view categories model =
             UI.ReloadableData.view
                 (\publication -> viewEdit { publication = publication, isHover = model.thumbnailHover })
                 model.publication
+        , dialog = model.deleteConfirmation
         }
 
 
@@ -131,35 +141,53 @@ viewEdit ({ isHover, publication } as args) =
 viewPoster : { isHover : Bool, publication : Publication.MetaData } -> Element Msg
 viewPoster { isHover, publication } =
     Card.bordered [ alignTop ]
-        [ el [ inFront (dropZone isHover) ] <| UI.poster { title = publication.title, thumbnail = publication.thumbnail }
-        , Input.button [ centerX ] { onPress = Just BrowseClicked, label = text "Browse" }
-        ]
+        (publication.thumbnail
+            |> Thumbnail.toUrl
+            |> Maybe.map
+                (always
+                    { actions =
+                        [ Action.compact <|
+                            Action.clickable
+                                { text = "Delete"
+                                , icon = Icon.delete Icon.large
+                                , onClick = DeleteClicked
+                                }
+                        ]
+                    , content =
+                        [ el [] <| UI.poster { title = publication.title, thumbnail = publication.thumbnail } ]
+                    }
+                )
+            |> Maybe.withDefault
+                { actions = []
+                , content = [ dropZone isHover ]
+                }
+        )
 
 
 dropZone : Bool -> Element Msg
 dropZone isHover =
-    html <|
-        H.div
-            [ HA.style "background" "rgba(255, 255, 255, 0.5)"
-            , HA.style "display" "flex"
-            , if isHover then
-                HA.style "border" "5px dotted rgba(0, 0, 0, 0.75)"
+    el
+        [ Background.color (rgba 0 0 0 0.25)
+        , Border.color (rgba255 223 52 92 1)
+        , Border.dashed
+        , if isHover then
+            Border.width 5
 
-              else
-                HA.style "border" "none"
-            , HA.style "width" "100%"
-            , HA.style "height" "100%"
-            , hijackOn "drop" dropDecoder
-            , hijackOn "dragenter" (JD.succeed DragEnter)
-            , hijackOn "dragover" (JD.succeed DragEnter)
-            , hijackOn "dragleave" (JD.succeed DragLeave)
-            ]
-            [ H.text "Drop file here" ]
+          else
+            Border.width 0
+        , width fill
+        , height fill
+        , hijackOn "drop" dropDecoder
+        , hijackOn "dragenter" (JD.succeed DragEnter)
+        , hijackOn "dragover" (JD.succeed DragEnter)
+        , hijackOn "dragleave" (JD.succeed DragLeave)
+        ]
+        (text "Drop file here")
 
 
-hijackOn : String -> JD.Decoder msg -> H.Attribute msg
+hijackOn : String -> JD.Decoder msg -> Attribute msg
 hijackOn event decoder =
-    HE.preventDefaultOn event (JD.map hijack decoder)
+    htmlAttribute <| HE.preventDefaultOn event (JD.map hijack decoder)
 
 
 hijack : msg -> ( msg, Bool )
@@ -230,7 +258,7 @@ update key msg model =
         FileSelected file ->
             uploadFile file model
 
-        UploadCompleted remoteData ->
+        ThumbnailUpdated remoteData ->
             remoteData
                 |> ReloadableData.toMaybe
                 |> Maybe.map
@@ -240,7 +268,7 @@ update key msg model =
                                 model.publication
                                     |> ReloadableData.map
                                         (\publication ->
-                                            { publication | thumbnail = Thumbnail.url url }
+                                            { publication | thumbnail = url |> Maybe.map Thumbnail.url |> Maybe.withDefault Thumbnail.none }
                                         )
                           }
                         , Cmd.none
@@ -257,6 +285,37 @@ update key msg model =
         DragLeave ->
             ( { model | thumbnailHover = False }, Cmd.none )
 
+        DeleteClicked ->
+            ( { model
+                | deleteConfirmation =
+                    Dialog.modal <|
+                        Dialog.confirmation
+                            { content = text "Are you sure you want to delete the cover image?"
+                            , onPositive = DeleteConfirmed
+                            , onNegative = DeleteCancelled
+                            , onClose = DeleteCancelled
+                            }
+              }
+            , Cmd.none
+            )
+
+        DeleteConfirmed ->
+            ( { model | deleteConfirmation = Dialog.none }
+            , model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.map
+                    (\publication ->
+                        Publication.deleteThumbnail
+                            { publicationId = publication.id
+                            , msg = ThumbnailUpdated |> ReloadableData.mapF (always Nothing)
+                            }
+                    )
+                |> Maybe.withDefault Cmd.none
+            )
+
+        DeleteCancelled ->
+            ( { model | deleteConfirmation = Dialog.none }, Cmd.none )
+
 
 uploadFile : File -> Model -> ( Model, Cmd Msg )
 uploadFile file model =
@@ -269,7 +328,7 @@ uploadFile file model =
                     { publicationId = publication.id
                     , fileName = "thumbnail"
                     , file = file
-                    , msg = UploadCompleted
+                    , msg = ThumbnailUpdated |> ReloadableData.mapF Just
                     }
             )
         |> Maybe.withDefault Cmd.none

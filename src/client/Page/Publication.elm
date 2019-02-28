@@ -31,6 +31,7 @@ import UI.Layout
 import UI.Link as UI
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as UI
+import UI.Parts.Dialog as Dialog
 import UI.Parts.Information as Information
 import UI.Parts.Search
 import UI.Poster as UI
@@ -89,6 +90,7 @@ view categoryData model =
             UI.ReloadableData.view
                 viewPublication
                 model.publication
+        , dialog = Dialog.none
         }
 
 
@@ -119,14 +121,14 @@ viewInformation publication =
             [ Action.large <|
                 Action.link
                     { text = "Edit"
-                    , icon = Icon.edit
+                    , icon = Icon.edit Icon.small
                     , url = Route.publicationEditUrl publication.id
                     , onClick = LinkClicked
                     }
             , Action.large <|
                 Action.link
                     { text = "Read"
-                    , icon = Icon.read
+                    , icon = Icon.read Icon.small
                     , url = Route.readUrl publication.id
                     , onClick = LinkClicked
                     }
@@ -137,13 +139,16 @@ viewInformation publication =
 viewPoster : Int -> Thumbnail -> String -> Element Msg
 viewPoster publicationId thumbnail title =
     Card.bordered [ alignTop ]
-        [ UI.link
-            [ height fill ]
-            { msg = LinkClicked
-            , url = Route.readUrl publicationId
-            , label = UI.poster { title = title, thumbnail = thumbnail }
-            }
-        ]
+        { actions = []
+        , content =
+            [ UI.link
+                [ height fill ]
+                { msg = LinkClicked
+                , url = Route.readUrl publicationId
+                , label = UI.poster { title = title, thumbnail = thumbnail }
+                }
+            ]
+        }
 
 
 

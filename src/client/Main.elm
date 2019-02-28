@@ -20,6 +20,7 @@ import Task
 import Tree exposing (Tree)
 import UI.Layout
 import UI.Nav.Side
+import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, top)
@@ -154,6 +155,7 @@ view model =
                         |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
                         |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
                 , content = E.none
+                , dialog = Dialog.none
                 }
 
         ByCategory byCategoryModel ->

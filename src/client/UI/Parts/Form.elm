@@ -55,7 +55,12 @@ viewActions : { onSubmit : msg } -> Element msg
 viewActions { onSubmit } =
     let
         actions =
-            [ Action.large <| Action.clickable { text = "Save", icon = Icon.edit, onClick = onSubmit }
+            [ Action.large <|
+                Action.clickable
+                    { text = "Save"
+                    , icon = Icon.edit Icon.small
+                    , onClick = onSubmit
+                    }
             ]
     in
     row

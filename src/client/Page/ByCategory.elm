@@ -19,8 +19,13 @@ import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
 import UI.Nav.Side
+import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.ReloadableData
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -28,12 +33,6 @@ type alias Model =
     , selectedCategoryId : Maybe Int
     , searchText : String
     }
-
-
-type Msg
-    = NoOp
-    | MenuItemClicked String
-    | LoadCategoryCompleted (ReloadableWebData () (List Category))
 
 
 init : Maybe Int -> ( Model, Cmd Msg )
@@ -46,17 +45,18 @@ init selectedCategoryId =
     )
 
 
-update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
-update key msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none )
 
-        MenuItemClicked url ->
-            ( model, Nav.pushUrl key url )
+-- MESSAGE
 
-        LoadCategoryCompleted categories ->
-            ( { model | categories = categories }, Cmd.none )
+
+type Msg
+    = NoOp
+    | MenuItemClicked String
+    | LoadCategoryCompleted (ReloadableWebData () (List Category))
+
+
+
+-- VIEW
 
 
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -68,6 +68,7 @@ view key categories model =
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = categorySliderView key model
+        , dialog = Dialog.none
         }
 
 
@@ -85,7 +86,7 @@ categorySliderView key model =
                         , label =
                             row
                                 []
-                                [ Icon.expandMore
+                                [ Icon.expandMore Icon.small
                                 , text "All Categories"
                                 ]
                         }
@@ -126,3 +127,20 @@ categoryView key model categoryName maybeCategoryId =
                     , label = text categoryName
                     }
         )
+
+
+
+-- UPDATE
+
+
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        MenuItemClicked url ->
+            ( model, Nav.pushUrl key url )
+
+        LoadCategoryCompleted categories ->
+            ( { model | categories = categories }, Cmd.none )

@@ -27,6 +27,7 @@ import UI.Loading
 import UI.Menu
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as BreadCrumb
+import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.Poster as UI
 import UI.Spacing as UI
@@ -68,7 +69,7 @@ type Msg
 
 
 
--- VIEw
+-- VIEW
 
 
 view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
@@ -80,6 +81,7 @@ view key categories model =
                 |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = mainSection model.publications
+        , dialog = Dialog.none
         }
 
 
@@ -123,15 +125,18 @@ publicationView publication =
             Route.publicationUrl publication.id
     in
     Card.bordered []
-        [ link
-            [ width fill
-            , height fill
+        { actions = []
+        , content =
+            [ link
+                [ width fill
+                , height fill
+                ]
+                { url = url
+                , label = UI.thumbnail { title = publication.title, thumbnail = publication.thumbnail }
+                }
+            , publicationActionView publication.id
             ]
-            { url = url
-            , label = UI.thumbnail { title = publication.title, thumbnail = publication.thumbnail }
-            }
-        , publicationActionView publication.id
-        ]
+        }
 
 
 publicationActionView : Int -> Element Msg
@@ -149,7 +154,7 @@ publicationActionView publicationId =
             Action.compact <|
                 Action.link
                     { text = "Read"
-                    , icon = Icon.read
+                    , icon = Icon.read Icon.small
                     , url = Route.readUrl publicationId
                     , onClick = LinkClicked
                     }

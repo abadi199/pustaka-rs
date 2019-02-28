@@ -2,6 +2,7 @@ module Entity.Publication exposing
     ( Data
     , MetaData
     , Page
+    , deleteThumbnail
     , emptyMetaData
     , get
     , listByCategory
@@ -122,6 +123,16 @@ uploadThumbnail { publicationId, fileName, file, msg } =
         , fileName = fileName
         , file = file
         , decoder = JD.string
+        }
+
+
+deleteThumbnail : { publicationId : Int, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+deleteThumbnail { publicationId, msg } =
+    ReloadableData.Http.delete
+        { initial = publicationId
+        , url = "/api/publication/thumbnail/" ++ String.fromInt publicationId
+        , msg = msg
+        , json = JE.null
         }
 
 

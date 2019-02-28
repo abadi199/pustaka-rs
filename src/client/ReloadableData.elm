@@ -5,6 +5,7 @@ module ReloadableData exposing
     , join
     , loading
     , map
+    , mapF
     , refresh
     , setError
     , toMaybe
@@ -117,6 +118,11 @@ map f reloadableData =
 
         Failure e i ->
             Failure e i
+
+
+mapF : (b -> a) -> (ReloadableData e i a -> msg) -> (ReloadableData e i b -> msg)
+mapF f msg =
+    \b -> msg (b |> map f)
 
 
 initial : ReloadableData e i a -> i

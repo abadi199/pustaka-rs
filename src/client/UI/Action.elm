@@ -9,6 +9,7 @@ module UI.Action exposing
     )
 
 import Element as E exposing (..)
+import Element.Border as Border
 import Element.Events as EV
 import UI.Icon exposing (Icon)
 import UI.Link as UI
@@ -81,7 +82,15 @@ viewLarge actionType =
             UI.link [ pointer ] { url = url, msg = onClick, label = row [] [ icon, E.text text ] }
 
         Clickable { text, icon, onClick } ->
-            row [ pointer, EV.onClick onClick ] [ icon, E.text text ]
+            row
+                [ Spacing.paddingEach { top = -10, bottom = -10, right = -2, left = -2 }
+                , Border.width 1
+                , Border.solid
+                , Border.color (rgba 0 0 0 0.5)
+                , pointer
+                , EV.onClick onClick
+                ]
+                [ icon, E.text text ]
 
         Disable { text, icon } ->
             row [] [ icon, E.text text ]
