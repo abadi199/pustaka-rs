@@ -8,10 +8,10 @@
     "postinstall": "cargo install --version 1.9.2 watchexec",
     "watch": "run-p watch:elm watch:ts watch:rust",
     "watch:elm": "watchexec --restart --exts elm -w src/client/ 'npm run build:elm'",
-    "watch:ts": "watchexec --restart --exts ts -w src/client/*.ts 'npm run build:ts'",
+    "watch:ts": "parcel watch src/client/*.ts -d app/assets/ -t browser",
     "watch:rust": "watchexec --restart -w src/server 'npm run start:server'",
     "build:elm": "elm make src/client/Main.elm --output app/assets/app.js",
-    "build:ts": "tsc",
+    "build:ts": "parcel build src/client/*.ts -d app/assets/ -t browser",
     "build:prod": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
     "start:server": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed",
@@ -24,9 +24,14 @@
   "author": "Abadi Kurniawan",
   "license": "ISC",
   "devDependencies": {
+    "@types/lodash": "^4.14.121",
     "elm": "0.19.0-bugfix6",
     "elm-format": "0.8.0",
+    "epubjs": "^0.3.83",
+    "lodash": "^4.17.11",
     "npm-run-all": "^4.1.5",
+    "parcel-bundler": "^1.11.0",
     "typescript": "^3.3.3333"
-  }
+  },
+  "dependencies": {}
 }

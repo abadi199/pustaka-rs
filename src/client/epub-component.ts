@@ -1,12 +1,12 @@
-declare var ePub: any;
 declare var Elm: any;
+
+import ePub from "epubjs";
 
 class EpubViewer extends HTMLElement {
   constructor(
     private rendition: any,
     private book: any,
     private displayed: any,
-    private pageNumber: number
   ) {
     super();
   }
@@ -16,7 +16,6 @@ class EpubViewer extends HTMLElement {
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-    console.log(name);
     if (!this.rendition) {
       return;
     }
@@ -46,10 +45,13 @@ class EpubViewer extends HTMLElement {
     const location = this.getAttribute("epub");
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
-    this.pageNumber = parseInt(this.getAttribute("page") || "", 10);
-    console.log("page", this.pageNumber);
 
     shadow.appendChild(bookContainer);
+
+    if (!location) {
+      alert("location attribute is empty!");
+      return;
+    }
 
     this.book = ePub(location);
     this.rendition = this.book.renderTo(bookContainer, {
@@ -57,41 +59,11 @@ class EpubViewer extends HTMLElement {
       width: width,
       height: height
     });
+
     this.displayed = this.rendition.display();
-
-    // this.book.ready.then(() => {
-    //   const prevButton = document.getElementById("prevButton");
-    //   const nextButton = document.getElementById("nextButton");
-
-    //   if (prevButton) {
-    //     prevButton.addEventListener(
-    //       "click",
-    //       e => {
-    //         this.book.package.metadata.direction === "rtl"
-    //           ? this.rendition.next()
-    //           : this.rendition.prev();
-    //       },
-    //       false
-    //     );
-    //   }
-    //   if (nextButton) {
-    //     nextButton.addEventListener(
-    //       "click",
-    //       e => {
-    //         this.book.package.metadata.direction === "rtl"
-    //           ? this.rendition.prev()
-    //           : this.rendition.next();
-    //       },
-    //       false
-    //     );
-    //   }
-    // });
   }
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
   customElements.define("epub-viewer", EpubViewer);
-  if (Elm && Elm.Main && Elm.Main.init) {
-    Elm.Main.init();
-  }
 });

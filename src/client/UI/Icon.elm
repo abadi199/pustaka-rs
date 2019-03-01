@@ -6,7 +6,9 @@ module UI.Icon exposing
     , expandLess
     , expandMore
     , large
+    , next
     , none
+    , previous
     , read
     , small
     )
@@ -123,5 +125,23 @@ delete size =
             , Svg.path [ d "M10,18.5h.07a.5.5,0,0,0,.42-.57l-1-7a.5.5,0,1,0-1,.14l1,7A.5.5,0,0,0,10,18.5Z" ]
                 []
             , Svg.path [ d "M5,8.5h.54L6.5,21a.5.5,0,0,0,.5.46H17a.5.5,0,0,0,.5-.46l1-12.54H19a.5.5,0,0,0,.5-.5V6a.5.5,0,0,0-.4-.49L14.5,4.6V3a.5.5,0,0,0-.5-.5H10a.5.5,0,0,0-.5.5V4.59l-4.6.92A.5.5,0,0,0,4.5,6V8A.5.5,0,0,0,5,8.5Zm11.54,12H7.46l-.92-12H17.46Zm-6-17h3v1h-3Zm-5,2.91L10,5.5h4l4.55.91V7.5H5.5Z" ]
+                []
+            ]
+
+
+next : Size -> Icon msg
+next size =
+    html <|
+        svg [ viewBox "0 0 24 30", height size, width size ]
+            [ Svg.path [ d "M10.15,15.35a.5.5,0,0,0,.71,0l3-3a.5.5,0,0,0,0-.71l-3-3a.5.5,0,0,0-.71.71L12.79,12l-2.65,2.65A.5.5,0,0,0,10.15,15.35Z" ]
+                []
+            ]
+
+
+previous : Size -> Icon msg
+previous size =
+    html <|
+        svg [ viewBox "0 0 24 30", height size, width size ]
+            [ Svg.path [ d "M12.85,8.65a.5.5,0,0,0-.71,0l-3,3a.5.5,0,0,0,0,.71l3,3a.5.5,0,0,0,.71-.71L10.21,12l2.65-2.65A.5.5,0,0,0,12.85,8.65Z" ]
                 []
             ]

@@ -27,6 +27,7 @@ import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
+import UI.Icon as Icon
 import UI.Link as UI
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -82,8 +83,8 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Browser.Events.onAnimationFrameDelta Tick
-        , Keyboard.onLeft NextPage
-        , Keyboard.onRight PreviousPage
+        , Keyboard.onLeft PreviousPage
+        , Keyboard.onRight NextPage
         , Keyboard.onEscape BackLinkClicked
         ]
 
@@ -162,8 +163,9 @@ left pub previousUrl =
         [ onClick PreviousPage
         , alignLeft
         , height fill
+        , pointer
         ]
-        [ text "<<" ]
+        [ Icon.previous Icon.large ]
 
 
 pages : Viewport -> Publication.Data -> PageView -> Element Msg
@@ -193,8 +195,9 @@ right pub =
         [ onClick NextPage
         , alignRight
         , height fill
+        , pointer
         ]
-        [ text ">>" ]
+        [ Icon.next Icon.large ]
 
 
 previousPage : PageView -> PageView
