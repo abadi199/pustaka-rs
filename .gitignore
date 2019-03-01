@@ -6,3 +6,4 @@ elm-stuff/
 app/**/*.js
 .env
 *.map
+.cache/
