@@ -8,6 +8,7 @@ module ReloadableData exposing
     , mapF
     , refresh
     , setError
+    , toInitial
     , toMaybe
     )
 
@@ -31,7 +32,7 @@ loading : ReloadableData e i a -> ReloadableData e i a
 loading reloadableData =
     let
         i =
-            initial reloadableData
+            toInitial reloadableData
     in
     reloadableData
         |> toMaybe
@@ -125,8 +126,8 @@ mapF f msg =
     \b -> msg (b |> map f)
 
 
-initial : ReloadableData e i a -> i
-initial reloadableData =
+toInitial : ReloadableData e i a -> i
+toInitial reloadableData =
     case reloadableData of
         Success i _ ->
             i
@@ -173,7 +174,7 @@ setError : e -> ReloadableData e i a -> ReloadableData e i a
 setError e reloadableData =
     let
         i =
-            initial reloadableData
+            toInitial reloadableData
     in
     reloadableData
         |> toMaybe

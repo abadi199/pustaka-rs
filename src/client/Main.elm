@@ -214,7 +214,7 @@ pageUpdate msg model =
                 |> Return.mapBoth (PageMsg << PublicationMsg) (updatePage model Publication)
 
         ( ReadMsg pageMsg, Read pageModel ) ->
-            ReadPage.update pageMsg pageModel
+            ReadPage.update model.key pageMsg pageModel
                 |> Return.mapBoth (PageMsg << ReadMsg) (updatePage model Read)
 
         ( PublicationEditMsg pageMsg, PublicationEdit pageModel ) ->

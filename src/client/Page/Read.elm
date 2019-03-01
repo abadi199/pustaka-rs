@@ -11,6 +11,7 @@ module Page.Read exposing
 import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
+import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Border as Border exposing (shadow)
 import Element.Events as Events exposing (onClick, onMouseEnter)
@@ -19,6 +20,7 @@ import Entity.MediaFormat as MediaFormat exposing (MediaFormat(..))
 import Entity.Publication as Publication
 import Html exposing (Html)
 import Html.Attributes as HA
+import Keyboard
 import Reader exposing (PageView(..))
 import Reader.Comic as Comic
 import Reader.Epub as Epub
@@ -28,6 +30,10 @@ import Task
 import UI.Link as UI
 import UI.ReloadableData
 import UI.Spacing as UI
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -48,13 +54,8 @@ headerVisibleDuration =
     2000
 
 
-type Msg
-    = GetDataCompleted (ReloadableWebData Int Publication.Data)
-    | NextPage
-    | PreviousPage
-    | BackLinkClicked
-    | Tick Float
-    | ReaderClicked
+
+-- INIT
 
 
 init : Int -> Maybe String -> ( Model, Cmd Msg )
@@ -73,45 +74,35 @@ initialModel pubId previousUrl =
     }
 
 
+
+-- SUBSCRIPTION
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Browser.Events.onAnimationFrameDelta Tick
+    Sub.batch
+        [ Browser.Events.onAnimationFrameDelta Tick
+        , Keyboard.onLeft NextPage
+        , Keyboard.onRight PreviousPage
+        , Keyboard.onEscape BackLinkClicked
+        ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        GetDataCompleted data ->
-            ( { model | publication = data }, Cmd.none )
 
-        PreviousPage ->
-            ( { model | currentPage = previousPage model.currentPage }, Cmd.none )
-
-        NextPage ->
-            ( { model | currentPage = nextPage model.currentPage }, Cmd.none )
-
-        BackLinkClicked ->
-            ( model, Cmd.none )
-
-        Tick delta ->
-            ( updateHeaderVisibility delta model, Cmd.none )
-
-        ReaderClicked ->
-            ( { model | headerVisibility = Visible { counter = headerVisibleDuration } }, Cmd.none )
+-- MESSAGE
 
 
-updateHeaderVisibility : Float -> Model -> Model
-updateHeaderVisibility delta model =
-    case model.headerVisibility of
-        Hidden ->
-            model
+type Msg
+    = GetDataCompleted (ReloadableWebData Int Publication.Data)
+    | NextPage
+    | PreviousPage
+    | BackLinkClicked
+    | Tick Float
+    | ReaderClicked
 
-        Visible { counter } ->
-            if counter - delta <= 0 then
-                { model | headerVisibility = Hidden }
 
-            else
-                { model | headerVisibility = Visible { counter = counter - delta } }
+
+-- VIEW
 
 
 view : Viewport -> Model -> Browser.Document Msg
@@ -168,8 +159,7 @@ header pub model =
 left : Publication.Data -> Maybe String -> Element Msg
 left pub previousUrl =
     row
-        [ htmlAttribute <| HA.id "prevButton"
-        , onClick PreviousPage
+        [ onClick PreviousPage
         , alignLeft
         , height fill
         ]
@@ -200,8 +190,7 @@ pages viewport pub pageView =
 right : Publication.Data -> Element Msg
 right pub =
     row
-        [ htmlAttribute <| HA.id "nextButton"
-        , onClick NextPage
+        [ onClick NextPage
         , alignRight
         , height fill
         ]
@@ -226,3 +215,43 @@ nextPage currentPage =
 
         SinglePage a ->
             SinglePage (a + 1)
+
+
+
+-- UPDATE
+
+
+update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
+update key msg model =
+    case msg of
+        GetDataCompleted data ->
+            ( { model | publication = data }, Cmd.none )
+
+        PreviousPage ->
+            ( { model | currentPage = previousPage model.currentPage }, Cmd.none )
+
+        NextPage ->
+            ( { model | currentPage = nextPage model.currentPage }, Cmd.none )
+
+        BackLinkClicked ->
+            ( model, model.publication |> ReloadableData.toInitial |> Route.publicationUrl |> Nav.pushUrl key )
+
+        Tick delta ->
+            ( updateHeaderVisibility delta model, Cmd.none )
+
+        ReaderClicked ->
+            ( { model | headerVisibility = Visible { counter = headerVisibleDuration } }, Cmd.none )
+
+
+updateHeaderVisibility : Float -> Model -> Model
+updateHeaderVisibility delta model =
+    case model.headerVisibility of
+        Hidden ->
+            model
+
+        Visible { counter } ->
+            if counter - delta <= 0 then
+                { model | headerVisibility = Hidden }
+
+            else
+                { model | headerVisibility = Visible { counter = counter - delta } }

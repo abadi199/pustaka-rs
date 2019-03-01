@@ -24,5 +24,6 @@ reader viewport pub pageView =
                 |> HA.attribute "epub"
             , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
             , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
+            , HA.attribute "pageNumber" (Reader.getPageNumber pageView |> String.fromInt)
             ]
             []

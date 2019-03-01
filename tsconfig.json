@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "./app/assets/",
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "module": "es6",
+    "target": "es6",
+    "allowJs": false
+  },
+  "include": ["./src/"]
+}
