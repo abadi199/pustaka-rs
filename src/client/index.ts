@@ -12,20 +12,30 @@ class EpubViewer extends HTMLElement {
   }
 
   static get observedAttributes() {
-    // return ["width", "height", "pageNumber"];
-    return ["pageNumber"];
+    return ["page", "width", "height"];
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
     console.log(name);
-    if (this.rendition) {
-      if (name === "width" || name === "height") {
-        const width = this.getAttribute("width");
-        const height = this.getAttribute("height");
-        this.rendition.resize(width, height);
-      }
-      else if (name === "pageNumber") {
-        console.log(this.getAttribute("pageNumber"));
+    if (!this.rendition) {
+      return;
+    }
+    if (name === "width" || name === "height") {
+      const width = this.getAttribute("width");
+      const height = this.getAttribute("height");
+      this.rendition.resize(width, height);
+    }
+    else if (name === "page") {
+      const oldPage = parseInt(oldValue, 10);
+      const newPage = parseInt(newValue, 10);
+      if (newPage > oldPage) {
+        this.book.package.metadata.direction === "rtl"
+          ? this.rendition.prev()
+          : this.rendition.next();
+      } else {
+        this.book.package.metadata.direction === "rtl"
+          ? this.rendition.next()
+          : this.rendition.prev();
       }
     }
   }
@@ -36,8 +46,8 @@ class EpubViewer extends HTMLElement {
     const location = this.getAttribute("epub");
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
-    this.pageNumber = parseInt(this.getAttribute("pageNumber") || "", 10);
-    console.log("pageNumber", this.pageNumber);
+    this.pageNumber = parseInt(this.getAttribute("page") || "", 10);
+    console.log("page", this.pageNumber);
 
     shadow.appendChild(bookContainer);
 
@@ -49,33 +59,33 @@ class EpubViewer extends HTMLElement {
     });
     this.displayed = this.rendition.display();
 
-    this.book.ready.then(() => {
-      const prevButton = document.getElementById("prevButton");
-      const nextButton = document.getElementById("nextButton");
+    // this.book.ready.then(() => {
+    //   const prevButton = document.getElementById("prevButton");
+    //   const nextButton = document.getElementById("nextButton");
 
-      if (prevButton) {
-        prevButton.addEventListener(
-          "click",
-          e => {
-            this.book.package.metadata.direction === "rtl"
-              ? this.rendition.next()
-              : this.rendition.prev();
-          },
-          false
-        );
-      }
-      if (nextButton) {
-        nextButton.addEventListener(
-          "click",
-          e => {
-            this.book.package.metadata.direction === "rtl"
-              ? this.rendition.prev()
-              : this.rendition.next();
-          },
-          false
-        );
-      }
-    });
+    //   if (prevButton) {
+    //     prevButton.addEventListener(
+    //       "click",
+    //       e => {
+    //         this.book.package.metadata.direction === "rtl"
+    //           ? this.rendition.next()
+    //           : this.rendition.prev();
+    //       },
+    //       false
+    //     );
+    //   }
+    //   if (nextButton) {
+    //     nextButton.addEventListener(
+    //       "click",
+    //       e => {
+    //         this.book.package.metadata.direction === "rtl"
+    //           ? this.rendition.prev()
+    //           : this.rendition.next();
+    //       },
+    //       false
+    //     );
+    //   }
+    // });
   }
 }
 
