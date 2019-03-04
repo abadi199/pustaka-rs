@@ -100,6 +100,7 @@ type Msg
     | BackLinkClicked
     | Tick Float
     | ReaderClicked
+    | PageChanged Float
 
 
 
@@ -183,7 +184,12 @@ pages viewport pub pageView =
                 Comic.reader pub pageView
 
             Epub ->
-                Epub.reader viewport pub pageView
+                Epub.reader
+                    { viewport = viewport
+                    , publication = pub
+                    , pageView = pageView
+                    , onPageChanged = PageChanged
+                    }
 
             NoMediaFormat ->
                 Debug.todo "No media format"
@@ -244,6 +250,13 @@ update key msg model =
 
         ReaderClicked ->
             ( { model | headerVisibility = Visible { counter = headerVisibleDuration } }, Cmd.none )
+
+        PageChanged pageNumber ->
+            let
+                _ =
+                    Debug.log "PageChanged" pageNumber
+            in
+            ( model, Cmd.none )
 
 
 updateHeaderVisibility : Float -> Model -> Model
