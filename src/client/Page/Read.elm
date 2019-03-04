@@ -18,7 +18,7 @@ import Element.Events as Events exposing (onClick, onMouseEnter)
 import Element.Font as Font
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat(..))
 import Entity.Publication as Publication
-import Html exposing (Html)
+import Html as H exposing (Html)
 import Html.Attributes as HA
 import Keyboard
 import Reader exposing (PageView(..))
@@ -27,6 +27,7 @@ import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
+import UI.Background
 import UI.Icon as Icon
 import UI.Link as UI
 import UI.ReloadableData
@@ -41,7 +42,8 @@ type alias Model =
     { publication : ReloadableWebData Int Publication.Data
     , currentPage : PageView
     , previousUrl : Maybe String
-    , headerVisibility : HeaderVisibility
+    , overlayVisibility : HeaderVisibility
+    , percentage : Float
     }
 
 
@@ -50,8 +52,8 @@ type HeaderVisibility
     | Visible { counter : Float }
 
 
-headerVisibleDuration : Float
-headerVisibleDuration =
+overlayVisibilityDuration : Float
+overlayVisibilityDuration =
     2000
 
 
@@ -71,7 +73,8 @@ initialModel pubId previousUrl =
     { publication = Loading pubId
     , currentPage = DoublePage 1
     , previousUrl = previousUrl
-    , headerVisibility = Visible { counter = headerVisibleDuration }
+    , overlayVisibility = Visible { counter = overlayVisibilityDuration }
+    , percentage = 0
     }
 
 
@@ -115,6 +118,7 @@ view viewport model =
             (\pub ->
                 row
                     [ inFront <| header pub model
+                    , inFront <| slider pub model
                     , width fill
                     ]
                     [ left pub model.previousUrl
@@ -128,9 +132,41 @@ view viewport model =
     }
 
 
+slider : Publication.Data -> Model -> Element Msg
+slider pub model =
+    let
+        percentage =
+            model.percentage
+                * 100
+                |> clamp 0 100
+
+        heightInPixel =
+            case model.overlayVisibility of
+                Hidden ->
+                    px 5
+
+                Visible _ ->
+                    px 40
+    in
+    row
+        [ alignBottom
+        , centerX
+        , UI.Background.light
+        , width fill
+        , height heightInPixel
+        ]
+        [ row
+            [ UI.Background.dark
+            , height fill
+            , htmlAttribute <| HA.style "flex-basis" (String.fromFloat percentage ++ "%")
+            ]
+            []
+        ]
+
+
 header : Publication.Data -> Model -> Element Msg
 header pub model =
-    case model.headerVisibility of
+    case model.overlayVisibility of
         Hidden ->
             none
 
@@ -249,25 +285,21 @@ update key msg model =
             ( updateHeaderVisibility delta model, Cmd.none )
 
         ReaderClicked ->
-            ( { model | headerVisibility = Visible { counter = headerVisibleDuration } }, Cmd.none )
+            ( { model | overlayVisibility = Visible { counter = overlayVisibilityDuration } }, Cmd.none )
 
-        PageChanged pageNumber ->
-            let
-                _ =
-                    Debug.log "PageChanged" pageNumber
-            in
-            ( model, Cmd.none )
+        PageChanged percentage ->
+            ( { model | percentage = percentage }, Cmd.none )
 
 
 updateHeaderVisibility : Float -> Model -> Model
 updateHeaderVisibility delta model =
-    case model.headerVisibility of
+    case model.overlayVisibility of
         Hidden ->
             model
 
         Visible { counter } ->
             if counter - delta <= 0 then
-                { model | headerVisibility = Hidden }
+                { model | overlayVisibility = Hidden }
 
             else
-                { model | headerVisibility = Visible { counter = counter - delta } }
+                { model | overlayVisibility = Visible { counter = counter - delta } }
