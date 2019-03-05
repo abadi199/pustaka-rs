@@ -255,7 +255,7 @@ update key msg model =
 
         SubmissionCompleted reloadableData ->
             reloadableData
-                |> ReloadableData.error
+                |> ReloadableData.toError
                 |> Maybe.map
                     (\err ->
                         ( { model | publication = ReloadableData.setError err model.publication }

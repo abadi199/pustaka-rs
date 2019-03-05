@@ -114,6 +114,7 @@ type Msg
     | PageChanged Float
     | SliderClicked Float
     | Ready
+    | GetProgressCompleted (ReloadableWebData Int Float)
 
 
 
@@ -316,7 +317,18 @@ update key msg model =
             ( { model | progress = Publication.percentage percentage }, Cmd.none )
 
         Ready ->
-            ( { model | sliderReady = True }, Cmd.none )
+            ( { model | sliderReady = True }
+            , Publication.getProgress
+                { publicationId = ReloadableData.toInitial model.publication
+                , msg = GetProgressCompleted
+                }
+            )
+
+        GetProgressCompleted data ->
+            data
+                |> ReloadableData.toMaybe
+                |> Maybe.map (\percentage -> ( { model | progress = Publication.percentage percentage }, Cmd.none ))
+                |> Maybe.withDefault ( model, Cmd.none )
 
 
 updateHeaderVisibility : Float -> Model -> Model

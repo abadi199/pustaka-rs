@@ -1,13 +1,13 @@
 module ReloadableData exposing
     ( ReloadableData(..)
     , ReloadableWebData
-    , error
     , join
     , loading
     , map
     , mapF
     , refresh
     , setError
+    , toError
     , toInitial
     , toMaybe
     )
@@ -148,8 +148,8 @@ toInitial reloadableData =
             i
 
 
-error : ReloadableData e i a -> Maybe e
-error reloadableData =
+toError : ReloadableData e i a -> Maybe e
+toError reloadableData =
     case reloadableData of
         Success _ _ ->
             Nothing

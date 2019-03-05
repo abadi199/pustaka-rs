@@ -6,6 +6,7 @@ module Entity.Publication exposing
     , deleteThumbnail
     , emptyMetaData
     , get
+    , getProgress
     , listByCategory
     , percentage
     , read
@@ -85,6 +86,16 @@ toPercentage progress =
 
 
 -- HTTP
+
+
+getProgress : { publicationId : Int, msg : ReloadableWebData Int Float -> msg } -> Cmd msg
+getProgress { publicationId, msg } =
+    ReloadableData.Http.get
+        { initial = publicationId
+        , url = "/api/publication/progress/" ++ String.fromInt publicationId
+        , msg = msg
+        , decoder = JD.float
+        }
 
 
 updateProgress : { publicationId : Int, progress : Progress, msg : ReloadableWebData Int () -> msg } -> Cmd msg

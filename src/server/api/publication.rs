@@ -7,11 +7,11 @@ use actix_web::{
 use config::Config;
 use db::executor::DbExecutor;
 use db::publication::{
-    self, Delete, DeleteThumbnail, Get, List, ListByCategory, Update, UpdateProgress,
+    self, Delete, DeleteThumbnail, Get, GetProgress, List, ListByCategory, Update, UpdateProgress,
     UpdateThumbnail,
 };
 use fs::executor::{DeleteFile, FsExecutor};
-use futures::{future, stream, Future, IntoFuture, Stream};
+use futures::{future, Future, IntoFuture, Stream};
 use mime;
 use models::{NewPublication, Publication, PublicationProgress, CBR, CBZ, EPUB};
 use reader::{comic, epub};
@@ -88,7 +88,6 @@ fn update_progress(
     json: Json<PublicationProgress>,
 ) -> FutureResponse<HttpResponse> {
     // TODO
-    println!("{:?}", json);
     let json = json.into_inner();
     state
         .db
@@ -98,6 +97,20 @@ fn update_progress(
         })
         .map_err(error::ErrorInternalServerError)
         .map(|_| HttpResponse::Ok().json(()))
+        .responder()
+}
+
+fn get_progress(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(GetProgress {
+            publication_id: publication_id.into_inner(),
+        })
+        .map_err(error::ErrorInternalServerError)
+        .and_then(|res| match res {
+            Ok(progress) => Ok(HttpResponse::Ok().json(progress)),
+            Err(err) => Ok(error::ErrorInternalServerError(err).into()),
+        })
         .responder()
 }
 
@@ -122,9 +135,9 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
             publication_id: publication_id.into_inner(),
         })
         .from_err()
-        .and_then(|res| match res {
-            Ok(publication) => Ok(HttpResponse::Ok().json(publication)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        .map(|res| match res {
+            Ok(publication) => HttpResponse::Ok().json(publication),
+            Err(_) => HttpResponse::InternalServerError().into(),
         })
         .responder()
 }
@@ -190,7 +203,6 @@ fn read_page_comic(
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
     let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
-    println!("{:?}", filename);
     let file = NamedFile::open(filename);
     file.map_err(|err| err.into())
 }
@@ -363,7 +375,6 @@ fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureRespon
     let config = state.config.clone();
     let db = state.db.clone();
     let publication_id: i32 = publication_id.into_inner();
-    println!("{:?}", req);
     Box::new(
         req.multipart()
             .map_err(error::ErrorInternalServerError)
@@ -462,5 +473,6 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             delete_thumbnail,
         )
         .route("/progress/", Method::PUT, update_progress)
+        .route("/progress/{publication_id}", Method::GET, get_progress)
         .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
 }

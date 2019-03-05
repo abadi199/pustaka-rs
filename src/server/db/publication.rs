@@ -298,25 +298,48 @@ impl Handler<UpdateProgress> for DbExecutor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: UpdateProgress, _: &mut Self::Context) -> Self::Result {
-        use schema::publication_progress::dsl::*;
-
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        let row: Vec<PublicationProgress> = publication_progress
-            .filter(publication_id.eq(msg.publication_id))
-            .limit(1)
-            .load(&*connection)
-            .expect(&format!(
-                "Error loading publication_progress with publication_id {}",
-                msg.publication_id
-            ));
-
-        match row.is_empty() {
-            true => insert_publication_progress(connection, msg.publication_id, msg.progress),
-            false => update_publication_progress(connection, msg.publication_id, msg.progress),
-        }?;
-
-        Ok(())
+        let option = get_publication_progress(connection, msg.publication_id)?;
+        match option {
+            Some(_) => update_publication_progress(connection, msg.publication_id, msg.progress),
+            None => insert_publication_progress(connection, msg.publication_id, msg.progress),
+        }
     }
+}
+
+#[derive(Debug)]
+pub struct GetProgress {
+    pub publication_id: i32,
+}
+impl Message for GetProgress {
+    type Result = Result<f32, Error>;
+}
+impl Handler<GetProgress> for DbExecutor {
+    type Result = Result<f32, Error>;
+
+    fn handle(&mut self, msg: GetProgress, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        get_publication_progress(connection, msg.publication_id).map(|option| {
+            option
+                .map(|publication_progress| publication_progress.progress)
+                .unwrap_or(0f32)
+        })
+    }
+}
+
+fn get_publication_progress(
+    connection: &SqliteConnection,
+    publication_id: i32,
+) -> Result<Option<PublicationProgress>, Error> {
+    use schema::publication_progress::dsl;
+
+    let mut row: Vec<PublicationProgress> = dsl::publication_progress
+        .filter(dsl::publication_id.eq(publication_id))
+        .limit(1)
+        .load(&*connection)
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    Ok(row.pop())
 }
 
 fn insert_publication_progress(
