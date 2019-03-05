@@ -46,7 +46,7 @@ confirmation { content, onPositive, onNegative, onClose } =
                 [ centerX
                 , centerY
                 , UI.padding 1
-                , Background.white
+                , Background.solidWhite
                 ]
                 [ content
                 , row
@@ -71,7 +71,7 @@ toElement dialog =
             el
                 [ width fill
                 , height fill
-                , Background.dark
+                , Background.transparentDarkBlack
                 , onClick onClose
                 ]
                 element

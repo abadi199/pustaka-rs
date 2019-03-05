@@ -19,7 +19,7 @@ panel : { a | title : String, informationList : List (Description msg), actions 
 panel { title, informationList, actions } =
     Card.simple
         [ alignTop
-        , Background.medium
+        , Background.transparentMediumBlack
         , width fill
         , UI.padding -2
         ]

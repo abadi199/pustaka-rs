@@ -14,12 +14,14 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Border as Border exposing (shadow)
-import Element.Events as Events exposing (onClick, onMouseEnter)
+import Element.Events as Events exposing (onClick)
 import Element.Font as Font
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat(..))
 import Entity.Publication as Publication
 import Html as H exposing (Html)
 import Html.Attributes as HA
+import Html.Events as HE
+import Json.Decode as JD
 import Keyboard
 import Reader exposing (PageView(..))
 import Reader.Comic as Comic
@@ -27,9 +29,12 @@ import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Task
-import UI.Background
+import UI.Action as Action
+import UI.Background as Background
+import UI.Events
 import UI.Icon as Icon
 import UI.Link as UI
+import UI.Parts.Slider as Slider
 import UI.ReloadableData
 import UI.Spacing as UI
 
@@ -44,6 +49,7 @@ type alias Model =
     , previousUrl : Maybe String
     , overlayVisibility : HeaderVisibility
     , percentage : Float
+    , sliderReady : Bool
     }
 
 
@@ -75,6 +81,7 @@ initialModel pubId previousUrl =
     , previousUrl = previousUrl
     , overlayVisibility = Visible { counter = overlayVisibilityDuration }
     , percentage = 0
+    , sliderReady = False
     }
 
 
@@ -88,7 +95,7 @@ subscriptions model =
         [ Browser.Events.onAnimationFrameDelta Tick
         , Keyboard.onLeft PreviousPage
         , Keyboard.onRight NextPage
-        , Keyboard.onEscape BackLinkClicked
+        , Keyboard.onEscape (LinkClicked <| Route.publicationUrl (ReloadableData.toInitial model.publication))
         ]
 
 
@@ -100,10 +107,12 @@ type Msg
     = GetDataCompleted (ReloadableWebData Int Publication.Data)
     | NextPage
     | PreviousPage
-    | BackLinkClicked
+    | LinkClicked String
     | Tick Float
-    | ReaderClicked
+    | MouseMoved
     | PageChanged Float
+    | SliderClicked Float
+    | Ready
 
 
 
@@ -122,7 +131,12 @@ view viewport model =
                     , width fill
                     ]
                     [ left pub model.previousUrl
-                    , pages viewport pub model.currentPage
+                    , pages
+                        { viewport = viewport
+                        , publication = pub
+                        , pageView = model.currentPage
+                        , percentage = model.percentage
+                        }
                     , right pub
                     ]
             )
@@ -134,34 +148,15 @@ view viewport model =
 
 slider : Publication.Data -> Model -> Element Msg
 slider pub model =
-    let
-        percentage =
-            model.percentage
-                * 100
-                |> clamp 0 100
+    case ( model.sliderReady, model.overlayVisibility ) of
+        ( False, _ ) ->
+            none
 
-        heightInPixel =
-            case model.overlayVisibility of
-                Hidden ->
-                    px 5
+        ( True, Hidden ) ->
+            Slider.compact { percentage = model.percentage, onClick = SliderClicked }
 
-                Visible _ ->
-                    px 40
-    in
-    row
-        [ alignBottom
-        , centerX
-        , UI.Background.light
-        , width fill
-        , height heightInPixel
-        ]
-        [ row
-            [ UI.Background.dark
-            , height fill
-            , htmlAttribute <| HA.style "flex-basis" (String.fromFloat percentage ++ "%")
-            ]
-            []
-        ]
+        ( True, Visible _ ) ->
+            Slider.large { percentage = model.percentage, onClick = SliderClicked }
 
 
 header : Publication.Data -> Model -> Element Msg
@@ -173,24 +168,24 @@ header pub model =
         Visible _ ->
             row
                 [ width fill
+                , Background.solidWhite
                 , Border.shadow
                     { offset = ( 0, 0 )
                     , size = 0
                     , blur = 10
                     , color = rgba 0 0 0 0.5
                     }
-                , UI.padding -2
+                , UI.padding -5
+                , UI.Events.onMouseMove MouseMoved
                 ]
-                [ UI.link
-                    []
-                    { url =
-                        model.previousUrl
-                            |> Maybe.withDefault (Route.publicationUrl pub.id)
-                    , label =
-                        text "<< Back"
-                    , msg = always BackLinkClicked
-                    }
-                , el [ width fill, centerX, Font.center ] (text pub.title)
+                [ Action.toElement <|
+                    Action.large <|
+                        Action.link
+                            { text = "Back"
+                            , icon = Icon.previous Icon.small
+                            , url = model.previousUrl |> Maybe.withDefault (Route.publicationUrl pub.id)
+                            , onClick = LinkClicked
+                            }
                 ]
 
 
@@ -205,26 +200,35 @@ left pub previousUrl =
         [ Icon.previous Icon.large ]
 
 
-pages : Viewport -> Publication.Data -> PageView -> Element Msg
-pages viewport pub pageView =
+pages :
+    { viewport : Viewport
+    , publication : Publication.Data
+    , percentage : Float
+    , pageView : PageView
+    }
+    -> Element Msg
+pages { viewport, publication, percentage, pageView } =
     el
         [ centerX
-        , onMouseEnter ReaderClicked
+        , UI.Events.onMouseMove MouseMoved
         ]
     <|
-        case pub.mediaFormat of
+        case publication.mediaFormat of
             CBZ ->
-                Comic.reader pub pageView
+                Comic.reader publication pageView
 
             CBR ->
-                Comic.reader pub pageView
+                Comic.reader publication pageView
 
             Epub ->
                 Epub.reader
                     { viewport = viewport
-                    , publication = pub
-                    , pageView = pageView
+                    , publication = publication
+                    , percentage = percentage
                     , onPageChanged = PageChanged
+                    , onMouseMove = MouseMoved
+                    , onReady = Ready
+                    , pageView = pageView
                     }
 
             NoMediaFormat ->
@@ -278,17 +282,23 @@ update key msg model =
         NextPage ->
             ( { model | currentPage = nextPage model.currentPage }, Cmd.none )
 
-        BackLinkClicked ->
-            ( model, model.publication |> ReloadableData.toInitial |> Route.publicationUrl |> Nav.pushUrl key )
+        LinkClicked url ->
+            ( model, Nav.pushUrl key url )
 
         Tick delta ->
             ( updateHeaderVisibility delta model, Cmd.none )
 
-        ReaderClicked ->
+        MouseMoved ->
             ( { model | overlayVisibility = Visible { counter = overlayVisibilityDuration } }, Cmd.none )
 
         PageChanged percentage ->
             ( { model | percentage = percentage }, Cmd.none )
+
+        SliderClicked percentage ->
+            ( { model | percentage = percentage }, Cmd.none )
+
+        Ready ->
+            ( { model | sliderReady = True }, Cmd.none )
 
 
 updateHeaderVisibility : Float -> Model -> Model

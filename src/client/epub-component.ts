@@ -9,7 +9,7 @@ class EpubViewer extends HTMLElement {
     super();
   }
   static get observedAttributes() {
-    return ["page", "width", "height"];
+    return ["page", "percentage", "width", "height"];
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -29,6 +29,10 @@ class EpubViewer extends HTMLElement {
       } else {
         this.rendition.prev();
       }
+    } else if (name === "percentage") {
+      console.log("js:percentage", oldValue, newValue);
+      const cfi = this.book.locations.cfiFromPercentage(parseFloat(newValue));
+      this.rendition.display(cfi);
     }
   }
 
@@ -55,6 +59,11 @@ class EpubViewer extends HTMLElement {
 
     this.rendition.on('relocated', this.relocatedListener);
     this.rendition.on("keyup", this.keyListener);
+    this.rendition.hooks.content.register((contents) => {
+      contents.window.addEventListener("mousemove", (evt) => {
+        this.dispatchEvent(new Event("mousemove"));
+      });
+    });
 
     const displayed = this.rendition.display();
 
@@ -62,7 +71,7 @@ class EpubViewer extends HTMLElement {
       const locations = this.book.locations.generate(1600);
       return locations;
     }).then((locations: object) => {
-      this.getCurrentPercentage(this.rendition.currentLocation());
+      this.dispatchEvent(new Event("ready"));
     });
   }
 
@@ -89,8 +98,9 @@ class EpubViewer extends HTMLElement {
     return (<Location>location).start != undefined;
   };
 
-  relocatedListener = (location: any) => {
+  relocatedListener = (location: Location | DisplayedLocation) => {
     const currentLocation = this.getCurrentPercentage(location);
+    console.log("js:relocatedListener", currentLocation);
     const pageChangeEvent = new CustomEvent("pageChanged", { detail: currentLocation });
     this.dispatchEvent(pageChangeEvent);
   };

@@ -10,16 +10,20 @@ import Html.Events as HE
 import Json.Decode as JD
 import Json.Encode as JE
 import Reader exposing (PageView(..))
+import UI.Events
 
 
 reader :
     { viewport : Viewport
     , publication : Publication.Data
-    , pageView : PageView
+    , percentage : Float
     , onPageChanged : Float -> msg
+    , onMouseMove : msg
+    , onReady : msg
+    , pageView : PageView
     }
     -> Element msg
-reader { onPageChanged, viewport, publication, pageView } =
+reader { pageView, onPageChanged, onReady, viewport, publication, percentage, onMouseMove } =
     E.html <|
         H.node "epub-viewer"
             [ publication.id
@@ -33,6 +37,9 @@ reader { onPageChanged, viewport, publication, pageView } =
             , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
             , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
             , HA.attribute "page" (Reader.getPageNumber pageView |> String.fromInt)
+            , HA.attribute "percentage" (String.fromFloat percentage)
             , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map onPageChanged)
+            , HE.on "ready" (JD.succeed onReady)
+            , UI.Events.onHtmlMouseMove onMouseMove
             ]
             []
