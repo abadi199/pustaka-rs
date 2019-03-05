@@ -1,5 +1,6 @@
 use schema::{
-    author, category, favorite_category, media_type, publication, publication_category, tag,
+    author, category, favorite_category, media_type, publication, publication_category,
+    publication_progress, tag,
 };
 use serde::ser::SerializeStruct;
 use serde::Serialize;
@@ -146,4 +147,12 @@ pub struct Tag {
 #[primary_key(category_id)]
 pub struct FavoriteCategory {
     pub category_id: CategoryId,
+}
+
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations, Insertable)]
+#[table_name = "publication_progress"]
+#[primary_key(publication_id)]
+pub struct PublicationProgress {
+    pub publication_id: i32,
+    pub progress: f32,
 }

@@ -47,6 +47,13 @@ table! {
 }
 
 table! {
+    publication_progress (publication_id) {
+        publication_id -> Integer,
+        progress -> Float,
+    }
+}
+
+table! {
     publication_tag (publication_id, tag_id) {
         publication_id -> Integer,
         tag_id -> Integer,
@@ -72,6 +79,7 @@ joinable!(publication -> author (author_id));
 joinable!(publication -> media_type (media_type_id));
 joinable!(publication_category -> category (category_id));
 joinable!(publication_category -> publication (publication_id));
+joinable!(publication_progress -> publication (publication_id));
 joinable!(publication_tag -> publication (publication_id));
 joinable!(publication_tag -> tag (tag_id));
 
@@ -82,6 +90,7 @@ allow_tables_to_appear_in_same_query!(
     media_type,
     publication,
     publication_category,
+    publication_progress,
     publication_tag,
     tag,
     user,

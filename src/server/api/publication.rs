@@ -7,12 +7,13 @@ use actix_web::{
 use config::Config;
 use db::executor::DbExecutor;
 use db::publication::{
-    self, Delete, DeleteThumbnail, Get, List, ListByCategory, Update, UpdateThumbnail,
+    self, Delete, DeleteThumbnail, Get, List, ListByCategory, Update, UpdateProgress,
+    UpdateThumbnail,
 };
 use fs::executor::{DeleteFile, FsExecutor};
 use futures::{future, stream, Future, IntoFuture, Stream};
 use mime;
-use models::{NewPublication, Publication, CBR, CBZ, EPUB};
+use models::{NewPublication, Publication, PublicationProgress, CBR, CBZ, EPUB};
 use reader::{comic, epub};
 use state::AppState;
 use std::{
@@ -82,18 +83,21 @@ fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<Htt
         .responder()
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct Progress {
-    publication_id: i32,
-    progress: f64,
-}
-
-fn update_progress(state: State<AppState>, json: Json<Progress>) -> FutureResponse<HttpResponse> {
+fn update_progress(
+    state: State<AppState>,
+    json: Json<PublicationProgress>,
+) -> FutureResponse<HttpResponse> {
     // TODO
     println!("{:?}", json);
-    let response = HttpResponse::Ok().json(());
-    future::ok::<HttpResponse, actix_web::Error>(response)
-        .from_err()
+    let json = json.into_inner();
+    state
+        .db
+        .send(UpdateProgress {
+            publication_id: json.publication_id,
+            progress: json.progress,
+        })
+        .map_err(error::ErrorInternalServerError)
+        .map(|_| HttpResponse::Ok().json(()))
         .responder()
 }
 

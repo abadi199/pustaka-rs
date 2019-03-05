@@ -5,7 +5,7 @@ use diesel::prelude::*;
 
 use actix::prelude::*;
 use db::executor::DbExecutor;
-use models::{Category, NewPublication, Publication};
+use models::{Category, NewPublication, Publication, PublicationProgress};
 use schema::publication::dsl::*;
 
 #[derive(Debug)]
@@ -284,4 +284,66 @@ fn get_publication(
         )),
         false => Ok(row.remove(0)),
     }
+}
+
+#[derive(Debug)]
+pub struct UpdateProgress {
+    pub publication_id: i32,
+    pub progress: f32,
+}
+impl Message for UpdateProgress {
+    type Result = Result<(), Error>;
+}
+impl Handler<UpdateProgress> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: UpdateProgress, _: &mut Self::Context) -> Self::Result {
+        use schema::publication_progress::dsl::*;
+
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        let row: Vec<PublicationProgress> = publication_progress
+            .filter(publication_id.eq(msg.publication_id))
+            .limit(1)
+            .load(&*connection)
+            .expect(&format!(
+                "Error loading publication_progress with publication_id {}",
+                msg.publication_id
+            ));
+
+        match row.is_empty() {
+            true => insert_publication_progress(connection, msg.publication_id, msg.progress),
+            false => update_publication_progress(connection, msg.publication_id, msg.progress),
+        }?;
+
+        Ok(())
+    }
+}
+
+fn insert_publication_progress(
+    connection: &SqliteConnection,
+    the_publication_id: i32,
+    the_progress: f32,
+) -> Result<(), Error> {
+    use schema::publication_progress::dsl::*;
+    diesel::insert_into(publication_progress)
+        .values(PublicationProgress {
+            publication_id: the_publication_id,
+            progress: the_progress,
+        })
+        .execute(&*connection)
+        .expect("Error inserting publication_progress");
+
+    Ok(())
+}
+fn update_publication_progress(
+    connection: &SqliteConnection,
+    the_publication_id: i32,
+    the_progress: f32,
+) -> Result<(), Error> {
+    use schema::publication_progress::dsl::*;
+    diesel::update(publication_progress.filter(publication_id.eq(the_publication_id)))
+        .set(progress.eq(the_progress))
+        .execute(&*connection)
+        .expect("Error updating publication_progress");
+    Ok(())
 }
