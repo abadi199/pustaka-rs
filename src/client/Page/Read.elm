@@ -34,6 +34,7 @@ import UI.Background as Background
 import UI.Events
 import UI.Icon as Icon
 import UI.Link as UI
+import UI.Parts.Header as Header
 import UI.Parts.Slider as Slider
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -47,15 +48,10 @@ type alias Model =
     { publication : ReloadableWebData Int Publication.Data
     , currentPage : PageView
     , previousUrl : Maybe String
-    , overlayVisibility : HeaderVisibility
+    , overlayVisibility : Header.Visibility
     , progress : Publication.Progress
     , sliderReady : Bool
     }
-
-
-type HeaderVisibility
-    = Hidden
-    | Visible { counter : Float }
 
 
 overlayVisibilityDuration : Float
@@ -70,7 +66,8 @@ overlayVisibilityDuration =
 init : Int -> Maybe String -> ( Model, Cmd Msg )
 init pubId previousUrl =
     ( initialModel pubId previousUrl
-    , Publication.read { publicationId = pubId, msg = GetDataCompleted }
+    , Cmd.batch
+        [ Publication.read { publicationId = pubId, msg = GetDataCompleted } ]
     )
 
 
@@ -79,7 +76,7 @@ initialModel pubId previousUrl =
     { publication = Loading pubId
     , currentPage = DoublePage 1
     , previousUrl = previousUrl
-    , overlayVisibility = Visible { counter = overlayVisibilityDuration }
+    , overlayVisibility = Header.visible { counter = overlayVisibilityDuration }
     , progress = Publication.percentage 0
     , sliderReady = False
     }
@@ -150,18 +147,18 @@ view viewport model =
 
 slider : Publication.Data -> Model -> Element Msg
 slider pub model =
-    case ( model.sliderReady, model.overlayVisibility ) of
+    case ( model.sliderReady, Header.isVisible model.overlayVisibility ) of
         ( False, _ ) ->
             none
 
-        ( True, Hidden ) ->
+        ( True, False ) ->
             Slider.compact
                 { onMouseMove = MouseMoved
                 , percentage = model.progress |> Publication.toPercentage
                 , onClick = SliderClicked
                 }
 
-        ( True, Visible _ ) ->
+        ( True, True ) ->
             Slider.large
                 { onMouseMove = MouseMoved
                 , percentage = model.progress |> Publication.toPercentage
@@ -171,32 +168,12 @@ slider pub model =
 
 header : Publication.Data -> Model -> Element Msg
 header pub model =
-    case model.overlayVisibility of
-        Hidden ->
-            none
-
-        Visible _ ->
-            row
-                [ width fill
-                , Background.solidWhite
-                , Border.shadow
-                    { offset = ( 0, 0 )
-                    , size = 0
-                    , blur = 10
-                    , color = rgba 0 0 0 0.5
-                    }
-                , UI.padding -5
-                , UI.Events.onMouseMove MouseMoved
-                ]
-                [ Action.toElement <|
-                    Action.large <|
-                        Action.link
-                            { text = "Back"
-                            , icon = Icon.previous Icon.small
-                            , url = model.previousUrl |> Maybe.withDefault (Route.publicationUrl pub.id)
-                            , onClick = LinkClicked
-                            }
-                ]
+    Header.header
+        { visibility = model.overlayVisibility
+        , previousUrl = model.previousUrl |> Maybe.withDefault (Route.publicationUrl pub.id)
+        , onMouseMove = MouseMoved
+        , onLinkClicked = LinkClicked
+        }
 
 
 left : Publication.Data -> Maybe String -> Element Msg
@@ -287,7 +264,31 @@ update key msg model =
             ( model, Cmd.none )
 
         GetDataCompleted data ->
-            ( { model | publication = data }, Cmd.none )
+            let
+                mediaFormat =
+                    data
+                        |> Debug.log "publication"
+                        |> ReloadableData.toMaybe
+                        |> Maybe.map (\pub -> pub.mediaFormat)
+                        |> Debug.log "mediaFormat"
+            in
+            ( { model | publication = data }
+            , case mediaFormat of
+                Nothing ->
+                    Cmd.none
+
+                Just CBZ ->
+                    Task.perform (always Ready) (Task.succeed ())
+
+                Just CBR ->
+                    Task.perform (always Ready) (Task.succeed ())
+
+                Just Epub ->
+                    Cmd.none
+
+                Just NoMediaFormat ->
+                    Cmd.none
+            )
 
         PreviousPage ->
             ( { model | currentPage = previousPage model.currentPage }, Cmd.none )
@@ -302,7 +303,7 @@ update key msg model =
             ( updateHeaderVisibility delta model, Cmd.none )
 
         MouseMoved ->
-            ( { model | overlayVisibility = Visible { counter = overlayVisibilityDuration } }, Cmd.none )
+            ( { model | overlayVisibility = Header.visible { counter = overlayVisibilityDuration } }, Cmd.none )
 
         PageChanged percentage ->
             ( { model | progress = Publication.percentage percentage }
@@ -333,13 +334,13 @@ update key msg model =
 
 updateHeaderVisibility : Float -> Model -> Model
 updateHeaderVisibility delta model =
-    case model.overlayVisibility of
-        Hidden ->
+    case Header.toCounter model.overlayVisibility of
+        Nothing ->
             model
 
-        Visible { counter } ->
+        Just counter ->
             if counter - delta <= 0 then
-                { model | overlayVisibility = Hidden }
+                { model | overlayVisibility = Header.hidden }
 
             else
-                { model | overlayVisibility = Visible { counter = counter - delta } }
+                { model | overlayVisibility = Header.visible { counter = counter - delta } }

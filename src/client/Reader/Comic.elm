@@ -1,10 +1,21 @@
-module Reader.Comic exposing (reader)
+module Reader.Comic exposing (reader, view)
 
+import Browser.Dom exposing (Viewport)
 import Element as E exposing (..)
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
 import Reader exposing (PageView(..))
+
+
+view :
+    { publication : Publication.Data
+    , viewport : Viewport
+    , pageView : PageView
+    }
+    -> Element msg
+view { publication, viewport, pageView } =
+    E.text "view"
 
 
 reader : Publication.Data -> PageView -> Element msg

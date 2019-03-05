@@ -5,7 +5,7 @@ use reader::models::Data;
 use std::error::Error;
 use std::fmt;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use unrar::Archive;
 use unzip;
 
@@ -43,9 +43,19 @@ const EXTRACT_LOCATION: &str = "cache";
 pub fn open(the_publication: &Publication) -> Result<Data, ComicError> {
     use reader::comic::ComicError::*;
 
+    println!("open {:?}", the_publication.file);
+    match the_publication.media_format.as_ref() {
+        CBR => open_cbr(the_publication),
+        CBZ => open_cbz(the_publication),
+        _ => Err(InvalidMediaFormatError),
+    }
+}
+
+fn open_cbr(the_publication: &Publication) -> Result<Data, ComicError> {
+    use reader::comic::ComicError::*;
     let open_archive = Archive::new(the_publication.file.clone())
         .extract_to(EXTRACT_LOCATION.to_string())
-        .map_err(|_err| RarError);
+        .map_err(|_err| RarError)?;
 
     Ok(Data {
         id: the_publication.id,
@@ -56,7 +66,25 @@ pub fn open(the_publication: &Publication) -> Result<Data, ComicError> {
         thumbnail_url: the_publication.thumbnail_url().clone(),
         file: the_publication.file.clone(),
         media_format: the_publication.media_format.clone(),
-        total_pages: open_archive.map(|comic| comic.count()).unwrap_or(0),
+        total_pages: open_archive.count(),
+    })
+}
+
+fn open_cbz(the_publication: &Publication) -> Result<Data, ComicError> {
+    use reader::comic::ComicError::*;
+
+    let count = unzip::count(&the_publication.file).map_err(|_| ZipError)?;
+
+    Ok(Data {
+        id: the_publication.id,
+        isbn: the_publication.isbn.clone(),
+        title: the_publication.title.clone(),
+        media_type_id: the_publication.media_type_id,
+        author_id: the_publication.author_id,
+        thumbnail_url: the_publication.thumbnail_url().clone(),
+        file: the_publication.file.clone(),
+        media_format: the_publication.media_format.clone(),
+        total_pages: count,
     })
 }
 

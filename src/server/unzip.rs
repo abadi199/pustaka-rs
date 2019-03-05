@@ -15,6 +15,13 @@ pub fn unzip(file: &str, output_path_str: &str) -> ZipResult<()> {
     Ok(())
 }
 
+pub fn count(file: &str) -> ZipResult<usize> {
+    let fname = Path::new(file);
+    let file = File::open(&fname)?;
+    let archive = ZipArchive::new(file)?;
+    Ok(archive.len())
+}
+
 pub fn unzip_nth(file: &str, output_path: &str, nth: usize) -> ZipResult<String> {
     let fname = Path::new(file);
     let file = File::open(&fname)?;
