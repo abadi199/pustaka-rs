@@ -69,7 +69,6 @@ fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<
 }
 
 fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<HttpResponse> {
-    println!("{:?}", json);
     state
         .db
         .send(Update {
@@ -80,6 +79,21 @@ fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<Htt
             Ok(_) => Ok(HttpResponse::Ok().json(())),
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
+        .responder()
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Progress {
+    publication_id: i32,
+    progress: f64,
+}
+
+fn update_progress(state: State<AppState>, json: Json<Progress>) -> FutureResponse<HttpResponse> {
+    // TODO
+    println!("{:?}", json);
+    let response = HttpResponse::Ok().json(());
+    future::ok::<HttpResponse, actix_web::Error>(response)
+        .from_err()
         .responder()
 }
 
@@ -443,5 +457,6 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
             Method::DELETE,
             delete_thumbnail,
         )
+        .route("/progress/", Method::PUT, update_progress)
         .resource("/download/{publication_id}/{tail:.*}", |r| r.f(download))
 }

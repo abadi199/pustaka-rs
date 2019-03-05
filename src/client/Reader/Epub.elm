@@ -16,14 +16,14 @@ import UI.Events
 reader :
     { viewport : Viewport
     , publication : Publication.Data
-    , percentage : Float
+    , progress : Publication.Progress
     , onPageChanged : Float -> msg
     , onMouseMove : msg
     , onReady : msg
     , pageView : PageView
     }
     -> Element msg
-reader { pageView, onPageChanged, onReady, viewport, publication, percentage, onMouseMove } =
+reader { pageView, onPageChanged, onReady, viewport, publication, progress, onMouseMove } =
     E.html <|
         H.node "epub-viewer"
             [ publication.id
@@ -37,7 +37,7 @@ reader { pageView, onPageChanged, onReady, viewport, publication, percentage, on
             , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
             , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
             , HA.attribute "page" (Reader.getPageNumber pageView |> String.fromInt)
-            , HA.attribute "percentage" (String.fromFloat percentage)
+            , HA.attribute "percentage" (progress |> Publication.toPercentage |> String.fromFloat)
             , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map onPageChanged)
             , HE.on "ready" (JD.succeed onReady)
             , UI.Events.onHtmlMouseMove onMouseMove

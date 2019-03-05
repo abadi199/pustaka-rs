@@ -6,10 +6,11 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
 import UI.Background
+import UI.Events as Events
 
 
-slider : Int -> { onClick : Float -> msg, percentage : Float } -> Element msg
-slider height { onClick, percentage } =
+slider : Int -> { onMouseMove : msg, onClick : Float -> msg, percentage : Float } -> Element msg
+slider height { onMouseMove, onClick, percentage } =
     let
         percentageInHundred =
             percentage
@@ -28,6 +29,7 @@ slider height { onClick, percentage } =
         , pointer
         , htmlAttribute <| HA.id "mySlider"
         , onClickGetX onClick
+        , Events.onMouseMove onMouseMove
         ]
         [ row
             [ UI.Background.transparentDarkBlack
@@ -38,14 +40,14 @@ slider height { onClick, percentage } =
         ]
 
 
-compact : { onClick : Float -> msg, percentage : Float } -> Element msg
-compact { onClick, percentage } =
-    slider 5 { onClick = onClick, percentage = percentage }
+compact : { onMouseMove : msg, onClick : Float -> msg, percentage : Float } -> Element msg
+compact { onMouseMove, onClick, percentage } =
+    slider 5 { onMouseMove = onMouseMove, onClick = onClick, percentage = percentage }
 
 
-large : { onClick : Float -> msg, percentage : Float } -> Element msg
-large { onClick, percentage } =
-    slider 40 { onClick = onClick, percentage = percentage }
+large : { onMouseMove : msg, onClick : Float -> msg, percentage : Float } -> Element msg
+large { onMouseMove, onClick, percentage } =
+    slider 40 { onMouseMove = onMouseMove, onClick = onClick, percentage = percentage }
 
 
 onClickGetX : (Float -> msg) -> Attribute msg

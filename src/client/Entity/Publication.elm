@@ -2,12 +2,16 @@ module Entity.Publication exposing
     ( Data
     , MetaData
     , Page
+    , Progress
     , deleteThumbnail
     , emptyMetaData
     , get
     , listByCategory
+    , percentage
     , read
+    , toPercentage
     , update
+    , updateProgress
     , uploadThumbnail
     )
 
@@ -63,8 +67,39 @@ type alias Page =
     }
 
 
+type Progress
+    = Percentage Float
+
+
+percentage : Float -> Progress
+percentage =
+    Percentage
+
+
+toPercentage : Progress -> Float
+toPercentage progress =
+    case progress of
+        Percentage pct ->
+            pct
+
+
 
 -- HTTP
+
+
+updateProgress : { publicationId : Int, progress : Progress, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+updateProgress { publicationId, progress, msg } =
+    ReloadableData.Http.put
+        { initial = publicationId
+        , url = "/api/publication/progress/"
+        , decoder = JD.succeed ()
+        , json =
+            JE.object
+                [ ( "publication_id", JE.int publicationId )
+                , ( "progress", JE.float <| toPercentage progress )
+                ]
+        , msg = msg
+        }
 
 
 listByCategory : { categoryId : Int, msg : ReloadableWebData () (List MetaData) -> msg } -> Cmd msg

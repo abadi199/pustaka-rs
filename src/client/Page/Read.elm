@@ -48,7 +48,7 @@ type alias Model =
     , currentPage : PageView
     , previousUrl : Maybe String
     , overlayVisibility : HeaderVisibility
-    , percentage : Float
+    , progress : Publication.Progress
     , sliderReady : Bool
     }
 
@@ -80,7 +80,7 @@ initialModel pubId previousUrl =
     , currentPage = DoublePage 1
     , previousUrl = previousUrl
     , overlayVisibility = Visible { counter = overlayVisibilityDuration }
-    , percentage = 0
+    , progress = Publication.percentage 0
     , sliderReady = False
     }
 
@@ -104,7 +104,8 @@ subscriptions model =
 
 
 type Msg
-    = GetDataCompleted (ReloadableWebData Int Publication.Data)
+    = NoOp
+    | GetDataCompleted (ReloadableWebData Int Publication.Data)
     | NextPage
     | PreviousPage
     | LinkClicked String
@@ -135,7 +136,7 @@ view viewport model =
                         { viewport = viewport
                         , publication = pub
                         , pageView = model.currentPage
-                        , percentage = model.percentage
+                        , progress = model.progress
                         }
                     , right pub
                     ]
@@ -153,10 +154,18 @@ slider pub model =
             none
 
         ( True, Hidden ) ->
-            Slider.compact { percentage = model.percentage, onClick = SliderClicked }
+            Slider.compact
+                { onMouseMove = MouseMoved
+                , percentage = model.progress |> Publication.toPercentage
+                , onClick = SliderClicked
+                }
 
         ( True, Visible _ ) ->
-            Slider.large { percentage = model.percentage, onClick = SliderClicked }
+            Slider.large
+                { onMouseMove = MouseMoved
+                , percentage = model.progress |> Publication.toPercentage
+                , onClick = SliderClicked
+                }
 
 
 header : Publication.Data -> Model -> Element Msg
@@ -203,11 +212,11 @@ left pub previousUrl =
 pages :
     { viewport : Viewport
     , publication : Publication.Data
-    , percentage : Float
+    , progress : Publication.Progress
     , pageView : PageView
     }
     -> Element Msg
-pages { viewport, publication, percentage, pageView } =
+pages { viewport, publication, progress, pageView } =
     el
         [ centerX
         , UI.Events.onMouseMove MouseMoved
@@ -224,7 +233,7 @@ pages { viewport, publication, percentage, pageView } =
                 Epub.reader
                     { viewport = viewport
                     , publication = publication
-                    , percentage = percentage
+                    , progress = progress
                     , onPageChanged = PageChanged
                     , onMouseMove = MouseMoved
                     , onReady = Ready
@@ -273,6 +282,9 @@ nextPage currentPage =
 update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
 update key msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         GetDataCompleted data ->
             ( { model | publication = data }, Cmd.none )
 
@@ -292,10 +304,16 @@ update key msg model =
             ( { model | overlayVisibility = Visible { counter = overlayVisibilityDuration } }, Cmd.none )
 
         PageChanged percentage ->
-            ( { model | percentage = percentage }, Cmd.none )
+            ( { model | progress = Publication.percentage percentage }
+            , Publication.updateProgress
+                { publicationId = model.publication |> ReloadableData.toInitial
+                , progress = model.progress
+                , msg = always NoOp
+                }
+            )
 
         SliderClicked percentage ->
-            ( { model | percentage = percentage }, Cmd.none )
+            ( { model | progress = Publication.percentage percentage }, Cmd.none )
 
         Ready ->
             ( { model | sliderReady = True }, Cmd.none )
