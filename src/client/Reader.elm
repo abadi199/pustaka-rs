@@ -1,4 +1,9 @@
-module Reader exposing (PageView(..), getPageNumber)
+module Reader exposing
+    ( PageView(..)
+    , getPageNumber
+    , nextPage
+    , previousPage
+    )
 
 
 type PageView
@@ -14,3 +19,23 @@ getPageNumber pageView =
 
         SinglePage pageNumber ->
             pageNumber
+
+
+previousPage : PageView -> PageView
+previousPage currentPage =
+    case currentPage of
+        DoublePage a ->
+            DoublePage (a - 2)
+
+        SinglePage a ->
+            SinglePage (a - 1)
+
+
+nextPage : PageView -> PageView
+nextPage currentPage =
+    case currentPage of
+        DoublePage a ->
+            DoublePage (a + 2)
+
+        SinglePage a ->
+            SinglePage (a + 1)

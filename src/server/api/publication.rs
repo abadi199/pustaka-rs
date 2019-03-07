@@ -101,6 +101,7 @@ fn update_progress(
 }
 
 fn get_progress(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
+    println!("get_progress");
     state
         .db
         .send(GetProgress {

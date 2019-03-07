@@ -2,7 +2,6 @@ module Page.Read exposing
     ( Model
     , Msg
     , init
-    , initialModel
     , subscriptions
     , update
     , view
@@ -16,11 +15,12 @@ import Element as E exposing (..)
 import Element.Border as Border exposing (shadow)
 import Element.Events as Events exposing (onClick)
 import Element.Font as Font
-import Entity.MediaFormat as MediaFormat exposing (MediaFormat(..))
+import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
 import Entity.Publication as Publication
 import Html as H exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
+import Http
 import Json.Decode as JD
 import Keyboard
 import Reader exposing (PageView(..))
@@ -31,6 +31,7 @@ import Route
 import Task
 import UI.Action as Action
 import UI.Background as Background
+import UI.Error
 import UI.Events
 import UI.Icon as Icon
 import UI.Link as UI
@@ -45,13 +46,20 @@ import UI.Spacing as UI
 
 
 type alias Model =
-    { publication : ReloadableWebData Int Publication.Data
-    , currentPage : PageView
-    , previousUrl : Maybe String
-    , overlayVisibility : Header.Visibility
-    , progress : Publication.Progress
-    , sliderReady : Bool
+    { publication : ReloadableData ReadError Int PublicationType
+    , backUrl : String
+    , delta : Float
     }
+
+
+type ReadError
+    = HttpError Http.Error
+    | SimpleError String
+
+
+type PublicationType
+    = Epub Publication.Data Epub.Model
+    | Comic Publication.Data
 
 
 overlayVisibilityDuration : Float
@@ -64,22 +72,14 @@ overlayVisibilityDuration =
 
 
 init : Int -> Maybe String -> ( Model, Cmd Msg )
-init pubId previousUrl =
-    ( initialModel pubId previousUrl
+init publicationId previousUrl =
+    ( { publication = Loading publicationId
+      , backUrl = previousUrl |> Maybe.withDefault (Route.publicationUrl publicationId)
+      , delta = 0
+      }
     , Cmd.batch
-        [ Publication.read { publicationId = pubId, msg = GetDataCompleted } ]
+        [ Publication.read { publicationId = publicationId, msg = GetDataCompleted } ]
     )
-
-
-initialModel : Int -> Maybe String -> Model
-initialModel pubId previousUrl =
-    { publication = Loading pubId
-    , currentPage = DoublePage 1
-    , previousUrl = previousUrl
-    , overlayVisibility = Header.visible { counter = overlayVisibilityDuration }
-    , progress = Publication.percentage 0
-    , sliderReady = False
-    }
 
 
 
@@ -89,10 +89,16 @@ initialModel pubId previousUrl =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Browser.Events.onAnimationFrameDelta Tick
-        , Keyboard.onLeft PreviousPage
-        , Keyboard.onRight NextPage
-        , Keyboard.onEscape (LinkClicked <| Route.publicationUrl (ReloadableData.toInitial model.publication))
+        [ case model.publication |> ReloadableData.toMaybe of
+            Just (Epub publication epubModel) ->
+                Epub.subscription epubModel |> Sub.map EpubMsg
+
+            Just (Comic publication) ->
+                Sub.none
+
+            Nothing ->
+                Sub.none
+        , Keyboard.onEscape (LinkClicked model.backUrl)
         ]
 
 
@@ -103,15 +109,9 @@ subscriptions model =
 type Msg
     = NoOp
     | GetDataCompleted (ReloadableWebData Int Publication.Data)
-    | NextPage
-    | PreviousPage
     | LinkClicked String
-    | Tick Float
     | MouseMoved
-    | PageChanged Float
-    | SliderClicked Float
-    | Ready
-    | GetProgressCompleted (ReloadableWebData Int Float)
+    | EpubMsg Epub.Msg
 
 
 
@@ -122,22 +122,44 @@ view : Viewport -> Model -> Browser.Document Msg
 view viewport model =
     { title = "Read"
     , body =
-        UI.ReloadableData.view
-            (\pub ->
-                row
-                    [ inFront <| header pub model
-                    , inFront <| slider pub model
-                    , width fill
-                    ]
-                    [ left pub model.previousUrl
-                    , pages
-                        { viewport = viewport
-                        , publication = pub
-                        , pageView = model.currentPage
-                        , progress = model.progress
-                        }
-                    , right pub
-                    ]
+        UI.ReloadableData.custom
+            (\error ->
+                case error of
+                    SimpleError string ->
+                        UI.Error.string string
+
+                    HttpError httpError ->
+                        UI.Error.http httpError
+            )
+            (\publicationType ->
+                case publicationType of
+                    Comic publication ->
+                        layout identity
+                            { header = text "Header"
+                            , slider = text "Slider"
+                            , reader = text "Content"
+                            , previous = text "Left"
+                            , next = text "Right"
+                            }
+
+                    Epub publication epubModel ->
+                        layout EpubMsg
+                            { header =
+                                Epub.header
+                                    { backUrl = model.backUrl
+                                    , publication = publication
+                                    , model = epubModel
+                                    }
+                            , slider = Epub.slider epubModel
+                            , reader =
+                                Epub.reader
+                                    { viewport = viewport
+                                    , publication = publication
+                                    , model = epubModel
+                                    }
+                            , previous = Epub.previous publication
+                            , next = Epub.next publication
+                            }
             )
             model.publication
             |> E.layout []
@@ -145,112 +167,30 @@ view viewport model =
     }
 
 
-slider : Publication.Data -> Model -> Element Msg
-slider pub model =
-    case ( model.sliderReady, Header.isVisible model.overlayVisibility ) of
-        ( False, _ ) ->
-            none
-
-        ( True, False ) ->
-            Slider.compact
-                { onMouseMove = MouseMoved
-                , percentage = model.progress |> Publication.toPercentage
-                , onClick = SliderClicked
-                }
-
-        ( True, True ) ->
-            Slider.large
-                { onMouseMove = MouseMoved
-                , percentage = model.progress |> Publication.toPercentage
-                , onClick = SliderClicked
-                }
-
-
-header : Publication.Data -> Model -> Element Msg
-header pub model =
-    Header.header
-        { visibility = model.overlayVisibility
-        , previousUrl = model.previousUrl |> Maybe.withDefault (Route.publicationUrl pub.id)
-        , onMouseMove = MouseMoved
-        , onLinkClicked = LinkClicked
+layout :
+    (msg -> Msg)
+    ->
+        { previous : Element msg
+        , next : Element msg
+        , header : Element msg
+        , slider : Element msg
+        , reader : Element msg
         }
-
-
-left : Publication.Data -> Maybe String -> Element Msg
-left pub previousUrl =
-    row
-        [ onClick PreviousPage
-        , alignLeft
-        , height fill
-        , pointer
-        ]
-        [ Icon.previous Icon.large ]
-
-
-pages :
-    { viewport : Viewport
-    , publication : Publication.Data
-    , progress : Publication.Progress
-    , pageView : PageView
-    }
     -> Element Msg
-pages { viewport, publication, progress, pageView } =
-    el
-        [ centerX
-        , UI.Events.onMouseMove MouseMoved
-        ]
-    <|
-        case publication.mediaFormat of
-            CBZ ->
-                Comic.reader publication pageView
-
-            CBR ->
-                Comic.reader publication pageView
-
-            Epub ->
-                Epub.reader
-                    { viewport = viewport
-                    , publication = publication
-                    , progress = progress
-                    , onPageChanged = PageChanged
-                    , onMouseMove = MouseMoved
-                    , onReady = Ready
-                    , pageView = pageView
-                    }
-
-            NoMediaFormat ->
-                Debug.todo "No media format"
-
-
-right : Publication.Data -> Element Msg
-right pub =
+layout tagger { header, slider, reader, previous, next } =
     row
-        [ onClick NextPage
-        , alignRight
-        , height fill
-        , pointer
+        [ inFront <| E.map tagger <| header
+        , inFront <| E.map tagger <| slider
+        , width fill
         ]
-        [ Icon.next Icon.large ]
-
-
-previousPage : PageView -> PageView
-previousPage currentPage =
-    case currentPage of
-        DoublePage a ->
-            DoublePage (a - 2)
-
-        SinglePage a ->
-            SinglePage (a - 1)
-
-
-nextPage : PageView -> PageView
-nextPage currentPage =
-    case currentPage of
-        DoublePage a ->
-            DoublePage (a + 2)
-
-        SinglePage a ->
-            SinglePage (a + 1)
+        [ previous |> E.map tagger
+        , E.el
+            [ centerX
+            , UI.Events.onMouseMove MouseMoved
+            ]
+            (reader |> E.map tagger)
+        , next |> E.map tagger
+        ]
 
 
 
@@ -264,83 +204,68 @@ update key msg model =
             ( model, Cmd.none )
 
         GetDataCompleted data ->
-            let
-                mediaFormat =
-                    data
-                        |> Debug.log "publication"
-                        |> ReloadableData.toMaybe
-                        |> Maybe.map (\pub -> pub.mediaFormat)
-                        |> Debug.log "mediaFormat"
-            in
-            ( { model | publication = data }
-            , case mediaFormat of
-                Nothing ->
-                    Cmd.none
-
-                Just CBZ ->
-                    Task.perform (always Ready) (Task.succeed ())
-
-                Just CBR ->
-                    Task.perform (always Ready) (Task.succeed ())
-
-                Just Epub ->
-                    Cmd.none
-
-                Just NoMediaFormat ->
-                    Cmd.none
-            )
-
-        PreviousPage ->
-            ( { model | currentPage = previousPage model.currentPage }, Cmd.none )
-
-        NextPage ->
-            ( { model | currentPage = nextPage model.currentPage }, Cmd.none )
+            updateCompletedData data model
 
         LinkClicked url ->
             ( model, Nav.pushUrl key url )
 
-        Tick delta ->
-            ( updateHeaderVisibility delta model, Cmd.none )
-
         MouseMoved ->
-            ( { model | overlayVisibility = Header.visible { counter = overlayVisibilityDuration } }, Cmd.none )
+            ( model, Cmd.none )
 
-        PageChanged percentage ->
-            ( { model | progress = Publication.percentage percentage }
-            , Publication.updateProgress
-                { publicationId = model.publication |> ReloadableData.toInitial
-                , progress = model.progress
-                , msg = always NoOp
-                }
-            )
+        EpubMsg epubMsg ->
+            case model.publication |> ReloadableData.toMaybe of
+                Just (Epub publication epubModel) ->
+                    let
+                        ( updatedEpubModel, epubCmd ) =
+                            Epub.update key epubMsg { model = epubModel, publication = publication }
+                    in
+                    ( { model | publication = model.publication |> ReloadableData.map (always (Epub publication updatedEpubModel)) }
+                    , epubCmd |> Cmd.map EpubMsg
+                    )
 
-        SliderClicked percentage ->
-            ( { model | progress = Publication.percentage percentage }, Cmd.none )
+                _ ->
+                    ( model, Cmd.none )
 
-        Ready ->
-            ( { model | sliderReady = True }
-            , Publication.getProgress
-                { publicationId = ReloadableData.toInitial model.publication
-                , msg = GetProgressCompleted
-                }
-            )
 
-        GetProgressCompleted data ->
+updateCompletedData : ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
+updateCompletedData data model =
+    let
+        publicationId =
+            ReloadableData.toInitial data
+
+        mediaFormat =
             data
                 |> ReloadableData.toMaybe
-                |> Maybe.map (\percentage -> ( { model | progress = Publication.percentage percentage }, Cmd.none ))
-                |> Maybe.withDefault ( model, Cmd.none )
+                |> Maybe.map (\pub -> pub.mediaFormat)
 
+        publicationType : ReloadableData ReadError Int PublicationType
+        publicationType =
+            case mediaFormat of
+                Just MediaFormat.CBR ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.andThen (\publication -> Success publicationId (Comic publication))
 
-updateHeaderVisibility : Float -> Model -> Model
-updateHeaderVisibility delta model =
-    case Header.toCounter model.overlayVisibility of
-        Nothing ->
-            model
+                Just MediaFormat.CBZ ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.andThen (\publication -> Success publicationId (Comic publication))
 
-        Just counter ->
-            if counter - delta <= 0 then
-                { model | overlayVisibility = Header.hidden }
+                Just MediaFormat.Epub ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.andThen (\publication -> Success publicationId (Epub publication Epub.initialModel))
 
-            else
-                { model | overlayVisibility = Header.visible { counter = counter - delta } }
+                Just MediaFormat.NoMediaFormat ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+
+                Nothing ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+    in
+    ( { model | publication = publicationType }
+    , Cmd.none
+    )

@@ -1,4 +1,4 @@
-module UI.ReloadableData exposing (view)
+module UI.ReloadableData exposing (custom, view)
 
 import Element as E exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
@@ -6,8 +6,8 @@ import UI.Error
 import UI.Loading
 
 
-view : (a -> Element msg) -> ReloadableWebData i a -> Element msg
-view successElement reloadableData =
+custom : (e -> Element msg) -> (a -> Element msg) -> ReloadableData e i a -> Element msg
+custom errorElement successElement reloadableData =
     case reloadableData of
         NotAsked _ ->
             E.none
@@ -22,7 +22,12 @@ view successElement reloadableData =
             successElement publications
 
         Failure error _ ->
-            UI.Error.view <| Debug.toString error
+            errorElement error
 
         FailureWithData error _ publications ->
-            el [ inFront <| UI.Error.view <| Debug.toString error ] (successElement publications)
+            el [ inFront <| errorElement error ] (successElement publications)
+
+
+view : (a -> Element msg) -> ReloadableWebData i a -> Element msg
+view =
+    custom UI.Error.http

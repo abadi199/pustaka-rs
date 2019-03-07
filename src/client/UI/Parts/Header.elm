@@ -47,12 +47,12 @@ toCounter visibility =
 
 header :
     { visibility : Visibility
-    , previousUrl : String
+    , backUrl : String
     , onMouseMove : msg
     , onLinkClicked : String -> msg
     }
     -> Element msg
-header { visibility, previousUrl, onMouseMove, onLinkClicked } =
+header { visibility, backUrl, onMouseMove, onLinkClicked } =
     case visibility of
         Hidden ->
             none
@@ -75,7 +75,7 @@ header { visibility, previousUrl, onMouseMove, onLinkClicked } =
                         Action.link
                             { text = "Back"
                             , icon = Icon.previous Icon.small
-                            , url = previousUrl
+                            , url = backUrl
                             , onClick = onLinkClicked
                             }
                 ]

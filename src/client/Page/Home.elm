@@ -30,6 +30,7 @@ import UI.Parts.BreadCrumb as BreadCrumb
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.Poster as UI
+import UI.ReloadableData
 import UI.Spacing as UI
 
 
@@ -80,33 +81,9 @@ view key categories model =
             categories
                 |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , content = mainSection model.publications
+        , content = UI.ReloadableData.view publicationsView model.publications
         , dialog = Dialog.none
         }
-
-
-mainSection : ReloadableWebData () (List Publication.MetaData) -> Element Msg
-mainSection data =
-    el []
-        (case data of
-            NotAsked _ ->
-                E.none
-
-            Loading _ ->
-                UI.Loading.view
-
-            Reloading _ publications ->
-                el [ inFront UI.Loading.view ] (publicationsView publications)
-
-            Success _ publications ->
-                publicationsView publications
-
-            Failure error _ ->
-                UI.Error.view <| Debug.toString error
-
-            FailureWithData error _ publications ->
-                el [ inFront <| UI.Error.view <| Debug.toString error ] (publicationsView publications)
-        )
 
 
 publicationsView : List Publication.MetaData -> Element Msg

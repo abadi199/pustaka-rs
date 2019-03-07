@@ -76,6 +76,7 @@ class EpubViewer extends HTMLElement {
   }
 
   keyListener = (event: KeyboardEvent) => {
+    console.log(event);
     switch (event.key) {
       case "ArrowLeft":
         this.rendition.prev();

@@ -1,9 +1,11 @@
 module ReloadableData exposing
     ( ReloadableData(..)
     , ReloadableWebData
+    , andThen
     , join
     , loading
     , map
+    , mapErr
     , mapF
     , refresh
     , setError
@@ -99,6 +101,28 @@ refresh prev next =
             next
 
 
+andThen : (a -> ReloadableData e i b) -> ReloadableData e i a -> ReloadableData e i b
+andThen f reloadableData =
+    case reloadableData of
+        NotAsked i ->
+            NotAsked i
+
+        Success i a ->
+            f a
+
+        Reloading i a ->
+            f a
+
+        Loading i ->
+            Loading i
+
+        Failure e i ->
+            Failure e i
+
+        FailureWithData e i a ->
+            f a
+
+
 map : (a -> b) -> ReloadableData e i a -> ReloadableData e i b
 map f reloadableData =
     case reloadableData of
@@ -119,6 +143,28 @@ map f reloadableData =
 
         Failure e i ->
             Failure e i
+
+
+mapErr : (e -> ee) -> ReloadableData e i a -> ReloadableData ee i a
+mapErr f reloadableData =
+    case reloadableData of
+        Success i a ->
+            Success i a
+
+        Reloading i a ->
+            Reloading i a
+
+        FailureWithData e i a ->
+            FailureWithData (f e) i a
+
+        NotAsked i ->
+            NotAsked i
+
+        Loading i ->
+            Loading i
+
+        Failure e i ->
+            Failure (f e) i
 
 
 mapF : (b -> a) -> (ReloadableData e i a -> msg) -> (ReloadableData e i b -> msg)
