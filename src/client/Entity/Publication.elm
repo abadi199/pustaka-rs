@@ -80,7 +80,6 @@ type alias Data =
     , title : String
     , thumbnail : Thumbnail
     , totalPages : Int
-    , currentPages : List Page
     , mediaFormat : MediaFormat
     }
 
@@ -222,13 +221,12 @@ metaDataDecoder =
 
 decoder : JD.Decoder Data
 decoder =
-    JD.map7 Data
+    JD.map6 Data
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
         (JD.field "thumbnail_url" thumbnailDecoder)
         (JD.field "total_pages" JD.int)
-        (JD.maybe (JD.field "pages" (JD.list pageDecoder)) |> JD.map (Maybe.withDefault []))
         (JD.field "media_format" MediaFormat.decoder)
 
 
