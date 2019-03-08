@@ -1,5 +1,6 @@
 module Entity.Publication exposing
     ( Data
+    , Id
     , MetaData
     , Page
     , Progress
@@ -7,6 +8,9 @@ module Entity.Publication exposing
     , emptyMetaData
     , get
     , getProgress
+    , id
+    , idToInt
+    , idToString
     , listByCategory
     , percentage
     , read
@@ -24,6 +28,25 @@ import Json.Encode as JE
 import ReloadableData exposing (ReloadableWebData)
 import ReloadableData.Http
 import Task exposing (Task)
+
+
+type Id
+    = Id Int
+
+
+id : Int -> Id
+id =
+    Id
+
+
+idToString : Id -> String
+idToString (Id i) =
+    String.fromInt i
+
+
+idToInt : Id -> Int
+idToInt (Id i) =
+    i
 
 
 

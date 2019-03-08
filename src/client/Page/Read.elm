@@ -59,12 +59,27 @@ type ReadError
 
 type PublicationType
     = Epub Publication.Data Epub.Model
-    | Comic Publication.Data
+    | Comic Publication.Data Comic.Model
 
 
-overlayVisibilityDuration : Float
-overlayVisibilityDuration =
-    2000
+toEpub : PublicationType -> Maybe ( Publication.Data, Epub.Model )
+toEpub publicationType =
+    case publicationType of
+        Epub publication model ->
+            Just ( publication, model )
+
+        _ ->
+            Nothing
+
+
+toComic : PublicationType -> Maybe ( Publication.Data, Comic.Model )
+toComic publicationType =
+    case publicationType of
+        Comic publication model ->
+            Just ( publication, model )
+
+        _ ->
+            Nothing
 
 
 
@@ -93,8 +108,8 @@ subscriptions model =
             Just (Epub publication epubModel) ->
                 Epub.subscription epubModel |> Sub.map EpubMsg
 
-            Just (Comic publication) ->
-                Sub.none
+            Just (Comic publication comicModel) ->
+                Comic.subscription comicModel |> Sub.map ComicMsg
 
             Nothing ->
                 Sub.none
@@ -112,6 +127,7 @@ type Msg
     | LinkClicked String
     | MouseMoved
     | EpubMsg Epub.Msg
+    | ComicMsg Comic.Msg
 
 
 
@@ -133,13 +149,22 @@ view viewport model =
             )
             (\publicationType ->
                 case publicationType of
-                    Comic publication ->
-                        layout identity
-                            { header = text "Header"
-                            , slider = text "Slider"
-                            , reader = text "Content"
-                            , previous = text "Left"
-                            , next = text "Right"
+                    Comic publication comicModel ->
+                        layout ComicMsg
+                            { header =
+                                Comic.header
+                                    { backUrl = model.backUrl
+                                    , publication = publication
+                                    , model = comicModel
+                                    }
+                            , slider = Comic.slider comicModel
+                            , reader =
+                                Comic.reader
+                                    { model = comicModel
+                                    , publication = publication
+                                    }
+                            , previous = Comic.previous
+                            , next = Comic.next
                             }
 
                     Epub publication epubModel ->
@@ -157,8 +182,8 @@ view viewport model =
                                     , publication = publication
                                     , model = epubModel
                                     }
-                            , previous = Epub.previous publication
-                            , next = Epub.next publication
+                            , previous = Epub.previous
+                            , next = Epub.next
                             }
             )
             model.publication
@@ -182,11 +207,14 @@ layout tagger { header, slider, reader, previous, next } =
         [ inFront <| E.map tagger <| header
         , inFront <| E.map tagger <| slider
         , width fill
+        , height fill
         ]
         [ previous |> E.map tagger
         , E.el
             [ centerX
             , UI.Events.onMouseMove MouseMoved
+            , width fill
+            , height fill
             ]
             (reader |> E.map tagger)
         , next |> E.map tagger
@@ -213,18 +241,41 @@ update key msg model =
             ( model, Cmd.none )
 
         EpubMsg epubMsg ->
-            case model.publication |> ReloadableData.toMaybe of
-                Just (Epub publication epubModel) ->
-                    let
-                        ( updatedEpubModel, epubCmd ) =
-                            Epub.update key epubMsg { model = epubModel, publication = publication }
-                    in
-                    ( { model | publication = model.publication |> ReloadableData.map (always (Epub publication updatedEpubModel)) }
-                    , epubCmd |> Cmd.map EpubMsg
-                    )
-
-                _ ->
+            model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.andThen toEpub
+                |> Maybe.map (updateEpub key epubMsg model)
+                |> Maybe.withDefault
                     ( model, Cmd.none )
+
+        ComicMsg comicMsg ->
+            model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.andThen toComic
+                |> Maybe.map (updateComic key comicMsg model)
+                |> Maybe.withDefault ( model, Cmd.none )
+
+
+updateEpub : Nav.Key -> Epub.Msg -> Model -> ( Publication.Data, Epub.Model ) -> ( Model, Cmd Msg )
+updateEpub key epubMsg model ( publication, epubModel ) =
+    let
+        ( updatedEpubModel, epubCmd ) =
+            Epub.update key epubMsg { model = epubModel, publication = publication }
+    in
+    ( { model | publication = model.publication |> ReloadableData.map (always (Epub publication updatedEpubModel)) }
+    , epubCmd |> Cmd.map EpubMsg
+    )
+
+
+updateComic : Nav.Key -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model ) -> ( Model, Cmd Msg )
+updateComic key comicMsg model ( publication, comicModel ) =
+    let
+        ( updatedComicModel, comicCmd ) =
+            Comic.update key comicMsg { model = comicModel, publication = publication }
+    in
+    ( { model | publication = model.publication |> ReloadableData.map (always (Comic publication updatedComicModel)) }
+    , comicCmd |> Cmd.map ComicMsg
+    )
 
 
 updateCompletedData : ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
@@ -238,34 +289,47 @@ updateCompletedData data model =
                 |> ReloadableData.toMaybe
                 |> Maybe.map (\pub -> pub.mediaFormat)
 
-        publicationType : ReloadableData ReadError Int PublicationType
-        publicationType =
+        ( publicationType, cmd ) =
             case mediaFormat of
                 Just MediaFormat.CBR ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Success publicationId (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> extract
+                        |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
                 Just MediaFormat.CBZ ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Success publicationId (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> extract
+                        |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
                 Just MediaFormat.Epub ->
                     data
                         |> ReloadableData.mapErr HttpError
                         |> ReloadableData.andThen (\publication -> Success publicationId (Epub publication Epub.initialModel))
+                        |> (\a -> ( a, Cmd.none ))
 
                 Just MediaFormat.NoMediaFormat ->
                     data
                         |> ReloadableData.mapErr HttpError
                         |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> (\a -> ( a, Cmd.none ))
 
                 Nothing ->
                     data
                         |> ReloadableData.mapErr HttpError
                         |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> (\a -> ( a, Cmd.none ))
     in
     ( { model | publication = publicationType }
-    , Cmd.none
+    , cmd
+    )
+
+
+extract : ReloadableData e i ( a, b ) -> ( ReloadableData e i a, Maybe b )
+extract data =
+    ( data |> ReloadableData.map (\( a, b ) -> a)
+    , data |> ReloadableData.toMaybe |> Maybe.map (\( a, b ) -> b)
     )

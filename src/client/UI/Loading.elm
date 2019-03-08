@@ -5,4 +5,4 @@ import Element exposing (..)
 
 view : Element msg
 view =
-    el [] (text "Loading...")
+    el [ centerX, centerY ] (text "Loading...")

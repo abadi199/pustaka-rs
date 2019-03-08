@@ -1,17 +1,20 @@
 module ReloadableData.Http exposing
     ( delete
     , get
+    , image
     , post
     , put
     , upload
     )
 
+import Bytes exposing (Bytes)
 import File exposing (File)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Task exposing (Task)
+import UI.Image exposing (Image)
 
 
 
@@ -29,6 +32,23 @@ get { initial, url, msg, decoder } =
     Http.get
         { url = url
         , expect = Http.expectJson (toResultMsg initial msg) decoder
+        }
+
+
+type Base64
+    = Base64 String
+
+
+image :
+    { initial : i
+    , url : String
+    , msg : ReloadableWebData i Image -> msg
+    }
+    -> Cmd msg
+image { initial, url, msg } =
+    Http.get
+        { url = url
+        , expect = Http.expectBytesResponse (toResultMsg initial msg) toImage
         }
 
 
@@ -125,3 +145,22 @@ toReloadableWebData i result =
 toResultMsg : i -> (ReloadableWebData i a -> msg) -> (Result Http.Error a -> msg)
 toResultMsg i msg =
     \result -> msg (toReloadableWebData i result)
+
+
+toImage : Http.Response Bytes -> Result Http.Error Image
+toImage response =
+    case response of
+        Http.BadUrl_ url ->
+            Err (Http.BadUrl url)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ metadata bytes ->
+            Err (Http.BadStatus metadata.statusCode)
+
+        Http.GoodStatus_ metadata bytes ->
+            Ok <| UI.Image.image bytes

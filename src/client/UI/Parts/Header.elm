@@ -6,6 +6,7 @@ import Route
 import UI.Action as Action
 import UI.Background as Background
 import UI.Events
+import UI.Heading as Heading
 import UI.Icon as Icon
 import UI.Spacing as UI
 
@@ -50,9 +51,10 @@ header :
     , backUrl : String
     , onMouseMove : msg
     , onLinkClicked : String -> msg
+    , title : String
     }
     -> Element msg
-header { visibility, backUrl, onMouseMove, onLinkClicked } =
+header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
     case visibility of
         Hidden ->
             none
@@ -78,4 +80,5 @@ header { visibility, backUrl, onMouseMove, onLinkClicked } =
                             , url = backUrl
                             , onClick = onLinkClicked
                             }
+                , el [ centerX ] (Heading.heading 1 title)
                 ]

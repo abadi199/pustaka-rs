@@ -7,3 +7,4 @@ app/**/*.js
 .env
 *.map
 .cache/
+.idea

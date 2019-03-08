@@ -117,6 +117,7 @@ header { backUrl, publication, model } =
         , backUrl = backUrl
         , onMouseMove = MouseMoved
         , onLinkClicked = LinkClicked
+        , title = publication.title
         }
 
 
@@ -141,8 +142,8 @@ slider model =
                 }
 
 
-previous : Publication.Data -> Element Msg
-previous pub =
+previous : Element Msg
+previous =
     row
         [ onClick PreviousPage
         , alignLeft
@@ -152,8 +153,8 @@ previous pub =
         [ Icon.previous Icon.large ]
 
 
-next : Publication.Data -> Element Msg
-next pub =
+next : Element Msg
+next =
     row
         [ onClick NextPage
         , alignRight
