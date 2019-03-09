@@ -16,7 +16,7 @@ custom errorElement successElement reloadableData =
             UI.Loading.view
 
         Reloading _ publications ->
-            el [ inFront UI.Loading.view ] (successElement publications)
+            el [ inFront UI.Loading.view, width fill, height fill ] (successElement publications)
 
         Success _ publications ->
             successElement publications
@@ -25,7 +25,7 @@ custom errorElement successElement reloadableData =
             errorElement error
 
         FailureWithData error _ publications ->
-            el [ inFront <| errorElement error ] (successElement publications)
+            el [ inFront <| errorElement error, width fill, height fill ] (successElement publications)
 
 
 view : (a -> Element msg) -> ReloadableWebData i a -> Element msg

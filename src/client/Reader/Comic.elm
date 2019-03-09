@@ -11,6 +11,7 @@ import Html.Attributes as HA
 import Reader exposing (PageView(..))
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
+import UI.Error
 import UI.Events
 import UI.Icon as Icon
 import UI.Image as Image exposing (Image)
@@ -100,14 +101,18 @@ reader { publication, model } =
                 , Background.transparentMediumBlack
                 ]
               <|
-                UI.ReloadableData.view Image.fullHeight model.leftPage
+                UI.ReloadableData.view
+                    (\pageImage -> el [ alignRight ] (Image.fullHeight pageImage))
+                    model.leftPage
             , el
                 [ width fill
                 , height fill
                 , Background.transparentDarkBlack
                 ]
               <|
-                UI.ReloadableData.view Image.fullHeight model.rightPage
+                UI.ReloadableData.view
+                    (\pageImage -> el [ alignLeft ] (Image.fullHeight pageImage))
+                    model.rightPage
             ]
 
 
