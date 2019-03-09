@@ -220,16 +220,11 @@ update key msg { model, publication } =
             model.overlayVisibility
                 |> Header.toCounter
                 |> Maybe.map (\currentCounter -> currentCounter - delta)
+                |> Maybe.map Header.visibilityFromCounter
                 |> Maybe.map
-                    (\currentCounter ->
-                        if currentCounter < 0 then
-                            ( { model | overlayVisibility = Header.hidden }
-                            , Cmd.none
-                            )
-
-                        else
-                            ( { model | overlayVisibility = Header.visible { counter = currentCounter } }
-                            , Cmd.none
-                            )
+                    (\visibility ->
+                        ( { model | overlayVisibility = visibility }
+                        , Cmd.none
+                        )
                     )
                 |> Maybe.withDefault ( model, Cmd.none )

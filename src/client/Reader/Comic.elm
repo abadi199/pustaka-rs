@@ -1,6 +1,7 @@
 module Reader.Comic exposing (Model, Msg, header, init, next, previous, reader, slider, subscription, update)
 
 import Browser.Dom exposing (Viewport)
+import Browser.Events
 import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Events as EE exposing (onClick)
@@ -67,12 +68,19 @@ type Msg
     | SliderClicked Float
     | LeftImageLoaded (ReloadableWebData Int Image)
     | RightImageLoaded (ReloadableWebData Int Image)
+    | Tick Float
     | GetProgressCompleted (ReloadableWebData Int Float)
 
 
 subscription : Model -> Sub Msg
 subscription model =
-    Sub.none
+    Sub.batch
+        [ if model.overlayVisibility |> Header.isVisible then
+            Browser.Events.onAnimationFrameDelta Tick
+
+          else
+            Sub.none
+        ]
 
 
 
@@ -92,7 +100,12 @@ header { backUrl, publication, model } =
 
 reader : { publication : Publication.Data, model : Model } -> Element Msg
 reader { publication, model } =
-    el [ width fill, height fill ] <|
+    el
+        [ width fill
+        , height fill
+        , UI.Events.onMouseMove MouseMoved
+        ]
+    <|
         E.row
             [ width fill, height fill ]
             [ el
@@ -118,20 +131,23 @@ reader { publication, model } =
 
 slider : Model -> Element Msg
 slider model =
-    case Header.isVisible model.overlayVisibility of
-        False ->
+    case ( Header.isVisible model.overlayVisibility, model.progress |> ReloadableData.toMaybe ) of
+        ( False, Just progress ) ->
             Slider.compact
                 { onMouseMove = MouseMoved
-                , percentage = 0.25
+                , percentage = progress |> Publication.toPercentage
                 , onClick = SliderClicked
                 }
 
-        True ->
+        ( True, Just progress ) ->
             Slider.large
                 { onMouseMove = MouseMoved
-                , percentage = 0.25
+                , percentage = progress |> Publication.toPercentage
                 , onClick = SliderClicked
                 }
+
+        ( _, Nothing ) ->
+            none
 
 
 previous : Element Msg
@@ -192,6 +208,25 @@ update key msg { model, publication } =
         PreviousPage ->
             updatePages { publication = publication, model = model, pageUpdater = \page -> page - 2 }
 
+        Tick delta ->
+            model.overlayVisibility
+                |> Header.toCounter
+                |> Maybe.map (\currentCounter -> currentCounter - delta)
+                |> Maybe.map Header.visibilityFromCounter
+                |> Maybe.map
+                    (\visibility ->
+                        ( { model | overlayVisibility = visibility }
+                        , Cmd.none
+                        )
+                    )
+                |> Maybe.withDefault ( model, Cmd.none )
+
+        MouseMoved ->
+            ( { model | overlayVisibility = Header.visible counter }, Cmd.none )
+
+        SliderClicked float ->
+            updateProgress { publication = publication, model = model, data = ReloadableData.Success publication.id float }
+
         _ ->
             ( model, Cmd.none )
 
@@ -228,7 +263,11 @@ updateProgress : { publication : Publication.Data, model : Model, data : Reloada
 updateProgress { publication, model, data } =
     let
         updatedModel =
-            { model | progress = data |> ReloadableData.map Publication.percentage }
+            { model
+                | progress = data |> ReloadableData.map Publication.percentage
+                , leftPage = ReloadableData.loading model.leftPage
+                , rightPage = ReloadableData.loading model.rightPage
+            }
     in
     ( updatedModel
     , fetchPages { publication = publication, progress = updatedModel.progress }

@@ -25,7 +25,12 @@ custom errorElement successElement reloadableData =
             errorElement error
 
         FailureWithData error _ publications ->
-            el [ inFront <| errorElement error, width fill, height fill ] (successElement publications)
+            el
+                [ inFront <| errorElement error
+                , width fill
+                , height fill
+                ]
+                (successElement publications)
 
 
 view : (a -> Element msg) -> ReloadableWebData i a -> Element msg
