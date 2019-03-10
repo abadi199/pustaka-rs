@@ -32,7 +32,7 @@ slider height { onMouseMove, onClick, percentage } =
         , Events.onMouseMove onMouseMove
         ]
         [ row
-            [ UI.Background.transparentDarkBlack
+            [ UI.Background.transparentHeavyBlack
             , E.height fill
             , htmlAttribute <| HA.style "flex-basis" (String.fromFloat percentageInHundred ++ "%")
             ]

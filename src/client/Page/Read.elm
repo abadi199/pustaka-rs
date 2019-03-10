@@ -153,16 +153,11 @@ view viewport model =
                         layout ComicMsg
                             { header =
                                 Comic.header
-                                    { backUrl = model.backUrl
-                                    , publication = publication
-                                    , model = comicModel
-                                    }
+                                    { backUrl = model.backUrl }
+                                    publication
+                                    comicModel
                             , slider = Comic.slider comicModel
-                            , reader =
-                                Comic.reader
-                                    { model = comicModel
-                                    , publication = publication
-                                    }
+                            , reader = Comic.reader publication comicModel
                             , previous = Comic.previous
                             , next = Comic.next
                             }
@@ -271,9 +266,13 @@ updateComic : Nav.Key -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model )
 updateComic key comicMsg model ( publication, comicModel ) =
     let
         ( updatedComicModel, comicCmd ) =
-            Comic.update key comicMsg { model = comicModel, publication = publication }
+            Comic.update key comicMsg comicModel publication
     in
-    ( { model | publication = model.publication |> ReloadableData.map (always (Comic publication updatedComicModel)) }
+    ( { model
+        | publication =
+            model.publication
+                |> ReloadableData.map (always (Comic publication updatedComicModel))
+      }
     , comicCmd |> Cmd.map ComicMsg
     )
 

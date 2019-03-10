@@ -9,6 +9,7 @@ import Entity.Image as Image
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
+import Keyboard
 import Reader exposing (PageView(..))
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
@@ -80,6 +81,8 @@ subscription model =
 
           else
             Sub.none
+        , Keyboard.onLeft PreviousPage
+        , Keyboard.onRight NextPage
         ]
 
 
@@ -87,8 +90,8 @@ subscription model =
 -- VIEW
 
 
-header : { backUrl : String, publication : Publication.Data, model : Model } -> Element Msg
-header { backUrl, publication, model } =
+header : { backUrl : String } -> Publication.Data -> Model -> Element Msg
+header { backUrl } publication model =
     Header.header
         { visibility = model.overlayVisibility
         , backUrl = backUrl
@@ -98,8 +101,8 @@ header { backUrl, publication, model } =
         }
 
 
-reader : { publication : Publication.Data, model : Model } -> Element Msg
-reader { publication, model } =
+reader : Publication.Data -> Model -> Element Msg
+reader publication model =
     el
         [ width fill
         , height fill
@@ -120,7 +123,7 @@ reader { publication, model } =
             , el
                 [ width fill
                 , height fill
-                , Background.transparentDarkBlack
+                , Background.transparentHeavyBlack
                 ]
               <|
                 UI.ReloadableData.view
@@ -190,8 +193,8 @@ imageUrl pubId pageNum =
         ++ String.fromInt pageNum
 
 
-update : Nav.Key -> Msg -> { model : Model, publication : Publication.Data } -> ( Model, Cmd Msg )
-update key msg { model, publication } =
+update : Nav.Key -> Msg -> Model -> Publication.Data -> ( Model, Cmd Msg )
+update key msg model publication =
     case msg of
         LeftImageLoaded data ->
             ( { model | leftPage = data }, Cmd.none )
@@ -200,13 +203,13 @@ update key msg { model, publication } =
             ( { model | rightPage = data }, Cmd.none )
 
         GetProgressCompleted data ->
-            updateProgress { publication = publication, model = model, data = data }
+            updateProgress publication model data
 
         NextPage ->
-            updatePages { publication = publication, model = model, pageUpdater = \page -> page + 2 }
+            updatePages publication model { pageUpdater = \page -> page + 2 }
 
         PreviousPage ->
-            updatePages { publication = publication, model = model, pageUpdater = \page -> page - 2 }
+            updatePages publication model { pageUpdater = \page -> page - 2 }
 
         Tick delta ->
             model.overlayVisibility
@@ -225,28 +228,31 @@ update key msg { model, publication } =
             ( { model | overlayVisibility = Header.visible counter }, Cmd.none )
 
         SliderClicked float ->
-            updateProgress { publication = publication, model = model, data = ReloadableData.Success publication.id float }
+            updateProgress publication model (ReloadableData.Success publication.id float)
 
         _ ->
             ( model, Cmd.none )
 
 
-updatePages { model, publication, pageUpdater } =
+updatePages : Publication.Data -> Model -> { pageUpdater : Int -> Int } -> ( Model, Cmd Msg )
+updatePages publication model { pageUpdater } =
     let
-        updatedModel =
-            { model
-                | progress =
-                    model.progress
-                        |> ReloadableData.map (toPageNumber { totalPages = publication.totalPages })
-                        |> ReloadableData.map pageUpdater
-                        |> ReloadableData.map (toProgress { totalPages = publication.totalPages })
-                , leftPage = ReloadableData.loading model.leftPage
-                , rightPage = ReloadableData.loading model.rightPage
-            }
+        data =
+            model.progress
+                |> ReloadableData.map (toPageNumber { totalPages = publication.totalPages })
+                |> ReloadableData.map pageUpdater
+                |> ReloadableData.map (toPercentage { totalPages = publication.totalPages })
     in
-    ( updatedModel
-    , fetchPages { publication = publication, progress = updatedModel.progress }
-    )
+    if
+        data
+            |> ReloadableData.map (\pct -> pct * toFloat publication.totalPages |> round)
+            |> ReloadableData.map (\pageNumber -> publication.totalPages > pageNumber && pageNumber >= 0)
+            |> ReloadableData.withDefault False
+    then
+        updateProgress publication model data
+
+    else
+        ( model, Cmd.none ) |> Debug.log "no more pages"
 
 
 toPageNumber : { totalPages : Int } -> Publication.Progress -> Int
@@ -254,13 +260,13 @@ toPageNumber { totalPages } progress =
     Publication.toPercentage progress * toFloat totalPages |> round
 
 
-toProgress : { totalPages : Int } -> Int -> Publication.Progress
-toProgress { totalPages } page =
-    toFloat page / toFloat totalPages |> Publication.percentage
+toPercentage : { totalPages : Int } -> Int -> Float
+toPercentage { totalPages } page =
+    toFloat page / toFloat totalPages
 
 
-updateProgress : { publication : Publication.Data, model : Model, data : ReloadableWebData Int Float } -> ( Model, Cmd Msg )
-updateProgress { publication, model, data } =
+updateProgress : Publication.Data -> Model -> ReloadableWebData Int Float -> ( Model, Cmd Msg )
+updateProgress publication model data =
     let
         updatedModel =
             { model
@@ -270,12 +276,24 @@ updateProgress { publication, model, data } =
             }
     in
     ( updatedModel
-    , fetchPages { publication = publication, progress = updatedModel.progress }
+    , Cmd.batch
+        [ fetchPages publication updatedModel.progress
+        , updatedModel.progress
+            |> ReloadableData.map
+                (\progress ->
+                    Publication.updateProgress
+                        { publicationId = publication.id
+                        , progress = progress
+                        , msg = always NoOp
+                        }
+                )
+            |> ReloadableData.withDefault Cmd.none
+        ]
     )
 
 
-fetchPages : { publication : Publication.Data, progress : ReloadableWebData Int Publication.Progress } -> Cmd Msg
-fetchPages { publication, progress } =
+fetchPages : Publication.Data -> ReloadableWebData Int Publication.Progress -> Cmd Msg
+fetchPages publication progress =
     let
         maybeLeftPage =
             progress

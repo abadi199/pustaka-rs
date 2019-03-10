@@ -12,6 +12,7 @@ module ReloadableData exposing
     , toError
     , toInitial
     , toMaybe
+    , withDefault
     )
 
 import Http
@@ -40,6 +41,11 @@ loading reloadableData =
         |> toMaybe
         |> Maybe.map (Reloading i)
         |> Maybe.withDefault (Loading i)
+
+
+withDefault : a -> ReloadableData e i a -> a
+withDefault a data =
+    data |> toMaybe |> Maybe.withDefault a
 
 
 join : Result a a -> a

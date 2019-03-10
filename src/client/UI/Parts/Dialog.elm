@@ -71,7 +71,7 @@ toElement dialog =
             el
                 [ width fill
                 , height fill
-                , Background.transparentDarkBlack
+                , Background.transparentHeavyBlack
                 , onClick onClose
                 ]
                 element

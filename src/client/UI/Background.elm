@@ -1,8 +1,11 @@
 module UI.Background exposing
     ( solidWhite
-    , transparentDarkBlack
+    , transparentHeavyBlack
+    , transparentHeavyWhite
     , transparentLightBlack
+    , transparentLightWhite
     , transparentMediumBlack
+    , transparentMediumWhite
     )
 
 import Element exposing (..)
@@ -14,13 +17,28 @@ solidWhite =
     color (rgba 1 1 1 1)
 
 
+transparentLightWhite : Attribute msg
+transparentLightWhite =
+    color (rgba 1 1 1 0.025)
+
+
+transparentHeavyWhite : Attribute msg
+transparentHeavyWhite =
+    color (rgba 1 1 1 0.25)
+
+
+transparentMediumWhite : Attribute msg
+transparentMediumWhite =
+    color (rgba 1 1 1 0.125)
+
+
 transparentLightBlack : Attribute msg
 transparentLightBlack =
     color (rgba 0 0 0 0.025)
 
 
-transparentDarkBlack : Attribute msg
-transparentDarkBlack =
+transparentHeavyBlack : Attribute msg
+transparentHeavyBlack =
     color (rgba 0 0 0 0.25)
 
 
