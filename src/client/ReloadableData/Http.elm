@@ -117,10 +117,6 @@ upload :
     }
     -> Cmd msg
 upload { initial, url, msg, fileName, file, decoder } =
-    let
-        _ =
-            Debug.log "File.mime" (File.mime file)
-    in
     Http.post
         { url = url
         , body = Http.multipartBody [ Http.filePart fileName file ]

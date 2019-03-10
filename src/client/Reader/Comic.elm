@@ -252,7 +252,7 @@ updatePages publication model { pageUpdater } =
         updateProgress publication model data
 
     else
-        ( model, Cmd.none ) |> Debug.log "no more pages"
+        ( model, Cmd.none )
 
 
 toPageNumber : { totalPages : Int } -> Publication.Progress -> Int
