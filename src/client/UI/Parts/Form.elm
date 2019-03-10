@@ -58,7 +58,7 @@ viewActions { onSubmit } =
             [ Action.large <|
                 Action.clickable
                     { text = "Save"
-                    , icon = Icon.edit Icon.small
+                    , icon = Icon.save Icon.small
                     , onClick = onSubmit
                     }
             ]

@@ -149,7 +149,7 @@ viewPoster { isHover, publication } =
                     { actions =
                         [ Action.compact <|
                             Action.clickable
-                                { text = "Delete"
+                                { text = "Delete Poster"
                                 , icon = Icon.delete Icon.large
                                 , onClick = DeleteClicked
                                 }

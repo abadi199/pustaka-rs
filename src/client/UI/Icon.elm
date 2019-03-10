@@ -10,12 +10,13 @@ module UI.Icon exposing
     , none
     , previous
     , read
+    , save
     , small
     )
 
 import Element exposing (..)
-import Svg exposing (..)
-import Svg.Attributes as S exposing (..)
+import Svg as S exposing (..)
+import Svg.Attributes as SA exposing (..)
 
 
 type alias Icon msg =
@@ -47,24 +48,24 @@ smallInt =
     24
 
 
-height : Size -> Svg.Attribute msg
+height : Size -> S.Attribute msg
 height size =
     case size of
         Small ->
-            S.height <| String.fromInt smallInt
+            SA.height <| String.fromInt smallInt
 
         Large ->
-            S.height <| String.fromInt largeInt
+            SA.height <| String.fromInt largeInt
 
 
-width : Size -> Svg.Attribute msg
+width : Size -> S.Attribute msg
 width size =
     case size of
         Small ->
-            S.width <| String.fromInt smallInt
+            SA.width <| String.fromInt smallInt
 
         Large ->
-            S.width <| String.fromInt largeInt
+            SA.width <| String.fromInt largeInt
 
 
 none : Icon msg
@@ -75,10 +76,10 @@ none =
 expandMore : Size -> Icon msg
 expandMore size =
     html <|
-        svg [ width size, height size, viewBox "0 0 24 24" ]
-            [ Svg.path [ d "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M14.83 16.42L24 25.59l9.17-9.17L36 19.25l-12 12-12-12z" ]
                 []
-            , Svg.path [ d "M0 0h24v24H0z", S.fill "none" ]
+            , S.path [ d "M0-.75h48v48H0z", SA.fill "none" ]
                 []
             ]
 
@@ -86,10 +87,10 @@ expandMore size =
 expandLess : Size -> Icon msg
 expandLess size =
     html <|
-        svg [ width size, height size, viewBox "0 0 24 24" ]
-            [ Svg.path [ d "M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M14.83 30.83L24 21.66l9.17 9.17L36 28 24 16 12 28z" ]
                 []
-            , Svg.path [ d "M0 0h24v24H0z", S.fill "none" ]
+            , S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
                 []
             ]
 
@@ -97,10 +98,10 @@ expandLess size =
 edit : Size -> Icon msg
 edit size =
     html <|
-        svg [ width size, height size, viewBox "0 0 24 30" ]
-            [ Svg.path [ d "M21,9.5a.5.5,0,0,0-.5.5V20a.5.5,0,0,1-.5.5H4a.5.5,0,0,1-.5-.5V4A.5.5,0,0,1,4,3.5H14a.5.5,0,0,0,0-1H4A1.5,1.5,0,0,0,2.5,4V20A1.5,1.5,0,0,0,4,21.5H20A1.5,1.5,0,0,0,21.5,20V10A.5.5,0,0,0,21,9.5Z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M6 34.5V42h7.5l22.13-22.13-7.5-7.5L6 34.5zm35.41-20.41c.78-.78.78-2.05 0-2.83l-4.67-4.67c-.78-.78-2.05-.78-2.83 0l-3.66 3.66 7.5 7.5 3.66-3.66z" ]
                 []
-            , Svg.path [ d "M18.52,2.65a.5.5,0,0,0-.71,0l-7.9,7.9a.5.5,0,0,0-.12.2L8.38,15a.5.5,0,0,0,.47.66l.16,0,4.24-1.41a.5.5,0,0,0,.2-.12l7.9-7.9a.5.5,0,0,0,0-.71ZM12.83,13.29,9.65,14.35l1.06-3.18,7.46-7.46,2.12,2.12Z" ]
+            , S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
                 []
             ]
 
@@ -108,10 +109,10 @@ edit size =
 read : Size -> Icon msg
 read size =
     html <|
-        svg [ width size, height size, viewBox "0 0 24 30" ]
-            [ Svg.path [ d "M12,5.5c-5.18,0-9.24,6-9.42,6.22a.5.5,0,0,0,0,.56c.17.25,4.24,6.22,9.42,6.22s9.24-6,9.42-6.22a.5.5,0,0,0,0-.56C21.24,11.47,17.18,5.5,12,5.5Zm0,12c-4,0-7.53-4.35-8.39-5.5C4.47,10.84,7.95,6.5,12,6.5s7.53,4.35,8.39,5.5C19.53,13.16,16.05,17.5,12,17.5Z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
                 []
-            , Svg.path [ d "M12,9a3,3,0,1,0,3,3A3,3,0,0,0,12,9Zm0,5a2,2,0,1,1,2-2A2,2,0,0,1,12,14Z" ]
+            , S.path [ d "M24 9C14 9 5.46 15.22 2 24c3.46 8.78 12 15 22 15s18.54-6.22 22-15C42.54 15.22 34.01 9 24 9zm0 25c-5.52 0-10-4.48-10-10s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10zm0-16c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z" ]
                 []
             ]
 
@@ -119,12 +120,10 @@ read size =
 delete : Size -> Icon msg
 delete size =
     html <|
-        svg [ viewBox "0 0 24 30", height size, width size ]
-            [ Svg.path [ d "M13.93,18.5H14a.5.5,0,0,0,.49-.43l1-7a.5.5,0,0,0-1-.14l-1,7A.5.5,0,0,0,13.93,18.5Z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M12 38c0 2.21 1.79 4 4 4h16c2.21 0 4-1.79 4-4V14H12v24zM38 8h-7l-2-2H19l-2 2h-7v4h28V8z" ]
                 []
-            , Svg.path [ d "M10,18.5h.07a.5.5,0,0,0,.42-.57l-1-7a.5.5,0,1,0-1,.14l1,7A.5.5,0,0,0,10,18.5Z" ]
-                []
-            , Svg.path [ d "M5,8.5h.54L6.5,21a.5.5,0,0,0,.5.46H17a.5.5,0,0,0,.5-.46l1-12.54H19a.5.5,0,0,0,.5-.5V6a.5.5,0,0,0-.4-.49L14.5,4.6V3a.5.5,0,0,0-.5-.5H10a.5.5,0,0,0-.5.5V4.59l-4.6.92A.5.5,0,0,0,4.5,6V8A.5.5,0,0,0,5,8.5Zm11.54,12H7.46l-.92-12H17.46Zm-6-17h3v1h-3Zm-5,2.91L10,5.5h4l4.55.91V7.5H5.5Z" ]
+            , S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
                 []
             ]
 
@@ -132,8 +131,10 @@ delete size =
 next : Size -> Icon msg
 next size =
     html <|
-        svg [ viewBox "0 0 24 30", height size, width size ]
-            [ Svg.path [ d "M10.15,15.35a.5.5,0,0,0,.71,0l3-3a.5.5,0,0,0,0-.71l-3-3a.5.5,0,0,0-.71.71L12.79,12l-2.65,2.65A.5.5,0,0,0,10.15,15.35Z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M20 12l-2.83 2.83L26.34 24l-9.17 9.17L20 36l12-12z" ]
+                []
+            , S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
                 []
             ]
 
@@ -141,7 +142,20 @@ next size =
 previous : Size -> Icon msg
 previous size =
     html <|
-        svg [ viewBox "0 0 24 30", height size, width size ]
-            [ Svg.path [ d "M12.85,8.65a.5.5,0,0,0-.71,0l-3,3a.5.5,0,0,0,0,.71l3,3a.5.5,0,0,0,.71-.71L10.21,12l2.65-2.65A.5.5,0,0,0,12.85,8.65Z" ]
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M31.83 14.83L28 12 16 24l12 12 2.83-2.83L21.66 24z" ]
+                []
+            , S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
+                []
+            ]
+
+
+save : Size -> Icon msg
+save size =
+    html <|
+        svg [ width size, height size, viewBox "0 0 48 48" ]
+            [ S.path [ d "M0 0h48v48H0z", SA.fill "none" ]
+                []
+            , S.path [ d "M34 6H10c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V14l-8-8zM24 38c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm6-20H10v-8h20v8z" ]
                 []
             ]
