@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "elm-test",
     "rustup": "rustup override set nightly-2018-05-15",
     "postinstall": "cargo install --version 1.9.2 watchexec",
     "watch": "run-p watch:elm watch:ts watch:rust",

@@ -1,4 +1,4 @@
-module UI.Image exposing (Image, fullHeight, image)
+module UI.Image exposing (Image(..), fullHeight, image)
 
 import Base64.Encode
 import Bytes exposing (Bytes)
@@ -9,6 +9,12 @@ import Html.Attributes as HA
 
 type Image
     = Image String
+    | Empty
+
+
+none : Image
+none =
+    Empty
 
 
 image : Bytes -> Image
@@ -20,5 +26,10 @@ image bytes =
 
 
 fullHeight : Image -> Element msg
-fullHeight (Image base64) =
-    html <| H.img [ HA.style "height" "100vh", HA.src <| "data:*/*;base64," ++ base64 ] []
+fullHeight img =
+    case img of
+        Image base64 ->
+            html <| H.img [ HA.style "height" "100vh", HA.src <| "data:*/*;base64," ++ base64 ] []
+
+        Empty ->
+            E.none

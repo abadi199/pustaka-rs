@@ -1,4 +1,20 @@
-module Reader.Comic exposing (Model, Msg, header, init, next, previous, reader, slider, subscription, update)
+module Reader.Comic exposing
+    ( Model
+    , Msg
+    , Page(..)
+    , header
+    , init
+    , initialModel
+    , next
+    , previous
+    , reader
+    , slider
+    , subscription
+    , toLeftPage
+    , toPageNumber
+    , update
+    , updateProgress
+    )
 
 import Browser.Dom exposing (Viewport)
 import Browser.Events
@@ -34,7 +50,6 @@ type alias Model =
     }
 
 
-init : Publication.Data -> ( Model, Cmd Msg )
 init publication =
     ( initialModel publication
     , Publication.getProgress { publicationId = publication.id, msg = GetProgressCompleted }
@@ -45,9 +60,8 @@ initialModel : Publication.Data -> Model
 initialModel publication =
     { overlayVisibility = Header.visible counter
     , progress = ReloadableData.Loading publication.id
-    , leftPage = ReloadableData.Loading 0
-    , rightPage =
-        ReloadableData.Loading 0
+    , leftPage = ReloadableData.Loading -1
+    , rightPage = ReloadableData.Loading -1
     }
 
 
@@ -202,15 +216,6 @@ update key msg model publication =
         RightImageLoaded data ->
             ( { model | rightPage = data }, Cmd.none )
 
-        GetProgressCompleted data ->
-            updateProgress publication model data
-
-        NextPage ->
-            updatePages publication model { pageUpdater = \page -> page + 2 }
-
-        PreviousPage ->
-            updatePages publication model { pageUpdater = \page -> page - 2 }
-
         Tick delta ->
             model.overlayVisibility
                 |> Header.toCounter
@@ -226,6 +231,15 @@ update key msg model publication =
 
         MouseMoved ->
             ( { model | overlayVisibility = Header.visible counter }, Cmd.none )
+
+        GetProgressCompleted data ->
+            updateProgress publication model data
+
+        NextPage ->
+            updatePages publication model { pageUpdater = \page -> page + 2 }
+
+        PreviousPage ->
+            updatePages publication model { pageUpdater = \page -> page - 2 }
 
         SliderClicked float ->
             updateProgress publication model (ReloadableData.Success publication.id float)
@@ -278,16 +292,13 @@ toPercentage { totalPages } page =
 updateProgress : Publication.Data -> Model -> ReloadableWebData Int Float -> ( Model, Cmd Msg )
 updateProgress publication model data =
     let
-        updatedModel =
-            { model
-                | progress = data |> ReloadableData.map Publication.percentage
-                , leftPage = ReloadableData.loading model.leftPage
-                , rightPage = ReloadableData.loading model.rightPage
-            }
+        ( updatedModel, cmd ) =
+            { model | progress = data |> ReloadableData.map Publication.percentage }
+                |> fetchPages publication
     in
     ( updatedModel
     , Cmd.batch
-        [ fetchPages publication updatedModel.progress
+        [ cmd
         , updatedModel.progress
             |> ReloadableData.map
                 (\progress ->
@@ -302,37 +313,87 @@ updateProgress publication model data =
     )
 
 
-fetchPages : Publication.Data -> ReloadableWebData Int Publication.Progress -> Cmd Msg
-fetchPages publication progress =
+fetchPages :
+    Publication.Data
+    -> Model
+    -> ( Model, Cmd Msg )
+fetchPages publication model =
     let
         maybeLeftPage =
-            progress
+            model.progress
                 |> ReloadableData.toMaybe
                 |> Maybe.map Publication.toPercentage
                 |> Maybe.map (\percentage -> toFloat publication.totalPages * percentage |> round)
 
         maybeRightPage =
             maybeLeftPage |> Maybe.map ((+) 1)
+
+        updatedModel =
+            { model
+                | leftPage =
+                    maybeLeftPage
+                        |> Maybe.map (\page -> ReloadableData.Loading page)
+                        |> Maybe.withDefault model.leftPage
+                , rightPage =
+                    maybeRightPage
+                        |> Maybe.map (\page -> ReloadableData.Loading page)
+                        |> Maybe.withDefault model.rightPage
+            }
     in
-    Cmd.batch
-        [ maybeLeftPage
-            |> Maybe.map
-                (\page ->
+    ( updatedModel
+    , Cmd.batch
+        [ updatedModel.leftPage
+            |> ReloadableData.toInitial
+            |> (\page ->
                     Image.get
                         { publicationId = publication.id
-                        , page = page + 1
+                        , page = page
                         , msg = LeftImageLoaded
                         }
-                )
-            |> Maybe.withDefault Cmd.none
-        , maybeRightPage
-            |> Maybe.map
-                (\page ->
+               )
+        , updatedModel.rightPage
+            |> ReloadableData.toInitial
+            |> (\page ->
                     Image.get
                         { publicationId = publication.id
-                        , page = page + 1
+                        , page = page
                         , msg = RightImageLoaded
                         }
-                )
-            |> Maybe.withDefault Cmd.none
+               )
         ]
+    )
+
+
+
+-- PAGE
+
+
+type Page
+    = Empty
+    | Page Int
+    | OutOfBound
+
+
+toLeftPage : { totalPages : Int, percentage : Float } -> Page
+toLeftPage { totalPages, percentage } =
+    let
+        page =
+            toFloat (totalPages - 1)
+                * (percentage / 100)
+                |> round
+                |> Debug.log "page"
+    in
+    if page == 0 then
+        Empty
+
+    else if page >= totalPages then
+        OutOfBound
+
+    else if page < 0 then
+        OutOfBound
+
+    else if (page |> remainderBy 2) == 0 then
+        Page (page - 1)
+
+    else
+        Page page
