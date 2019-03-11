@@ -150,26 +150,29 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
             publication_id: publication_id.into_inner(),
         })
         .from_err()
-        .and_then(|res| match res {
-            Ok(ref publication) => match publication.media_format.as_ref() {
-                CBR => read_comic(&publication),
-                CBZ => read_cbz(&publication),
-                EPUB => read_epub(&publication),
-                _ => Ok(HttpResponse::InternalServerError().into()),
-            },
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        .and_then(move |res| {
+            let config = state.config.clone();
+            match res {
+                Ok(ref publication) => match publication.media_format.as_ref() {
+                    CBR => read_cbr(&config, &publication),
+                    CBZ => read_cbz(&config, &publication),
+                    EPUB => read_epub(&publication),
+                    _ => Ok(HttpResponse::InternalServerError().into()),
+                },
+                Err(_) => Ok(HttpResponse::InternalServerError().into()),
+            }
         })
         .responder()
 }
 
-fn read_cbz(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
-    comic::open(&publication)
+fn read_cbz(config: &Config, publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    comic::open(config, &publication)
         .map_err(|err| err.into())
         .and_then(|data| Ok(HttpResponse::Ok().json(data)))
 }
 
-fn read_comic(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
-    comic::open(&publication)
+fn read_cbr(config: &Config, publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    comic::open(config, &publication)
         .map_err(|err| err.into())
         .and_then(|data| Ok(HttpResponse::Ok().json(data)))
 }

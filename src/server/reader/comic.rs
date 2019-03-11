@@ -40,21 +40,28 @@ impl ResponseError for ComicError {}
 
 const EXTRACT_LOCATION: &str = "cache";
 
-pub fn open(the_publication: &Publication) -> Result<Data, ComicError> {
+pub fn open(config: &Config, the_publication: &Publication) -> Result<Data, ComicError> {
     use reader::comic::ComicError::*;
 
     println!("open {:?}", the_publication.file);
     match the_publication.media_format.as_ref() {
-        CBR => open_cbr(the_publication),
+        CBR => open_cbr(config, the_publication),
         CBZ => open_cbz(the_publication),
         _ => Err(InvalidMediaFormatError),
     }
 }
 
-fn open_cbr(the_publication: &Publication) -> Result<Data, ComicError> {
+fn open_cbr(config: &Config, the_publication: &Publication) -> Result<Data, ComicError> {
     use reader::comic::ComicError::*;
+    let mut extract_location = PathBuf::from(config.pustaka_home.clone());
+    extract_location.push(EXTRACT_LOCATION);
+    extract_location.push(the_publication.id.to_string());
+    let extract_location = extract_location
+        .to_str()
+        .ok_or(GenericError("Extract location is invalid".to_string()))?;
+
     let open_archive = Archive::new(the_publication.file.clone())
-        .extract_to(EXTRACT_LOCATION.to_string())
+        .extract_to(extract_location.to_string())
         .map_err(|_err| RarError)?;
 
     Ok(Data {
