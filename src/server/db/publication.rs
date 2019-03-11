@@ -60,14 +60,20 @@ impl Handler<CreateBatch> for DbExecutor {
     fn handle(&mut self, msg: CreateBatch, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
         let new_publications = msg.0;
-        let filenames: Vec<String> = new_publications
-            .iter()
-            .map(|publ| publ.file.to_string())
-            .collect();
-        diesel::insert_into(publication)
-            .values(new_publications)
-            .execute(&*connection)
-            .expect("Error inserting publication");
+        let mut filenames: Vec<String> = Vec::new();
+
+        for new_publication in new_publications.iter() {
+            let existing_publication =
+                get_publication_by_file(connection, &new_publication.file).ok();
+            if existing_publication.is_none() {
+                diesel::insert_into(publication)
+                    .values(new_publication)
+                    .execute(&*connection)
+                    .expect("Error inserting publication");
+                filenames.push(new_publication.file.to_string());
+            }
+        }
+
         let publications = publication
             .filter(file.eq_any(filenames))
             .load::<Publication>(&*connection)
@@ -265,6 +271,25 @@ fn get_descendant_rec(
 
     categories.append(&mut grandchildren);
     Ok(categories)
+}
+
+fn get_publication_by_file(
+    connection: &SqliteConnection,
+    the_file: &str,
+) -> Result<Publication, String> {
+    let mut row = publication
+        .filter(file.eq(the_file))
+        .limit(1)
+        .load(&*connection)
+        .map_err(|_| format!("Error loading publication with file {}", the_file))?;
+
+    match row.is_empty() {
+        true => Err(format!(
+            "publication with file of {} can't be found",
+            the_file
+        )),
+        false => Ok(row.remove(0)),
+    }
 }
 
 fn get_publication(
