@@ -45,9 +45,9 @@ initialModel : Publication.Data -> Model
 initialModel publication =
     { overlayVisibility = Header.visible counter
     , progress = ReloadableData.Loading publication.id
-    , leftPage = ReloadableData.Loading 1
+    , leftPage = ReloadableData.Loading 0
     , rightPage =
-        ReloadableData.Loading 1
+        ReloadableData.Loading 0
     }
 
 
@@ -245,8 +245,9 @@ updatePages publication model { pageUpdater } =
     in
     if
         data
-            |> ReloadableData.map (\pct -> pct * toFloat publication.totalPages |> round)
-            |> ReloadableData.map (\pageNumber -> publication.totalPages > pageNumber && pageNumber >= 0)
+            |> ReloadableData.map Publication.percentage
+            |> ReloadableData.map (toPageNumber { totalPages = publication.totalPages })
+            |> ReloadableData.map (checkPagesBoundary { totalPages = publication.totalPages })
             |> ReloadableData.withDefault False
     then
         updateProgress publication model data
@@ -255,9 +256,18 @@ updatePages publication model { pageUpdater } =
         ( model, Cmd.none )
 
 
+checkPagesBoundary : { totalPages : Int } -> Int -> Bool
+checkPagesBoundary { totalPages } pageNumber =
+    totalPages - 1 > pageNumber && pageNumber >= 0
+
+
 toPageNumber : { totalPages : Int } -> Publication.Progress -> Int
 toPageNumber { totalPages } progress =
-    Publication.toPercentage progress * toFloat totalPages |> round
+    let
+        page =
+            Publication.toPercentage progress * toFloat totalPages |> round
+    in
+    page
 
 
 toPercentage : { totalPages : Int } -> Int -> Float
@@ -310,7 +320,7 @@ fetchPages publication progress =
                 (\page ->
                     Image.get
                         { publicationId = publication.id
-                        , page = page
+                        , page = page + 1
                         , msg = LeftImageLoaded
                         }
                 )
@@ -320,7 +330,7 @@ fetchPages publication progress =
                 (\page ->
                     Image.get
                         { publicationId = publication.id
-                        , page = page
+                        , page = page + 1
                         , msg = RightImageLoaded
                         }
                 )
