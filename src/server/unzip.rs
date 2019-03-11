@@ -35,7 +35,8 @@ fn internal_unzip_nth(
     output_path: &str,
     nth: usize,
 ) -> ZipResult<String> {
-    let mut file = archive.by_index(nth)?;
+    // TODO : Better way to handle the when the first nth is a folder, we need to skip it.
+    let mut file = archive.by_index(nth + 1)?;
     let filepath = file.sanitized_name();
     let mut outpath = PathBuf::new();
     outpath.push(output_path);
@@ -43,12 +44,7 @@ fn internal_unzip_nth(
     println!("internal_unzip_nth::outpath:{:?}", outpath);
 
     if (&*file.name()).ends_with('/') {
-        println!(
-            "File {} extracted to \"{}\"",
-            nth,
-            outpath.as_path().display()
-        );
-        fs::create_dir_all(&outpath).unwrap();
+        return Err(zip::result::ZipError::FileNotFound);
     } else {
         println!(
             "File {} extracted to \"{}\" ({} bytes)",
@@ -75,5 +71,8 @@ fn internal_unzip_nth(
         }
     }
 
-    Ok(outpath.to_str().unwrap_or("").to_string())
+    let outpath_str = outpath
+        .to_str()
+        .ok_or(zip::result::ZipError::FileNotFound)?;
+    Ok(outpath_str.to_string())
 }
