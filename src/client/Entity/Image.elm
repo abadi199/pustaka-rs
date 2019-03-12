@@ -9,10 +9,10 @@ import ReloadableData.Http
 import UI.Image exposing (Image)
 
 
-get : { publicationId : Int, page : Int, msg : ReloadableWebData Int Image -> msg } -> Cmd msg
+get : { publicationId : Int, page : Int, msg : ReloadableWebData () Image -> msg } -> Cmd msg
 get { publicationId, page, msg } =
     ReloadableData.Http.image
-        { initial = page
+        { initial = ()
         , url = "/api/publication/read/" ++ String.fromInt publicationId ++ "/page/" ++ String.fromInt page
         , msg = msg
         }

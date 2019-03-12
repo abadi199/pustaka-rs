@@ -1,7 +1,6 @@
 module Reader.Comic exposing
     ( Model
     , Msg
-    , Page(..)
     , header
     , init
     , initialModel
@@ -10,8 +9,6 @@ module Reader.Comic exposing
     , reader
     , slider
     , subscription
-    , toLeftPage
-    , toPageNumber
     , update
     , updateProgress
     )
@@ -27,6 +24,7 @@ import Html as H
 import Html.Attributes as HA
 import Keyboard
 import Reader exposing (PageView(..))
+import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
 import UI.Error
@@ -45,8 +43,8 @@ import UI.ReloadableData
 type alias Model =
     { overlayVisibility : Header.Visibility
     , progress : ReloadableWebData Int Publication.Progress
-    , leftPage : ReloadableWebData Int Image
-    , rightPage : ReloadableWebData Int Image
+    , leftPage : ComicPage (ReloadableWebData () Image)
+    , rightPage : ComicPage (ReloadableWebData () Image)
     }
 
 
@@ -60,8 +58,8 @@ initialModel : Publication.Data -> Model
 initialModel publication =
     { overlayVisibility = Header.visible counter
     , progress = ReloadableData.Loading publication.id
-    , leftPage = ReloadableData.Loading -1
-    , rightPage = ReloadableData.Loading -1
+    , leftPage = ComicPage.empty
+    , rightPage = ComicPage.empty
     }
 
 
@@ -81,8 +79,8 @@ type Msg
     | NextPage
     | PreviousPage
     | SliderClicked Float
-    | LeftImageLoaded (ReloadableWebData Int Image)
-    | RightImageLoaded (ReloadableWebData Int Image)
+    | LeftImageLoaded (ReloadableWebData () Image)
+    | RightImageLoaded (ReloadableWebData () Image)
     | Tick Float
     | GetProgressCompleted (ReloadableWebData Int Float)
 
@@ -128,22 +126,35 @@ reader publication model =
             [ el
                 [ width fill
                 , height fill
-                , Background.transparentMediumBlack
+                , Background.solidWhite
                 ]
               <|
-                UI.ReloadableData.view
-                    (\pageImage -> el [ alignRight ] (Image.fullHeight pageImage))
-                    model.leftPage
+                viewPage alignRight model.leftPage
             , el
                 [ width fill
                 , height fill
-                , Background.transparentHeavyBlack
+                , Background.solidWhite
                 ]
               <|
-                UI.ReloadableData.view
-                    (\pageImage -> el [ alignLeft ] (Image.fullHeight pageImage))
-                    model.rightPage
+                viewPage alignLeft model.rightPage
             ]
+
+
+viewPage : Attribute Msg -> ComicPage (ReloadableWebData () Image) -> Element Msg
+viewPage alignment page =
+    case page of
+        ComicPage.Empty ->
+            E.none
+
+        ComicPage.Page number data ->
+            UI.ReloadableData.view
+                (\pageImage ->
+                    el [ alignment ] (Image.fullHeight pageImage)
+                )
+                data
+
+        ComicPage.OutOfBound ->
+            text "Out of bound"
 
 
 slider : Model -> Element Msg
@@ -207,14 +218,18 @@ imageUrl pubId pageNum =
         ++ String.fromInt pageNum
 
 
+
+-- UPDATE
+
+
 update : Nav.Key -> Msg -> Model -> Publication.Data -> ( Model, Cmd Msg )
 update key msg model publication =
     case msg of
         LeftImageLoaded data ->
-            ( { model | leftPage = data }, Cmd.none )
+            ( { model | leftPage = ComicPage.map (always data) model.leftPage }, Cmd.none )
 
         RightImageLoaded data ->
-            ( { model | rightPage = data }, Cmd.none )
+            ( { model | rightPage = ComicPage.map (always data) model.rightPage }, Cmd.none )
 
         Tick delta ->
             model.overlayVisibility
@@ -236,164 +251,63 @@ update key msg model publication =
             updateProgress publication model data
 
         NextPage ->
-            updatePages publication model { pageUpdater = \page -> page + 2 }
+            Debug.todo "NextPage"
 
         PreviousPage ->
-            updatePages publication model { pageUpdater = \page -> page - 2 }
+            Debug.todo "PreviousPage"
 
         SliderClicked float ->
-            updateProgress publication model (ReloadableData.Success publication.id float)
+            Debug.todo "SliderClicked"
 
         _ ->
             ( model, Cmd.none )
 
 
-updatePages : Publication.Data -> Model -> { pageUpdater : Int -> Int } -> ( Model, Cmd Msg )
-updatePages publication model { pageUpdater } =
-    let
-        data =
-            model.progress
-                |> ReloadableData.map (toPageNumber { totalPages = publication.totalPages })
-                |> ReloadableData.map pageUpdater
-                |> ReloadableData.map (toPercentage { totalPages = publication.totalPages })
-    in
-    if
-        data
-            |> ReloadableData.map Publication.percentage
-            |> ReloadableData.map (toPageNumber { totalPages = publication.totalPages })
-            |> ReloadableData.map (checkPagesBoundary { totalPages = publication.totalPages })
-            |> ReloadableData.withDefault False
-    then
-        updateProgress publication model data
-
-    else
-        ( model, Cmd.none )
-
-
-checkPagesBoundary : { totalPages : Int } -> Int -> Bool
-checkPagesBoundary { totalPages } pageNumber =
-    totalPages - 1 > pageNumber && pageNumber >= 0
-
-
-toPageNumber : { totalPages : Int } -> Publication.Progress -> Int
-toPageNumber { totalPages } progress =
-    let
-        page =
-            Publication.toPercentage progress * toFloat totalPages |> round
-    in
-    page
-
-
-toPercentage : { totalPages : Int } -> Int -> Float
-toPercentage { totalPages } page =
-    toFloat page / toFloat totalPages
-
-
 updateProgress : Publication.Data -> Model -> ReloadableWebData Int Float -> ( Model, Cmd Msg )
 updateProgress publication model data =
-    let
-        ( updatedModel, cmd ) =
-            { model | progress = data |> ReloadableData.map Publication.percentage }
-                |> fetchPages publication
-    in
-    ( updatedModel
-    , Cmd.batch
-        [ cmd
-        , updatedModel.progress
-            |> ReloadableData.map
-                (\progress ->
-                    Publication.updateProgress
-                        { publicationId = publication.id
-                        , progress = progress
-                        , msg = always NoOp
-                        }
-                )
-            |> ReloadableData.withDefault Cmd.none
-        ]
-    )
+    case data of
+        ReloadableData.Success _ percentage ->
+            let
+                leftPage =
+                    ComicPage.toLeftPage
+                        (ReloadableData.Loading ())
+                        { totalPages = publication.totalPages, percentage = percentage }
 
+                rightPage =
+                    ComicPage.toRightPage
+                        (ReloadableData.Loading ())
+                        { totalPages = publication.totalPages, percentage = percentage }
 
-fetchPages :
-    Publication.Data
-    -> Model
-    -> ( Model, Cmd Msg )
-fetchPages publication model =
-    let
-        maybeLeftPage =
-            model.progress
-                |> ReloadableData.toMaybe
-                |> Maybe.map Publication.toPercentage
-                |> Maybe.map (\percentage -> toFloat publication.totalPages * percentage |> round)
+                updatedModel =
+                    { model | leftPage = leftPage, rightPage = rightPage }
 
-        maybeRightPage =
-            maybeLeftPage |> Maybe.map ((+) 1)
+                cmd =
+                    Cmd.batch
+                        [ leftPage
+                            |> ComicPage.toPageNumber
+                            |> Maybe.map
+                                (\pageNumber ->
+                                    Image.get
+                                        { publicationId = publication.id
+                                        , page = pageNumber
+                                        , msg = LeftImageLoaded
+                                        }
+                                )
+                            |> Maybe.withDefault Cmd.none
+                        , rightPage
+                            |> ComicPage.toPageNumber
+                            |> Maybe.map
+                                (\pageNumber ->
+                                    Image.get
+                                        { publicationId = publication.id
+                                        , page = pageNumber
+                                        , msg = RightImageLoaded
+                                        }
+                                )
+                            |> Maybe.withDefault Cmd.none
+                        ]
+            in
+            ( updatedModel, cmd )
 
-        updatedModel =
-            { model
-                | leftPage =
-                    maybeLeftPage
-                        |> Maybe.map (\page -> ReloadableData.Loading page)
-                        |> Maybe.withDefault model.leftPage
-                , rightPage =
-                    maybeRightPage
-                        |> Maybe.map (\page -> ReloadableData.Loading page)
-                        |> Maybe.withDefault model.rightPage
-            }
-    in
-    ( updatedModel
-    , Cmd.batch
-        [ updatedModel.leftPage
-            |> ReloadableData.toInitial
-            |> (\page ->
-                    Image.get
-                        { publicationId = publication.id
-                        , page = page
-                        , msg = LeftImageLoaded
-                        }
-               )
-        , updatedModel.rightPage
-            |> ReloadableData.toInitial
-            |> (\page ->
-                    Image.get
-                        { publicationId = publication.id
-                        , page = page
-                        , msg = RightImageLoaded
-                        }
-               )
-        ]
-    )
-
-
-
--- PAGE
-
-
-type Page
-    = Empty
-    | Page Int
-    | OutOfBound
-
-
-toLeftPage : { totalPages : Int, percentage : Float } -> Page
-toLeftPage { totalPages, percentage } =
-    let
-        page =
-            toFloat (totalPages - 1)
-                * (percentage / 100)
-                |> round
-                |> Debug.log "page"
-    in
-    if page == 0 then
-        Empty
-
-    else if page >= totalPages then
-        OutOfBound
-
-    else if page < 0 then
-        OutOfBound
-
-    else if (page |> remainderBy 2) == 0 then
-        Page (page - 1)
-
-    else
-        Page page
+        _ ->
+            ( model, Cmd.none )
