@@ -4,6 +4,7 @@ module Reader.ComicPage exposing
     , empty
     , map
     , toLeftPage
+    , toMaybe
     , toPageNumber
     , toRightPage
     )
@@ -18,6 +19,19 @@ type ComicPage a
 empty : ComicPage a
 empty =
     Empty
+
+
+toMaybe : ComicPage a -> Maybe a
+toMaybe page =
+    case page of
+        Page _ a ->
+            Just a
+
+        Empty ->
+            Nothing
+
+        OutOfBound ->
+            Nothing
 
 
 toPageNumber : ComicPage a -> Maybe Int
@@ -40,48 +54,64 @@ calculatePageNumber { totalPages, percentage } =
         |> round
 
 
-toLeftPage : a -> { totalPages : Int, percentage : Float } -> ComicPage a
-toLeftPage a ({ totalPages, percentage } as args) =
+toLeftPage : a -> (a -> a) -> { totalPages : Int, percentage : Float } -> (ComicPage a -> ComicPage a)
+toLeftPage default f ({ totalPages, percentage } as args) =
     let
         page =
             calculatePageNumber args
     in
     if page == 0 then
-        Empty
+        \_ -> Empty
 
     else if page >= totalPages then
-        OutOfBound
+        \_ -> OutOfBound
 
     else if page < 0 then
-        OutOfBound
+        \_ -> OutOfBound
 
     else if (page |> remainderBy 2) == 0 then
-        Page (page - 1) a
+        \oldPage ->
+            oldPage
+                |> toMaybe
+                |> Maybe.withDefault default
+                |> (\a -> Page (page - 1) (f a))
 
     else
-        Page page a
+        \oldPage ->
+            oldPage
+                |> toMaybe
+                |> Maybe.withDefault default
+                |> (\a -> Page page (f a))
 
 
-toRightPage : a -> { totalPages : Int, percentage : Float } -> ComicPage a
-toRightPage a ({ totalPages, percentage } as args) =
+toRightPage : a -> (a -> a) -> { totalPages : Int, percentage : Float } -> (ComicPage a -> ComicPage a)
+toRightPage default f ({ totalPages, percentage } as args) =
     let
         page =
             calculatePageNumber args
     in
     if page >= totalPages then
-        OutOfBound
+        \_ -> OutOfBound
 
     else if page < 0 then
-        OutOfBound
+        \_ -> OutOfBound
 
     else if (page |> remainderBy 2) == 0 then
-        Page page a
+        \oldPage ->
+            oldPage
+                |> toMaybe
+                |> Maybe.withDefault default
+                |> (\a -> Page page (f a))
 
     else if page == totalPages - 1 then
-        Empty
+        \_ -> Empty
 
     else
-        Page (page + 1) a
+        \oldPage ->
+            oldPage
+                |> toMaybe
+                |> Maybe.withDefault default
+                |> (\a -> Page (page + 1) (f a))
 
 
 map : (a -> b) -> ComicPage a -> ComicPage b

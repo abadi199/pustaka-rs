@@ -14,7 +14,6 @@ slider height { onMouseMove, onClick, percentage } =
     let
         percentageInHundred =
             percentage
-                * 100
                 |> clamp 0 100
 
         heightInPixel =
@@ -54,7 +53,7 @@ onClickGetX : (Float -> msg) -> Attribute msg
 onClickGetX msg =
     htmlAttribute <|
         HE.on "click"
-            (JD.map2 (\x width -> msg (x / width))
+            (JD.map2 (\x width -> msg ((x / width) * 100))
                 (JD.field "clientX" JD.float)
                 (JD.at [ "view", "innerWidth" ] JD.float)
             )

@@ -16,6 +16,7 @@ module Reader.Comic exposing
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
+import Cmd
 import Element as E exposing (..)
 import Element.Events as EE exposing (onClick)
 import Entity.Image as Image
@@ -257,7 +258,8 @@ update key msg model publication =
             Debug.todo "PreviousPage"
 
         SliderClicked float ->
-            Debug.todo "SliderClicked"
+            updateProgress publication model (ReloadableData.Success publication.id float)
+                |> Cmd.alsoDo (submitProgress publication)
 
         _ ->
             ( model, Cmd.none )
@@ -269,17 +271,26 @@ updateProgress publication model data =
         ReloadableData.Success _ percentage ->
             let
                 leftPage =
-                    ComicPage.toLeftPage
-                        (ReloadableData.Loading ())
-                        { totalPages = publication.totalPages, percentage = percentage }
+                    model.leftPage
+                        |> ComicPage.toLeftPage (ReloadableData.Loading ())
+                            ReloadableData.loading
+                            { totalPages = publication.totalPages, percentage = percentage }
 
                 rightPage =
-                    ComicPage.toRightPage
-                        (ReloadableData.Loading ())
-                        { totalPages = publication.totalPages, percentage = percentage }
+                    model.rightPage
+                        |> ComicPage.toRightPage (ReloadableData.Loading ())
+                            ReloadableData.loading
+                            { totalPages = publication.totalPages, percentage = percentage }
+
+                progress =
+                    data |> ReloadableData.map Publication.percentage
 
                 updatedModel =
-                    { model | leftPage = leftPage, rightPage = rightPage }
+                    { model
+                        | leftPage = leftPage
+                        , rightPage = rightPage
+                        , progress = progress
+                    }
 
                 cmd =
                     Cmd.batch
@@ -311,3 +322,18 @@ updateProgress publication model data =
 
         _ ->
             ( model, Cmd.none )
+
+
+submitProgress : Publication.Data -> Model -> Cmd Msg
+submitProgress publication model =
+    model.progress
+        |> ReloadableData.toMaybe
+        |> Maybe.map
+            (\progress ->
+                Publication.updateProgress
+                    { publicationId = publication.id
+                    , progress = progress
+                    , msg = always NoOp
+                    }
+            )
+        |> Maybe.withDefault Cmd.none
