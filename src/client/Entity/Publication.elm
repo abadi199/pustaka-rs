@@ -3,7 +3,6 @@ module Entity.Publication exposing
     , Id
     , MetaData
     , Page
-    , Progress
     , deleteThumbnail
     , emptyMetaData
     , get
@@ -12,15 +11,14 @@ module Entity.Publication exposing
     , idToInt
     , idToString
     , listByCategory
-    , percentage
     , read
-    , toPercentage
     , update
     , updateProgress
     , uploadThumbnail
     )
 
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
+import Entity.Progress as Progress exposing (Progress)
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail, thumbnailDecoder)
 import File exposing (File)
 import Json.Decode as JD
@@ -90,22 +88,6 @@ type alias Page =
     }
 
 
-type Progress
-    = Percentage Float
-
-
-percentage : Float -> Progress
-percentage =
-    Percentage
-
-
-toPercentage : Progress -> Float
-toPercentage progress =
-    case progress of
-        Percentage pct ->
-            pct
-
-
 
 -- HTTP
 
@@ -129,7 +111,7 @@ updateProgress { publicationId, progress, msg } =
         , json =
             JE.object
                 [ ( "publication_id", JE.int publicationId )
-                , ( "progress", JE.float <| toPercentage progress )
+                , ( "progress", JE.float <| Progress.toFloat progress )
                 ]
         , msg = msg
         }

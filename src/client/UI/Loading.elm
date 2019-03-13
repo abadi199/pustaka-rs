@@ -2,6 +2,7 @@ module UI.Loading exposing (view)
 
 import Element exposing (..)
 import UI.Background
+import UI.Icon as Icon
 
 
 view : Element msg
@@ -11,4 +12,4 @@ view =
         , height fill
         , UI.Background.transparentHeavyWhite
         ]
-        (el [ centerX, centerY ] <| text "Loading...")
+        (el [ centerX, centerY ] <| Icon.spinner Icon.large)

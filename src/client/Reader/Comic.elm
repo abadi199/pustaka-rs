@@ -13,22 +13,20 @@ module Reader.Comic exposing
     , updateProgress
     )
 
-import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
 import Cmd
 import Element as E exposing (..)
 import Element.Events as EE exposing (onClick)
 import Entity.Image as Image
+import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
 import Keyboard
-import Reader exposing (PageView(..))
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
-import UI.Error
 import UI.Events
 import UI.Icon as Icon
 import UI.Image as Image exposing (Image)
@@ -43,7 +41,7 @@ import UI.ReloadableData
 
 type alias Model =
     { overlayVisibility : Header.Visibility
-    , progress : ReloadableWebData Int Publication.Progress
+    , progress : ReloadableWebData Int Progress
     , leftPage : ComicPage (ReloadableWebData () Image)
     , rightPage : ComicPage (ReloadableWebData () Image)
     }
@@ -164,14 +162,14 @@ slider model =
         ( False, Just progress ) ->
             Slider.compact
                 { onMouseMove = MouseMoved
-                , percentage = progress |> Publication.toPercentage
+                , percentage = progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
         ( True, Just progress ) ->
             Slider.large
                 { onMouseMove = MouseMoved
-                , percentage = progress |> Publication.toPercentage
+                , percentage = progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
@@ -252,13 +250,21 @@ update key msg model publication =
             updateProgress publication model data
 
         NextPage ->
-            Debug.todo "NextPage"
+            model.progress
+                |> calculateNextPercentage (+) publication
+                |> updateProgress publication model
+                |> Cmd.alsoDo (submitProgress publication)
 
         PreviousPage ->
-            Debug.todo "PreviousPage"
+            model.progress
+                |> calculateNextPercentage (-) publication
+                |> updateProgress publication model
+                |> Cmd.alsoDo (submitProgress publication)
 
         SliderClicked float ->
-            updateProgress publication model (ReloadableData.Success publication.id float)
+            float
+                |> ReloadableData.Success publication.id
+                |> updateProgress publication model
                 |> Cmd.alsoDo (submitProgress publication)
 
         _ ->
@@ -283,7 +289,7 @@ updateProgress publication model data =
                             { totalPages = publication.totalPages, percentage = percentage }
 
                 progress =
-                    data |> ReloadableData.map Publication.percentage
+                    data |> ReloadableData.map Progress.percentage
 
                 updatedModel =
                     { model
@@ -322,6 +328,21 @@ updateProgress publication model data =
 
         _ ->
             ( model, Cmd.none )
+
+
+calculateNextPercentage :
+    (Float -> Float -> Float)
+    -> Publication.Data
+    -> ReloadableWebData Int Progress
+    -> ReloadableWebData Int Float
+calculateNextPercentage operator publication progress =
+    let
+        delta =
+            100 / toFloat (publication.totalPages - 1)
+    in
+    progress
+        |> ReloadableData.map Progress.toFloat
+        |> ReloadableData.map (\float -> operator float (delta * 2))
 
 
 submitProgress : Publication.Data -> Model -> Cmd Msg

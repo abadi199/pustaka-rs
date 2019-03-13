@@ -38,7 +38,6 @@ fn main() {
                 .and_then(move |res| save_publication_categories(db.clone(), res))
         })
         .map(|res| {
-            println!("{:?}", res);
             println!("The End");
         })
         .map_err(|err| println!("{:?}", err));

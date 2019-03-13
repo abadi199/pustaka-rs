@@ -28,7 +28,6 @@ impl Handler<LoadMetadata> for Scanner {
             thumbnail: None,
             file: file.path.clone(),
         };
-        println!("{:?}", publication);
 
         Ok((publication, category_id))
     }

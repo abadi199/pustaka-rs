@@ -101,7 +101,6 @@ fn update_progress(
 }
 
 fn get_progress(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
-    println!("get_progress");
     state
         .db
         .send(GetProgress {
@@ -208,7 +207,10 @@ fn read_page_comic(
 ) -> Result<NamedFile, actix_web::Error> {
     let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
     let file = NamedFile::open(filename);
-    file.map_err(|err| err.into())
+    file.map_err(|err| {
+        println!("{:?}", err);
+        err.into()
+    })
 }
 
 fn list_by_category(

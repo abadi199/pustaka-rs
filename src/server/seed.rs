@@ -13,7 +13,6 @@ fn main() {
     let connection = db::create_db_pool().get().unwrap();
 
     let path = env::current_dir().unwrap();
-    println!("The current directory is {}", path.display());
 
     insert_category(&*connection);
     insert_media_type(&*connection);

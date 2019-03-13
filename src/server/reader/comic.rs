@@ -43,7 +43,6 @@ const EXTRACT_LOCATION: &str = "cache";
 pub fn open(config: &Config, the_publication: &Publication) -> Result<Data, ComicError> {
     use reader::comic::ComicError::*;
 
-    println!("open {:?}", the_publication.file);
     match the_publication.media_format.as_ref() {
         CBR => open_cbr(config, the_publication),
         CBZ => open_cbz(the_publication),

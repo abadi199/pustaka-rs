@@ -5,6 +5,7 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Element.Events exposing (onClick)
+import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
@@ -27,7 +28,7 @@ import UI.Parts.Slider as Slider
 
 
 type alias Model =
-    { progress : Publication.Progress
+    { progress : Progress
     , isReady : Bool
     , overlayVisibility : Header.Visibility
     , pageCounter : Int
@@ -36,7 +37,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { progress = Publication.percentage 0
+    { progress = Progress.percentage 0
     , isReady = False
     , overlayVisibility = Header.visible counter
     , pageCounter = 0
@@ -102,7 +103,7 @@ reader { viewport, publication, model } =
             , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
             , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
             , HA.attribute "page" (model.pageCounter |> String.fromInt)
-            , HA.attribute "percentage" (model.progress |> Publication.toPercentage |> String.fromFloat)
+            , HA.attribute "percentage" (model.progress |> Progress.toFloat |> String.fromFloat)
             , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
             , HE.on "ready" (JD.succeed Ready)
             , UI.Events.onHtmlMouseMove MouseMoved
@@ -130,14 +131,14 @@ slider model =
         ( True, False ) ->
             Slider.compact
                 { onMouseMove = MouseMoved
-                , percentage = model.progress |> Publication.toPercentage
+                , percentage = model.progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
         ( True, True ) ->
             Slider.large
                 { onMouseMove = MouseMoved
-                , percentage = model.progress |> Publication.toPercentage
+                , percentage = model.progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
@@ -183,14 +184,14 @@ update key msg { model, publication } =
                 |> ReloadableData.toMaybe
                 |> Maybe.map
                     (\float ->
-                        ( { model | progress = Publication.percentage float }, Cmd.none )
+                        ( { model | progress = Progress.percentage float }, Cmd.none )
                     )
                 |> Maybe.withDefault ( model, Cmd.none )
 
         PageChanged float ->
             let
                 progress =
-                    Publication.percentage float
+                    Progress.percentage float
             in
             ( { model | progress = progress }
             , if model.isReady then
@@ -211,7 +212,7 @@ update key msg { model, publication } =
             ( { model | pageCounter = model.pageCounter + 1 }, Cmd.none )
 
         SliderClicked float ->
-            ( { model | progress = Publication.percentage float }, Cmd.none )
+            ( { model | progress = Progress.percentage float }, Cmd.none )
 
         LinkClicked string ->
             ( model, Nav.pushUrl key string )

@@ -12,6 +12,7 @@ module UI.Icon exposing
     , read
     , save
     , small
+    , spinner
     )
 
 import Element exposing (..)
@@ -158,4 +159,47 @@ save size =
                 []
             , S.path [ d "M34 6H10c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V14l-8-8zM24 38c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm6-20H10v-8h20v8z" ]
                 []
+            ]
+
+
+spinner : Size -> Icon msg
+spinner size =
+    html <|
+        svg [ width size, height size, viewBox "0 0 105 105", SA.fill "#fff" ]
+            [ circle [ cx "12.5", cy "12.5", r "12.5" ]
+                []
+            , animate [ attributeName "fill-opacity", begin "0s", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                [ circle [ cx "12.5", cy "52.5", r "12.5", fillOpacity ".5" ]
+                    []
+                , animate [ attributeName "fill-opacity", begin "100ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                    [ circle [ cx "52.5", cy "12.5", r "12.5" ]
+                        []
+                    , animate [ attributeName "fill-opacity", begin "300ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                        [ circle [ cx "52.5", cy "52.5", r "12.5" ]
+                            []
+                        , animate [ attributeName "fill-opacity", begin "600ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                            [ circle [ cx "92.5", cy "12.5", r "12.5" ]
+                                []
+                            , animate [ attributeName "fill-opacity", begin "800ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                                [ circle [ cx "92.5", cy "52.5", r "12.5" ]
+                                    []
+                                , animate [ attributeName "fill-opacity", begin "400ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                                    [ circle [ cx "12.5", cy "92.5", r "12.5" ]
+                                        []
+                                    , animate [ attributeName "fill-opacity", begin "700ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                                        [ circle [ cx "52.5", cy "92.5", r "12.5" ]
+                                            []
+                                        , animate [ attributeName "fill-opacity", begin "500ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                                            [ circle [ cx "92.5", cy "92.5", r "12.5" ]
+                                                []
+                                            , animate [ attributeName "fill-opacity", begin "200ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
+                                                []
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
             ]

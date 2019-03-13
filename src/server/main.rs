@@ -16,7 +16,6 @@ use std::path::PathBuf;
 fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let mut path: PathBuf = PathBuf::from("./app/assets");
     let file: PathBuf = req.match_info().query("tail").unwrap();
-    println!("file: {:?}", file);
     path.push(file);
     Ok(NamedFile::open(path)?)
 }
@@ -24,7 +23,6 @@ fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
 fn index(_req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let mut path: PathBuf = PathBuf::from("./app");
     let index: PathBuf = PathBuf::from("index.html");
-    println!("index");
     path.push(index);
 
     Ok(NamedFile::open(path)?)
@@ -37,8 +35,8 @@ fn main() {
     let pool = pustaka::db::create_db_pool();
     let config = config::get_config();
     let state = AppState {
-        db: SyncArbiter::start(3, move || DbExecutor(pool.clone())),
-        fs: SyncArbiter::start(3, move || FsExecutor()),
+        db: SyncArbiter::start(1, move || DbExecutor(pool.clone())),
+        fs: SyncArbiter::start(1, move || FsExecutor()),
         config: config,
     };
 

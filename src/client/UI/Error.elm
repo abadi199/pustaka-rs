@@ -6,7 +6,7 @@ import Http
 
 string : String -> Element msg
 string error =
-    el [] (text error)
+    el [ centerX, centerY ] (text error)
 
 
 http : Http.Error -> Element msg

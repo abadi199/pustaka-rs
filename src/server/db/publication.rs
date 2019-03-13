@@ -186,7 +186,10 @@ impl Handler<Get> for DbExecutor {
     fn handle(&mut self, msg: Get, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
         get_publication(connection, msg.publication_id)
-            .map_err(actix_web::error::ErrorInternalServerError)
+            .map_err(|err| {
+                println!("{:?}", err);
+                actix_web::error::ErrorInternalServerError(err)
+            })
     }
 }
 
@@ -300,7 +303,10 @@ fn get_publication(
         .filter(id.eq(publication_id))
         .limit(1)
         .load(&*connection)
-        .map_err(|_| format!("Error loading publication with id {}", publication_id))?;
+        .map_err(|err| {
+            println!("{:?}", err);
+            format!("Error loading publication with id {}", publication_id)
+        })?;
 
     match row.is_empty() {
         true => Err(format!(

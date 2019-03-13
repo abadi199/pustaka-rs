@@ -3,7 +3,6 @@ use zip::result::ZipResult;
 use zip::ZipArchive;
 
 pub fn unzip(file: &str, output_path_str: &str) -> ZipResult<()> {
-    println!("Unzipping {} to {}", file, output_path_str);
     let fname = Path::new(file);
     let file = File::open(&fname)?;
     let mut archive = ZipArchive::new(file)?;
@@ -41,17 +40,10 @@ fn internal_unzip_nth(
     let mut outpath = PathBuf::new();
     outpath.push(output_path);
     outpath.push(filepath);
-    println!("internal_unzip_nth::outpath:{:?}", outpath);
 
     if (&*file.name()).ends_with('/') {
         return Err(zip::result::ZipError::FileNotFound);
     } else {
-        println!(
-            "File {} extracted to \"{}\" ({} bytes)",
-            nth,
-            outpath.as_path().display(),
-            file.size()
-        );
         if let Some(p) = outpath.parent() {
             if !p.exists() {
                 fs::create_dir_all(&p).unwrap();
