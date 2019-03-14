@@ -197,6 +197,10 @@ fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureRespon
                 _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
             })
         })
+        .map_err(|err| {
+            println!("Error: {:?}", err);
+            err
+        })
         .responder()
 }
 
@@ -206,9 +210,10 @@ fn read_page_comic(
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
     let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
+    println!("File Name: {:?}", filename);
     let file = NamedFile::open(filename);
     file.map_err(|err| {
-        println!("{:?}", err);
+        println!("File Error: {:?}", err);
         err.into()
     })
 }

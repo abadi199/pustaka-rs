@@ -94,21 +94,30 @@ fn open_cbz(the_publication: &Publication) -> Result<Data, ComicError> {
     })
 }
 
-pub fn page(
+fn generate_extract_location(
     config: &Config,
     the_publication: &Publication,
-    page_number: usize,
 ) -> Result<String, ComicError> {
     let mut extract_location = PathBuf::from(config.pustaka_home.clone());
     extract_location.push(EXTRACT_LOCATION);
     extract_location.push(the_publication.id.to_string());
 
-    let extract_location = extract_location.to_str().ok_or(ComicError::GenericError(
-        "Unable to get extract location path".to_string(),
-    ))?;
+    extract_location
+        .to_str()
+        .ok_or(ComicError::GenericError(
+            "Unable to get extract location path".to_string(),
+        ))
+        .map(|path| path.to_string())
+}
 
+pub fn page(
+    config: &Config,
+    the_publication: &Publication,
+    page_number: usize,
+) -> Result<String, ComicError> {
+    let extract_location = &generate_extract_location(config, the_publication)?;
     match the_publication.media_format.as_ref() {
-        CBR => page_cbr(the_publication, page_number, extract_location),
+        CBR => page_cbr(config, the_publication, page_number, extract_location),
         CBZ => page_cbz(the_publication, page_number, extract_location),
         _ => Err(ComicError::InvalidMediaFormatError),
     }
@@ -124,6 +133,7 @@ fn page_cbz(
 }
 
 fn page_cbr(
+    config: &Config,
     the_publication: &Publication,
     page_number: usize,
     extract_location: &str,
@@ -132,10 +142,13 @@ fn page_cbr(
     let mut open_archive = Archive::new(the_publication.file.clone())
         .extract_to(extract_location.to_string())
         .map_err(|_err| RarError)?;
+    let extract_location = &generate_extract_location(config, the_publication)?;
 
+    println!("{:?}", (page_number));
+    println!("{:?}", open_archive.nth(page_number));
     match open_archive.nth(page_number) {
         Some(item) => match item {
-            Ok(entry) => Ok(format!("{}/{}", EXTRACT_LOCATION, entry.filename)),
+            Ok(entry) => Ok(format!("{}/{}", extract_location, entry.filename)),
             Err(_err) => Err(PageError),
         },
         None => Err(PageNotFound),

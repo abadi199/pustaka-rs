@@ -24,7 +24,7 @@ transparentLightWhite =
 
 transparentHeavyWhite : Attribute msg
 transparentHeavyWhite =
-    color (rgba 1 1 1 0.25)
+    color (rgba 1 1 1 0.5)
 
 
 transparentMediumWhite : Attribute msg

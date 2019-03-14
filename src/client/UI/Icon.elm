@@ -41,7 +41,7 @@ large =
 
 largeInt : Int
 largeInt =
-    36
+    48
 
 
 smallInt : Int
@@ -165,41 +165,7 @@ save size =
 spinner : Size -> Icon msg
 spinner size =
     html <|
-        svg [ width size, height size, viewBox "0 0 105 105", SA.fill "#fff" ]
-            [ circle [ cx "12.5", cy "12.5", r "12.5" ]
+        svg [ viewBox "1733.677 591.447 383.892 493.575", width size, height size ]
+            [ S.path [ d " M 2062.727 591.447 L 1788.518 591.447 C 1758.218 591.447 1733.951 615.989 1733.951 646.289 L 1733.677 1085.022 L 1925.622 895.905 L 2117.568 1085.022 L 2117.568 646.289 C 2117.568 615.989 2093.027 591.447 2062.727 591.447 Z ", SA.fill "rgb(223,52,92)" ]
                 []
-            , animate [ attributeName "fill-opacity", begin "0s", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                [ circle [ cx "12.5", cy "52.5", r "12.5", fillOpacity ".5" ]
-                    []
-                , animate [ attributeName "fill-opacity", begin "100ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                    [ circle [ cx "52.5", cy "12.5", r "12.5" ]
-                        []
-                    , animate [ attributeName "fill-opacity", begin "300ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                        [ circle [ cx "52.5", cy "52.5", r "12.5" ]
-                            []
-                        , animate [ attributeName "fill-opacity", begin "600ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                            [ circle [ cx "92.5", cy "12.5", r "12.5" ]
-                                []
-                            , animate [ attributeName "fill-opacity", begin "800ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                                [ circle [ cx "92.5", cy "52.5", r "12.5" ]
-                                    []
-                                , animate [ attributeName "fill-opacity", begin "400ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                                    [ circle [ cx "12.5", cy "92.5", r "12.5" ]
-                                        []
-                                    , animate [ attributeName "fill-opacity", begin "700ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                                        [ circle [ cx "52.5", cy "92.5", r "12.5" ]
-                                            []
-                                        , animate [ attributeName "fill-opacity", begin "500ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                                            [ circle [ cx "92.5", cy "92.5", r "12.5" ]
-                                                []
-                                            , animate [ attributeName "fill-opacity", begin "200ms", dur "1s", values "1;.2;1", calcMode "linear", repeatCount "indefinite" ]
-                                                []
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
             ]
