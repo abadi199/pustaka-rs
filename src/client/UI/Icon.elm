@@ -165,7 +165,28 @@ save size =
 spinner : Size -> Icon msg
 spinner size =
     html <|
-        svg [ viewBox "1733.677 591.447 383.892 493.575", width size, height size ]
-            [ S.path [ d " M 2062.727 591.447 L 1788.518 591.447 C 1758.218 591.447 1733.951 615.989 1733.951 646.289 L 1733.677 1085.022 L 1925.622 895.905 L 2117.568 1085.022 L 2117.568 646.289 C 2117.568 615.989 2093.027 591.447 2062.727 591.447 Z ", SA.fill "rgb(223,52,92)" ]
+        svg [ viewBox "1733.677 591.447 332.27042 578.33928", width size, height size ]
+            [ defs []
+                [ S.node "style"
+                    [ type_ "text/css" ]
+                    [ S.text """
+.bookmark {
+  stroke: #df345c;
+  stroke-width: 50;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: dash 1.5s infinite;
+  fill: none;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+"""
+                    ]
+                ]
+            , S.path [ class "bookmark", d "m 2036.9354,616.447 h -274.209 c -30.3,0 -54.567,24.542 -54.567,54.842 l -0.274,438.733 191.945,-189.117 191.946,189.117 V 671.289 c 0,-30.3 -24.541,-54.842 -54.841,-54.842 z" ]
                 []
             ]
