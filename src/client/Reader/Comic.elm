@@ -27,6 +27,7 @@ import Keyboard
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
+import UI.Error
 import UI.Events
 import UI.Icon as Icon
 import UI.Image as Image exposing (Image)
@@ -153,7 +154,7 @@ viewPage alignment page =
                 data
 
         ComicPage.OutOfBound ->
-            text "Out of bound"
+            UI.Error.string "Out of bound"
 
 
 slider : Model -> Element Msg

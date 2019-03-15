@@ -1,5 +1,6 @@
 module UI.Background exposing
-    ( solidWhite
+    ( lightRed
+    , solidWhite
     , transparentHeavyBlack
     , transparentHeavyWhite
     , transparentLightBlack
@@ -45,3 +46,8 @@ transparentHeavyBlack =
 transparentMediumBlack : Attribute msg
 transparentMediumBlack =
     color (rgba 0 0 0 0.125)
+
+
+lightRed : Attribute msg
+lightRed =
+    color (rgba255 255 186 186 1)
