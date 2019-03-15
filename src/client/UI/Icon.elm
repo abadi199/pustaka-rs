@@ -171,19 +171,23 @@ spinner size =
                     [ type_ "text/css" ]
                     [ S.text """
 .bookmark {
-  stroke: #df345c;
-  stroke-width: 50;
-  stroke-dasharray: 2000;
-  stroke-dashoffset: 2000;
-  animation: dash 1.5s infinite;
-  fill: none;
+    stroke: #df345c;
+    stroke-width: 50;
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    animation: dash 2s linear 0.5s infinite;
+    fill: none;
+}
+@keyframes dash {
+    0% {
+        stroke-dashoffset: 2000;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
 }
 
-@keyframes dash {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
 """
                     ]
                 ]
