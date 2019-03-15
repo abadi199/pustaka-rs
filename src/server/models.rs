@@ -89,10 +89,22 @@ pub struct Publication {
 impl Publication {
     pub fn thumbnail_url(&self) -> Option<String> {
         match self.thumbnail {
-            Some(ref file) if file == "" => None,
-            Some(_) => Some(format!("/api/publication/thumbnail/{}", &self.id)),
-            None => None,
+            Some(ref file) if file == "" => self.default_thumbnail_url(),
+            Some(_) => Some(Self::generate_url(self.id)),
+            None => self.default_thumbnail_url(),
         }
+    }
+
+    fn default_thumbnail_url(&self) -> Option<String> {
+        match self.media_format.as_ref() {
+            CBR => Some(Self::generate_url(self.id)),
+            CBZ => Some(Self::generate_url(self.id)),
+            _ => None,
+        }
+    }
+
+    fn generate_url(publication_id: i32) -> String {
+        format!("/api/publication/thumbnail/{}", publication_id)
     }
 }
 

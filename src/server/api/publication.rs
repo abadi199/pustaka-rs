@@ -239,23 +239,34 @@ fn generate_thumbnail(
     state: State<AppState>,
     publication_id: Path<i32>,
 ) -> FutureResponse<NamedFile> {
+    let config = state.config.clone();
+    let publication_id = publication_id.into_inner();
     state
         .db
         .send(Get {
-            publication_id: publication_id.into_inner(),
+            publication_id: publication_id,
         })
         .from_err()
-        .and_then(|res| {
+        .and_then(move |res| {
             res.and_then(|publication| match publication.thumbnail {
                 Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
-                None => Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Publication doesn't have thumbnail",
-                )
-                .into()),
+                None => get_default_thumbnail(&config, &publication),
             })
         })
         .responder()
+}
+
+fn get_default_thumbnail(config: &Config, publication: &Publication) -> Result<NamedFile> {
+    println!("get_default_thumbnail");
+    match publication.media_format.as_ref() {
+        CBR => read_page_comic(config, publication, 0),
+        CBZ => read_page_comic(config, publication, 0),
+        _ => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Publication doesn't have thumbnail",
+        )
+        .into()),
+    }
 }
 
 fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
