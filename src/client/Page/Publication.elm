@@ -13,6 +13,7 @@ import Element as E exposing (..)
 import Element.Background as Background
 import Element.Region as Region
 import Entity.Category exposing (Category)
+import Entity.Image as Image exposing (Image)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
@@ -45,6 +46,7 @@ import UI.Spacing as UI
 
 type alias Model =
     { publication : ReloadableWebData Int Publication.MetaData
+    , cover : ReloadableWebData () Image
     , searchText : String
     }
 
@@ -59,6 +61,7 @@ init publicationId =
 initialModel : Int -> Model
 initialModel publicationId =
     { publication = ReloadableData.Loading publicationId
+    , cover = ReloadableData.NotAsked ()
     , searchText = ""
     }
 
@@ -71,6 +74,7 @@ type Msg
     = LinkClicked String
     | GetPublicationCompleted (ReloadableWebData Int Publication.MetaData)
     | PublicationClicked Int
+    | CoverLoaded (ReloadableWebData () Image)
     | NoOp
 
 
@@ -88,19 +92,23 @@ view categoryData model =
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
-                viewPublication
+                (viewPublication model)
                 model.publication
         , dialog = Dialog.none
         }
 
 
-viewPublication : Publication.MetaData -> Element Msg
-viewPublication publication =
+viewPublication : Model -> Publication.MetaData -> Element Msg
+viewPublication model publication =
     column [ UI.spacing 1, width fill ]
         [ UI.breadCrumb []
         , row
             [ UI.spacing 1, width fill ]
-            [ viewPoster publication.id publication.thumbnail publication.title
+            [ viewCover
+                { publicationId = publication.id
+                , cover = model.cover
+                , title = publication.title
+                }
             , viewInformation publication
             ]
         ]
@@ -136,8 +144,8 @@ viewInformation publication =
         }
 
 
-viewPoster : Int -> Thumbnail -> String -> Element Msg
-viewPoster publicationId thumbnail title =
+viewCover : { publicationId : Int, cover : ReloadableWebData () Image, title : String } -> Element Msg
+viewCover { publicationId, cover, title } =
     Card.bordered [ alignTop ]
         { actions = []
         , content =
@@ -145,7 +153,7 @@ viewPoster publicationId thumbnail title =
                 [ height fill ]
                 { msg = LinkClicked
                 , url = Route.readUrl publicationId
-                , label = UI.poster { title = title, thumbnail = thumbnail }
+                , label = UI.reloadablePoster { title = title, image = cover }
                 }
             ]
         }
@@ -165,7 +173,26 @@ update key msg model =
             ( model, Nav.pushUrl key url )
 
         GetPublicationCompleted data ->
-            ( { model | publication = data }, Cmd.none )
+            loadPoster data { model | publication = data }
 
         PublicationClicked pubId ->
             ( model, Nav.pushUrl key <| Route.readUrl pubId )
+
+        CoverLoaded data ->
+            ( { model | cover = data }, Cmd.none )
+
+
+loadPoster : ReloadableWebData a Publication.MetaData -> Model -> ( Model, Cmd Msg )
+loadPoster data model =
+    case ReloadableData.toMaybe data of
+        Just publication ->
+            if publication.thumbnail |> Thumbnail.hasThumbnail then
+                ( { model | cover = ReloadableData.loading model.cover }
+                , Publication.downloadCover { publicationId = publication.id, msg = CoverLoaded }
+                )
+
+            else
+                ( model, Cmd.none )
+
+        Nothing ->
+            ( model, Cmd.none )

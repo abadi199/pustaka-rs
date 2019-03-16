@@ -15,6 +15,7 @@ import Element.Events as Events exposing (onClick)
 import Element.Font as Font
 import Element.Input as Input
 import Entity.Category exposing (Category)
+import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
 import File exposing (File)
@@ -78,7 +79,7 @@ type Msg
     | BrowseClicked
     | FileSelected File
     | FilesDropped File (List File)
-    | ThumbnailUpdated (ReloadableWebData Int (Maybe String))
+    | ThumbnailUpdated (ReloadableWebData () ())
     | DragEnter
     | DragLeave
     | DeleteClicked
@@ -143,7 +144,8 @@ viewPoster : { isHover : Bool, publication : Publication.MetaData } -> Element M
 viewPoster { isHover, publication } =
     Card.bordered [ alignTop ]
         (publication.thumbnail
-            |> Thumbnail.toUrl
+            |> Thumbnail.toImage
+            |> Image.toBase64
             |> Maybe.map
                 (always
                     { actions =
@@ -155,7 +157,7 @@ viewPoster { isHover, publication } =
                                 }
                         ]
                     , content =
-                        [ el [] <| UI.poster { title = publication.title, thumbnail = publication.thumbnail } ]
+                        [ el [] <| UI.poster { title = publication.title, image = Debug.todo "" } ]
                     }
                 )
             |> Maybe.withDefault
@@ -272,21 +274,9 @@ update key msg model =
 
         ThumbnailUpdated remoteData ->
             remoteData
-                |> ReloadableData.toMaybe
-                |> Maybe.map
-                    (\url ->
-                        ( { model
-                            | publication =
-                                model.publication
-                                    |> ReloadableData.map
-                                        (\publication ->
-                                            { publication | thumbnail = url |> Maybe.map Thumbnail.url |> Maybe.withDefault Thumbnail.none }
-                                        )
-                          }
-                        , Cmd.none
-                        )
-                    )
-                |> Maybe.withDefault ( model, Cmd.none )
+                |> ReloadableData.toResult
+                |> Result.map (Maybe.map (refreshThumbnail model) >> Maybe.withDefault ( model, Cmd.none ))
+                |> Result.withDefault (Debug.todo "Handle Error")
 
         FilesDropped file _ ->
             uploadFile file model
@@ -319,7 +309,7 @@ update key msg model =
                     (\publication ->
                         Publication.deleteThumbnail
                             { publicationId = publication.id
-                            , msg = ThumbnailUpdated |> ReloadableData.mapF (always Nothing)
+                            , msg = ThumbnailUpdated |> ReloadableData.mapF (always ())
                             }
                     )
                 |> Maybe.withDefault Cmd.none
@@ -327,6 +317,10 @@ update key msg model =
 
         DeleteCancelled ->
             ( { model | deleteConfirmation = Dialog.none }, Cmd.none )
+
+
+refreshThumbnail model _ =
+    ( model, Cmd.none )
 
 
 uploadFile : File -> Model -> ( Model, Cmd Msg )
@@ -340,7 +334,7 @@ uploadFile file model =
                     { publicationId = publication.id
                     , fileName = "thumbnail"
                     , file = file
-                    , msg = ThumbnailUpdated |> ReloadableData.mapF Just
+                    , msg = ThumbnailUpdated |> ReloadableData.mapF (always ())
                     }
             )
         |> Maybe.withDefault Cmd.none

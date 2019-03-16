@@ -4,6 +4,8 @@ module Entity.Publication exposing
     , MetaData
     , Page
     , deleteThumbnail
+    , downloadCover
+    , downloadPage
     , emptyMetaData
     , get
     , getProgress
@@ -17,6 +19,7 @@ module Entity.Publication exposing
     , uploadThumbnail
     )
 
+import Entity.Image as Image exposing (Image)
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail, thumbnailDecoder)
@@ -162,24 +165,40 @@ uploadThumbnail :
     { publicationId : Int
     , fileName : String
     , file : File
-    , msg : ReloadableWebData Int String -> msg
+    , msg : ReloadableWebData () () -> msg
     }
     -> Cmd msg
 uploadThumbnail { publicationId, fileName, file, msg } =
     ReloadableData.Http.upload
-        { initial = publicationId
+        { initial = ()
         , url = "/api/publication/thumbnail/" ++ String.fromInt publicationId
         , msg = msg
         , fileName = fileName
         , file = file
-        , decoder = JD.string
+        , decoder = JD.succeed ()
         }
 
 
-deleteThumbnail : { publicationId : Int, msg : ReloadableWebData Int () -> msg } -> Cmd msg
+downloadCover : { publicationId : Int, msg : ReloadableWebData () Image -> msg } -> Cmd msg
+downloadCover { publicationId, msg } =
+    Image.get
+        { url = "/api/publication/thumbnail/" ++ String.fromInt publicationId
+        , msg = msg
+        }
+
+
+downloadPage : { publicationId : Int, page : Int, msg : ReloadableWebData () Image -> msg } -> Cmd msg
+downloadPage { publicationId, page, msg } =
+    Image.get
+        { url = "/api/publication/read/" ++ String.fromInt publicationId ++ "/page/" ++ String.fromInt page
+        , msg = msg
+        }
+
+
+deleteThumbnail : { publicationId : Int, msg : ReloadableWebData () () -> msg } -> Cmd msg
 deleteThumbnail { publicationId, msg } =
     ReloadableData.Http.delete
-        { initial = publicationId
+        { initial = ()
         , url = "/api/publication/thumbnail/" ++ String.fromInt publicationId
         , msg = msg
         , json = JE.null

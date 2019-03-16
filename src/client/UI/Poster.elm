@@ -2,15 +2,20 @@ module UI.Poster exposing
     ( dimensionForHeight
     , poster
     , posterDimension
+    , reloadablePoster
     , thumbnail
     , thumbnailDimension
     )
 
 import Element as E exposing (..)
 import Element.Background as Background
+import Entity.Image as Image exposing (Image)
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
 import Html as H
 import Html.Attributes as HA
+import ReloadableData exposing (ReloadableWebData)
+import UI.Image as Image
+import UI.ReloadableData
 
 
 dimensionForHeight : Int -> { width : Int, height : Int }
@@ -39,19 +44,19 @@ thumbnail args =
             args.title
 
         cover =
-            args.thumbnail
+            args.thumbnail |> Thumbnail.toImage
 
         { height, width } =
             thumbnailDimension
     in
     cover
-        |> Thumbnail.toUrl
+        |> Image.toBase64
         |> Maybe.map
             (\image ->
-                posterImage
+                Image.poster
                     { width = width
                     , height = height
-                    , image = image
+                    , image = Image.fromBase64 image
                     , title = title
                     }
             )
@@ -64,23 +69,47 @@ thumbnail args =
             )
 
 
-poster : { title : String, thumbnail : Thumbnail } -> Element msg
-poster args =
+reloadablePoster : { title : String, image : ReloadableWebData i Image } -> Element msg
+reloadablePoster { title, image } =
     let
-        title =
-            args.title
-
-        cover =
-            args.thumbnail
-
         { width, height } =
             posterDimension
     in
-    cover
-        |> Thumbnail.toUrl
+    el
+        [ E.height <| px <| height
+        , E.width <| px <| width
+        ]
+        (UI.ReloadableData.view
+            (\img ->
+                img
+                    |> Image.toBase64
+                    |> Maybe.map
+                        (\_ ->
+                            Image.poster
+                                { width = width
+                                , height = height
+                                , image = img
+                                , title = title
+                                }
+                        )
+                    |> Maybe.withDefault
+                        (empty { width = width, height = height } title)
+            )
+            image
+        )
+
+
+poster : { title : String, image : Image } -> Element msg
+poster { title, image } =
+    let
+        { width, height } =
+            posterDimension
+    in
+    image
+        |> Image.toBase64
         |> Maybe.map
-            (\image ->
-                posterImage
+            (\_ ->
+                Image.poster
                     { width = width
                     , height = height
                     , image = image
@@ -94,22 +123,6 @@ poster args =
                 ]
                 (empty { width = width, height = height } title)
             )
-
-
-posterImage :
-    { width : Int
-    , height : Int
-    , image : String
-    , title : String
-    }
-    -> Element msg
-posterImage { width, height, title, image } =
-    E.image
-        [ E.height (px height)
-        , E.width (px width)
-        , htmlAttribute <| HA.title title
-        ]
-        { src = image, description = title }
 
 
 empty : { width : Int, height : Int } -> String -> Element msg

@@ -18,7 +18,7 @@ import Browser.Navigation as Nav
 import Cmd
 import Element as E exposing (..)
 import Element.Events as EE exposing (onClick)
-import Entity.Image as Image
+import Entity.Image as Image exposing (Image)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html as H
@@ -30,7 +30,7 @@ import UI.Background as Background
 import UI.Error
 import UI.Events
 import UI.Icon as Icon
-import UI.Image as Image exposing (Image)
+import UI.Image as Image
 import UI.Parts.Header as Header
 import UI.Parts.Slider as Slider
 import UI.ReloadableData
@@ -149,12 +149,26 @@ viewPage alignment page =
         ComicPage.Page number data ->
             UI.ReloadableData.view
                 (\pageImage ->
-                    el [ alignment ] (Image.fullHeight pageImage)
+                    el [ width fill, inFront (viewPageNumber number) ] (el [ alignment ] (Image.fullHeight pageImage))
                 )
                 data
 
         ComicPage.OutOfBound ->
             UI.Error.string "Out of bound"
+
+
+viewPageNumber : Int -> Element msg
+viewPageNumber number =
+    el
+        [ alignBottom
+        , if remainderBy 2 number == 0 then
+            alignRight
+
+          else
+            alignLeft
+        , paddingEach { bottom = 10, top = 0, left = 0, right = 0 }
+        ]
+        (text <| String.fromInt number)
 
 
 slider : Model -> Element Msg
@@ -275,8 +289,11 @@ update key msg model publication =
 updateProgress : Publication.Data -> Model -> ReloadableWebData Int Float -> ( Model, Cmd Msg )
 updateProgress publication model data =
     case data of
-        ReloadableData.Success _ percentage ->
+        ReloadableData.Success _ unclampedPercentage ->
             let
+                percentage =
+                    unclampedPercentage |> clamp 0 100 |> Debug.log "progress"
+
                 leftPage =
                     model.leftPage
                         |> ComicPage.toLeftPage (ReloadableData.Loading ())
@@ -290,7 +307,7 @@ updateProgress publication model data =
                             { totalPages = publication.totalPages, percentage = percentage }
 
                 progress =
-                    data |> ReloadableData.map Progress.percentage
+                    ReloadableData.Success publication.id (Progress.percentage percentage)
 
                 updatedModel =
                     { model
@@ -305,7 +322,7 @@ updateProgress publication model data =
                             |> ComicPage.toPageNumber
                             |> Maybe.map
                                 (\pageNumber ->
-                                    Image.get
+                                    Publication.downloadPage
                                         { publicationId = publication.id
                                         , page = pageNumber
                                         , msg = LeftImageLoaded
@@ -316,7 +333,7 @@ updateProgress publication model data =
                             |> ComicPage.toPageNumber
                             |> Maybe.map
                                 (\pageNumber ->
-                                    Image.get
+                                    Publication.downloadPage
                                         { publicationId = publication.id
                                         , page = pageNumber
                                         , msg = RightImageLoaded
@@ -343,7 +360,9 @@ calculateNextPercentage operator publication progress =
     in
     progress
         |> ReloadableData.map Progress.toFloat
+        |> ReloadableData.map (Debug.log "from")
         |> ReloadableData.map (\float -> operator float (delta * 2))
+        |> ReloadableData.map (Debug.log "to")
 
 
 submitProgress : Publication.Data -> Model -> Cmd Msg

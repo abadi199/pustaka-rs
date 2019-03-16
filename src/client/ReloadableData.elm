@@ -12,6 +12,7 @@ module ReloadableData exposing
     , toError
     , toInitial
     , toMaybe
+    , toResult
     , withDefault
     )
 
@@ -232,3 +233,25 @@ setError e reloadableData =
         |> toMaybe
         |> Maybe.map (\data -> FailureWithData e i data)
         |> Maybe.withDefault (Failure e i)
+
+
+toResult : ReloadableData e i a -> Result e (Maybe a)
+toResult data =
+    case data of
+        Success _ a ->
+            Ok (Just a)
+
+        Reloading _ _ ->
+            Ok Nothing
+
+        FailureWithData e _ _ ->
+            Err e
+
+        NotAsked _ ->
+            Ok Nothing
+
+        Loading _ ->
+            Ok Nothing
+
+        Failure e _ ->
+            Err e

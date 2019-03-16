@@ -13,6 +13,7 @@ import Browser.Navigation as Nav
 import Element as E exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Publication as Publication
+import Entity.Thumbnail as Thumbnail
 import Html.Attributes as HA
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
@@ -109,7 +110,11 @@ publicationView publication =
                 , height fill
                 ]
                 { url = url
-                , label = UI.thumbnail { title = publication.title, thumbnail = publication.thumbnail }
+                , label =
+                    UI.thumbnail
+                        { title = publication.title
+                        , thumbnail = publication.thumbnail
+                        }
                 }
             , publicationActionView publication.id
             ]
