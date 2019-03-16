@@ -10,8 +10,10 @@ module Page.Home exposing
 
 import Browser
 import Browser.Navigation as Nav
+import Dict exposing (Dict)
 import Element as E exposing (..)
 import Entity.Category exposing (Category)
+import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
 import Html.Attributes as HA
@@ -42,6 +44,7 @@ import UI.Spacing as UI
 type alias Model =
     { selectedCategoryId : Maybe Int
     , publications : ReloadableWebData () (List Publication.MetaData)
+    , covers : Dict Int (ReloadableWebData () Image)
     , searchText : String
     }
 
@@ -55,6 +58,7 @@ initialModel : Model
 initialModel =
     { selectedCategoryId = Nothing
     , publications = ReloadableData.NotAsked ()
+    , covers = Dict.empty
     , searchText = ""
     }
 
@@ -68,6 +72,7 @@ type Msg
     | LinkClicked String
     | CategorySelected (Maybe Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
+    | CoverDownloaded Int (ReloadableWebData () Image)
 
 
 
@@ -82,25 +87,28 @@ view key categories model =
             categories
                 |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , content = UI.ReloadableData.view publicationsView model.publications
+        , content = UI.ReloadableData.view (publicationsView model) model.publications
         , dialog = Dialog.none
         }
 
 
-publicationsView : List Publication.MetaData -> Element Msg
-publicationsView publications =
+publicationsView : Model -> List Publication.MetaData -> Element Msg
+publicationsView model publications =
     column [ width fill ]
         [ BreadCrumb.breadCrumb []
         , wrappedRow [ UI.padding 1, UI.spacing 1 ]
-            (publications |> List.map publicationView)
+            (publications |> List.map (publicationView model))
         ]
 
 
-publicationView : Publication.MetaData -> Element Msg
-publicationView publication =
+publicationView : Model -> Publication.MetaData -> Element Msg
+publicationView model publication =
     let
         url =
             Route.publicationUrl publication.id
+
+        noImage =
+            ReloadableData.Success () Image.none
     in
     Card.bordered []
         { actions = []
@@ -111,9 +119,9 @@ publicationView publication =
                 ]
                 { url = url
                 , label =
-                    UI.thumbnail
+                    UI.reloadableThumbnail
                         { title = publication.title
-                        , thumbnail = publication.thumbnail
+                        , image = Dict.get publication.id model.covers |> Maybe.withDefault noImage
                         }
                 }
             , publicationActionView publication.id
@@ -162,7 +170,34 @@ update key msg model =
             selectCategory selectedCategoryId model
 
         GetPublicationCompleted publications ->
-            ( { model | publications = publications }
+            ( { model
+                | publications = publications
+                , covers =
+                    publications
+                        |> ReloadableData.toMaybe
+                        |> Maybe.withDefault []
+                        |> List.map (\pub -> ( pub.id, ReloadableData.Loading () ))
+                        |> Dict.fromList
+              }
+            , publications
+                |> ReloadableData.toMaybe
+                |> Maybe.withDefault []
+                |> List.map
+                    (\pub ->
+                        Publication.downloadCover
+                            { publicationId = pub.id
+                            , msg = CoverDownloaded pub.id
+                            }
+                    )
+                |> Cmd.batch
+            )
+
+        CoverDownloaded publicationId data ->
+            ( { model
+                | covers =
+                    model.covers
+                        |> Dict.insert publicationId data
+              }
             , Cmd.none
             )
 

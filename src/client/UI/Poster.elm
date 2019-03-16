@@ -3,6 +3,7 @@ module UI.Poster exposing
     , poster
     , posterDimension
     , reloadablePoster
+    , reloadableThumbnail
     , thumbnail
     , thumbnailDimension
     )
@@ -37,26 +38,55 @@ thumbnailDimension =
     dimensionForHeight 200
 
 
-thumbnail : { title : String, thumbnail : Thumbnail } -> Element msg
-thumbnail args =
+reloadableThumbnail : { title : String, image : ReloadableWebData i Image } -> Element msg
+reloadableThumbnail { title, image } =
     let
-        title =
-            args.title
-
-        cover =
-            args.thumbnail |> Thumbnail.toImage
-
         { height, width } =
             thumbnailDimension
     in
-    cover
+    el
+        [ E.height <| px <| height
+        , E.width <| px <| width
+        ]
+        (UI.ReloadableData.view
+            (\img ->
+                img
+                    |> Image.toBase64
+                    |> Maybe.map
+                        (\_ ->
+                            Image.poster
+                                { width = width
+                                , height = height
+                                , image = img
+                                , title = title
+                                }
+                        )
+                    |> Maybe.withDefault
+                        (empty
+                            { width = width
+                            , height = height
+                            }
+                            title
+                        )
+            )
+            image
+        )
+
+
+thumbnail : { title : String, image : Image } -> Element msg
+thumbnail { title, image } =
+    let
+        { height, width } =
+            thumbnailDimension
+    in
+    image
         |> Image.toBase64
         |> Maybe.map
-            (\image ->
+            (\img ->
                 Image.poster
                     { width = width
                     , height = height
-                    , image = Image.fromBase64 image
+                    , image = Image.fromBase64 img
                     , title = title
                     }
             )
