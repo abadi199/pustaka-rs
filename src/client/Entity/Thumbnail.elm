@@ -1,11 +1,10 @@
 module Entity.Thumbnail exposing
-    ( Thumbnail
-    , fromBase64
+    ( Thumbnail(..)
+    , fromUrl
     , hasThumbnail
     , new
     , none
     , thumbnailDecoder
-    , toImage
     )
 
 import Entity.Image as Image exposing (Image)
@@ -16,7 +15,7 @@ import Json.Decode as JD
 type Thumbnail
     = NoThumbnail
     | New File
-    | Image String
+    | Url String
 
 
 hasThumbnail : Thumbnail -> Bool
@@ -28,21 +27,8 @@ hasThumbnail thumbnail =
         New _ ->
             False
 
-        Image _ ->
+        Url _ ->
             True
-
-
-toImage : Thumbnail -> Image
-toImage thumbnail =
-    case thumbnail of
-        NoThumbnail ->
-            Image.none
-
-        New file ->
-            Image.none
-
-        Image base64 ->
-            Image.fromBase64 base64
 
 
 none : Thumbnail
@@ -55,9 +41,9 @@ new =
     New
 
 
-fromBase64 : String -> Thumbnail
-fromBase64 =
-    Image
+fromUrl : String -> Thumbnail
+fromUrl =
+    Url
 
 
 thumbnailDecoder : JD.Decoder Thumbnail
@@ -71,7 +57,7 @@ thumbnailDecoder =
                             NoThumbnail
 
                         fileUrl ->
-                            Image fileUrl
+                            Url fileUrl
                 )
         , JD.null NoThumbnail
         ]

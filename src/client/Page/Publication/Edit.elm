@@ -17,7 +17,7 @@ import Element.Input as Input
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
-import Entity.Thumbnail as Thumbnail
+import Entity.Thumbnail as Thumbnail exposing (Thumbnail(..))
 import File exposing (File)
 import File.Select as Select
 import Html as H
@@ -51,6 +51,7 @@ type alias Model =
     , publication : ReloadableWebData Int Publication.MetaData
     , thumbnailHover : Bool
     , deleteConfirmation : Dialog Msg
+    , cover : ReloadableWebData () Image
     }
 
 
@@ -60,6 +61,7 @@ init publicationId =
       , publication = ReloadableData.Loading publicationId
       , thumbnailHover = False
       , deleteConfirmation = Dialog.none
+      , cover = ReloadableData.NotAsked ()
       }
     , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
@@ -85,6 +87,7 @@ type Msg
     | DeleteClicked
     | DeleteConfirmed
     | DeleteCancelled
+    | CoverDownloaded (ReloadableWebData () Image)
 
 
 type Field
@@ -106,18 +109,29 @@ view categories model =
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
-                (\publication -> viewEdit { publication = publication, isHover = model.thumbnailHover })
+                (\publication ->
+                    viewEdit
+                        { publication = publication
+                        , isHover = model.thumbnailHover
+                        , cover = model.cover
+                        }
+                )
                 model.publication
         , dialog = model.deleteConfirmation
         }
 
 
-viewEdit : { isHover : Bool, publication : Publication.MetaData } -> Element Msg
-viewEdit ({ isHover, publication } as args) =
+viewEdit :
+    { isHover : Bool
+    , publication : Publication.MetaData
+    , cover : ReloadableWebData () Image
+    }
+    -> Element Msg
+viewEdit { isHover, publication, cover } =
     column [ UI.spacing 1, width fill ]
         [ UI.breadCrumb []
         , row [ width fill, UI.spacing 1 ]
-            [ viewPoster args
+            [ viewPoster { isHover = isHover, publication = publication, cover = cover }
             , column [ width fill, UI.spacing 1 ]
                 [ UI.heading 1 "Edit Publication"
                 , Form.form
@@ -140,27 +154,34 @@ viewEdit ({ isHover, publication } as args) =
         ]
 
 
-viewPoster : { isHover : Bool, publication : Publication.MetaData } -> Element Msg
-viewPoster { isHover, publication } =
+viewPoster :
+    { isHover : Bool
+    , publication : Publication.MetaData
+    , cover : ReloadableWebData () Image
+    }
+    -> Element Msg
+viewPoster { isHover, publication, cover } =
     Card.bordered [ alignTop ]
-        (publication.thumbnail
-            |> Thumbnail.toImage
-            |> Image.toBase64
-            |> Maybe.map
-                (always
-                    { actions =
-                        [ Action.compact <|
-                            Action.clickable
-                                { text = "Delete Poster"
-                                , icon = Icon.delete Icon.large
-                                , onClick = DeleteClicked
-                                }
-                        ]
-                    , content =
-                        [ el [] <| UI.poster { title = publication.title, image = Debug.todo "" } ]
-                    }
-                )
-            |> Maybe.withDefault
+        (case publication.thumbnail of
+            NoThumbnail ->
+                { actions = []
+                , content = [ dropZone isHover ]
+                }
+
+            Url _ ->
+                { actions =
+                    [ Action.compact <|
+                        Action.clickable
+                            { text = "Delete Poster"
+                            , icon = Icon.delete Icon.large
+                            , onClick = DeleteClicked
+                            }
+                    ]
+                , content =
+                    [ el [] <| UI.reloadablePoster { title = publication.title, image = cover } ]
+                }
+
+            New _ ->
                 { actions = []
                 , content = [ dropZone isHover ]
                 }
@@ -229,7 +250,16 @@ update key msg model =
 
         GetPublicationCompleted reloadableData ->
             ( { model | publication = reloadableData }
-            , Cmd.none
+            , reloadableData
+                |> ReloadableData.toSuccess
+                |> Maybe.map
+                    (\publication ->
+                        Publication.downloadCover
+                            { publicationId = publication.id
+                            , msg = CoverDownloaded
+                            }
+                    )
+                |> Maybe.withDefault Cmd.none
             )
 
         PublicationChanged value ->
@@ -317,6 +347,9 @@ update key msg model =
 
         DeleteCancelled ->
             ( { model | deleteConfirmation = Dialog.none }, Cmd.none )
+
+        CoverDownloaded data ->
+            ( { model | cover = data }, Cmd.none )
 
 
 refreshThumbnail model _ =

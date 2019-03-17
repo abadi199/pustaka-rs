@@ -13,6 +13,7 @@ module ReloadableData exposing
     , toInitial
     , toMaybe
     , toResult
+    , toSuccess
     , withDefault
     )
 
@@ -255,3 +256,25 @@ toResult data =
 
         Failure e _ ->
             Err e
+
+
+toSuccess : ReloadableData e i a -> Maybe a
+toSuccess data =
+    case data of
+        Success _ a ->
+            Just a
+
+        Reloading _ _ ->
+            Nothing
+
+        FailureWithData _ _ _ ->
+            Nothing
+
+        NotAsked _ ->
+            Nothing
+
+        Loading _ ->
+            Nothing
+
+        Failure _ _ ->
+            Nothing

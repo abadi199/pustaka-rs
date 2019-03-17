@@ -292,7 +292,7 @@ updateProgress publication model data =
         ReloadableData.Success _ unclampedPercentage ->
             let
                 percentage =
-                    unclampedPercentage |> clamp 0 100 |> Debug.log "progress"
+                    unclampedPercentage |> clamp 0 100
 
                 leftPage =
                     model.leftPage
@@ -360,9 +360,7 @@ calculateNextPercentage operator publication progress =
     in
     progress
         |> ReloadableData.map Progress.toFloat
-        |> ReloadableData.map (Debug.log "from")
         |> ReloadableData.map (\float -> operator float (delta * 2))
-        |> ReloadableData.map (Debug.log "to")
 
 
 submitProgress : Publication.Data -> Model -> Cmd Msg
