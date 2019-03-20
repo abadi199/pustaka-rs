@@ -34,7 +34,6 @@ fn main() {
     let config = config::get_config();
     let config_1 = config.clone();
     let config_2 = config.clone();
-    let home_path = config.pustaka_home.clone();
 
     let task = db
         .send(pustaka::db::category::List {})
@@ -46,6 +45,7 @@ fn main() {
         .and_then(|res| save_publication_categories(db_3, res))
         .map(|_| {
             println!("The End");
+            System::current().stop();
         })
         .map_err(|err| println!("{:?}", err));
 
