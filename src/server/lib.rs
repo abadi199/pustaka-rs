@@ -18,6 +18,9 @@ extern crate r2d2_diesel;
 extern crate unrar;
 extern crate walkdir;
 extern crate zip;
+#[macro_use]
+extern crate custom_error;
+extern crate image;
 
 pub mod api;
 pub mod config;

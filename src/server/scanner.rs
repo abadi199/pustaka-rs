@@ -140,7 +140,7 @@ fn update_metadata(
             publication: data.0,
             category_id: data.1,
         });
-            batch.push(task);
+        batch.push(task);
     }
 
     Box::new(join_all(batch))

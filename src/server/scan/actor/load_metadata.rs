@@ -48,7 +48,7 @@ fn get_thumbnail_cbr(config: &Config, publication: &Publication) -> Option<Strin
     println!("CBR:{:?}", thumbnail_location);
     let thumbnail_path = comic::page_cbr(config, &publication.file, 0, thumbnail_location).ok();
     match thumbnail_path {
-        Ok(thumbnail_path) => Ok(thumbnail_path),
+        Some(thumbnail_path) => thumbnail::resize(&thumbnail_path).ok(),
         None => None,
     }
 }
@@ -58,5 +58,9 @@ fn get_thumbnail_cbz(config: &Config, publication: &Publication) -> Option<Strin
         thumbnail::generate_thumbnail_location(&config.pustaka_home, publication.id);
     let thumbnail_location = thumbnail_location.to_str()?;
     println!("CBZ:{:?}", thumbnail_location);
-    comic::page_cbz(&publication.file, 0, thumbnail_location).ok()
+    let thumbnail_path = comic::page_cbz(&publication.file, 0, thumbnail_location).ok();
+    match thumbnail_path {
+        Some(thumbnail_path) => thumbnail::resize(&thumbnail_path).ok(),
+        None => None,
+    }
 }
