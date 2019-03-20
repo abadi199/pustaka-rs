@@ -19,6 +19,7 @@ impl Handler<List> for DbExecutor {
     fn handle(&mut self, _msg: List, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
         let publications = publication
+            .order_by(title.asc())
             .load::<Publication>(&*connection)
             .expect("Error loading publications");
         Ok(publications)
@@ -221,6 +222,7 @@ impl Handler<ListByCategory> for DbExecutor {
 
         let publications = publication::publication
             .filter(publication::id.eq_any(the_publication_id))
+            .order_by(publication::title.asc())
             .load::<Publication>(&*connection)
             .expect("Error getting publications");
 
