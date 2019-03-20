@@ -176,7 +176,14 @@ update key msg model =
                     publications
                         |> ReloadableData.toMaybe
                         |> Maybe.withDefault []
-                        |> List.map (\pub -> ( pub.id, ReloadableData.Loading () ))
+                        |> List.filterMap
+                            (\pub ->
+                                if Thumbnail.hasThumbnail pub.thumbnail then
+                                    Just ( pub.id, ReloadableData.Loading () )
+
+                                else
+                                    Nothing
+                            )
                         |> Dict.fromList
               }
             , publications
@@ -184,10 +191,14 @@ update key msg model =
                 |> Maybe.withDefault []
                 |> List.map
                     (\pub ->
-                        Publication.downloadCover
-                            { publicationId = pub.id
-                            , msg = CoverDownloaded pub.id
-                            }
+                        if Thumbnail.hasThumbnail pub.thumbnail then
+                            Publication.downloadCover
+                                { publicationId = pub.id
+                                , msg = CoverDownloaded pub.id
+                                }
+
+                        else
+                            Cmd.none
                     )
                 |> Cmd.batch
             )

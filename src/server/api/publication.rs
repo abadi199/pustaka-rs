@@ -11,6 +11,7 @@ use db::publication::{
     UpdateThumbnail,
 };
 use fs::executor::{DeleteFile, FsExecutor};
+use fs::thumbnail;
 use futures::{future, Future, IntoFuture, Stream};
 use mime;
 use models::{NewPublication, Publication, PublicationProgress, CBR, CBZ, EPUB};
@@ -25,7 +26,6 @@ use std::{
 };
 
 pub const BASE_PATH: &str = "/api/publication";
-const THUMBNAIL_LOCATION: &str = "thumbnail";
 
 #[derive(Debug)]
 enum PublicationError {
@@ -244,29 +244,16 @@ fn generate_thumbnail(
     state
         .db
         .send(Get {
-            publication_id: publication_id,
+            publication_id,
         })
         .from_err()
         .and_then(move |res| {
             res.and_then(|publication| match publication.thumbnail {
                 Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
-                None => get_default_thumbnail(&config, &publication),
+                None => Err(actix_web::error::ErrorInternalServerError("This publication doesn't have thumbnail")),
             })
         })
         .responder()
-}
-
-fn get_default_thumbnail(config: &Config, publication: &Publication) -> Result<NamedFile> {
-    println!("get_default_thumbnail");
-    match publication.media_format.as_ref() {
-        CBR => read_page_comic(config, publication, 0),
-        CBZ => read_page_comic(config, publication, 0),
-        _ => Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Publication doesn't have thumbnail",
-        )
-        .into()),
-    }
 }
 
 fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
@@ -277,7 +264,7 @@ fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
     req.state()
         .db
         .send(Get {
-            publication_id: publication_id,
+            publication_id,
         })
         .from_err()
         .and_then(move |res| res.and_then(|publication| download_file(&config, &publication, file)))
@@ -296,14 +283,6 @@ fn download_file(
     Err(ErrorBadRequest(PublicationError::InvalidMediaFormat))
 }
 
-fn generate_thumbnail_location(home_path: &str, publication_id: i32) -> PathBuf {
-    let mut thumbnail_location = PathBuf::from(home_path.clone());
-    thumbnail_location.push(THUMBNAIL_LOCATION);
-    thumbnail_location.push(publication_id.to_string());
-
-    thumbnail_location
-}
-
 fn generate_thumbnail_url(publication_id: i32) -> String {
     format!("{}/thumbnail/{}", BASE_PATH, publication_id.to_string())
 }
@@ -313,7 +292,7 @@ fn save_file(
     publication_id: i32,
     field: multipart::Field<dev::Payload>,
 ) -> Box<Future<Item = String, Error = error::Error>> {
-    let thumbnail_location = generate_thumbnail_location(&home_path, publication_id);
+    let thumbnail_location = thumbnail::generate_thumbnail_location(&home_path, publication_id);
     let file_name: &str;
     {
         let content_type = field.content_type();
@@ -335,7 +314,7 @@ fn save_file(
         Ok(_) => {}
     }
 
-    let mut file_path = generate_thumbnail_location(&home_path, publication_id);
+    let mut file_path = thumbnail::generate_thumbnail_location(&home_path, publication_id);
     file_path.push(file_name);
 
     let mut file = match fs::File::create(file_path.clone()) {

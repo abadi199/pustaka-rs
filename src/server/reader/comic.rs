@@ -117,35 +117,31 @@ pub fn page(
 ) -> Result<String, ComicError> {
     let extract_location = &generate_extract_location(config, the_publication)?;
     match the_publication.media_format.as_ref() {
-        CBR => page_cbr(config, the_publication, page_number, extract_location),
-        CBZ => page_cbz(the_publication, page_number, extract_location),
+        CBR => page_cbr(config, &the_publication.file, page_number, extract_location),
+        CBZ => page_cbz(&the_publication.file, page_number, extract_location),
         _ => Err(ComicError::InvalidMediaFormatError),
     }
 }
 
-fn page_cbz(
-    publication: &Publication,
+pub fn page_cbz(
+    file: &str,
     page_number: usize,
     extract_location: &str,
 ) -> Result<String, ComicError> {
-    unzip::unzip_nth(&publication.file, extract_location, page_number)
-        .map_err(|_| ComicError::ZipError)
+    unzip::unzip_nth(file, extract_location, page_number).map_err(|_| ComicError::ZipError)
 }
 
-fn page_cbr(
+pub fn page_cbr(
     config: &Config,
-    the_publication: &Publication,
+    file: &str,
     page_number: usize,
     extract_location: &str,
 ) -> Result<String, ComicError> {
     use reader::comic::ComicError::*;
-    let mut open_archive = Archive::new(the_publication.file.clone())
+    let mut open_archive = Archive::new(file.to_string())
         .extract_to(extract_location.to_string())
         .map_err(|_err| RarError)?;
-    let extract_location = &generate_extract_location(config, the_publication)?;
 
-    println!("{:?}", (page_number));
-    println!("{:?}", open_archive.nth(page_number));
     match open_archive.nth(page_number) {
         Some(item) => match item {
             Ok(entry) => Ok(format!("{}/{}", extract_location, entry.filename)),

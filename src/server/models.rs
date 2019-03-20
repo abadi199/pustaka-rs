@@ -71,7 +71,7 @@ pub struct NewPublication {
 
 pub type PublicationId = i32;
 
-#[derive(Identifiable, Debug, Queryable, Deserialize, Associations, AsChangeset)]
+#[derive(Identifiable, Debug, Queryable, Deserialize, Associations, AsChangeset, Clone)]
 #[belongs_to(MediaType)]
 #[belongs_to(Author)]
 #[table_name = "publication"]
@@ -89,17 +89,9 @@ pub struct Publication {
 impl Publication {
     pub fn thumbnail_url(&self) -> Option<String> {
         match self.thumbnail {
-            Some(ref file) if file == "" => self.default_thumbnail_url(),
+            Some(ref file) if file == "" => None,
             Some(_) => Some(Self::generate_url(self.id)),
-            None => self.default_thumbnail_url(),
-        }
-    }
-
-    fn default_thumbnail_url(&self) -> Option<String> {
-        match self.media_format.as_ref() {
-            CBR => Some(Self::generate_url(self.id)),
-            CBZ => Some(Self::generate_url(self.id)),
-            _ => None,
+            None => None,
         }
     }
 

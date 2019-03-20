@@ -185,11 +185,10 @@ impl Handler<Get> for DbExecutor {
 
     fn handle(&mut self, msg: Get, _: &mut Self::Context) -> Self::Result {
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        get_publication(connection, msg.publication_id)
-            .map_err(|err| {
-                println!("{:?}", err);
-                actix_web::error::ErrorInternalServerError(err)
-            })
+        get_publication(connection, msg.publication_id).map_err(|err| {
+            println!("{:?}", err);
+            actix_web::error::ErrorInternalServerError(err)
+        })
     }
 }
 
