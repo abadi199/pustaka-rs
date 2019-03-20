@@ -32,6 +32,7 @@ poster { width, height, title, image } =
                     [ HA.style "height" (String.fromInt height ++ "px")
                     , HA.style "width" (String.fromInt width ++ "px")
                     , HA.alt title
+                    , HA.title title
                     , HA.src <| "data:*/*;base64," ++ base64
                     ]
                     []
