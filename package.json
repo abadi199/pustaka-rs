@@ -20,7 +20,7 @@
     "diesel:install": "cargo install diesel_cli --no-default-features --features sqlite",
     "diesel:run": "diesel migration run",
     "scan": "cargo run --bin scanner",
-    "clean:db": "sqlite3 pustaka.db 'delete from publication_category' && sqlite3 pustaka.db 'delete from publication'"
+    "clean:db": "sqlite3 pustaka.db 'delete from publication_category; delete from publication; delete from publication_progress'"
   },
   "author": "Abadi Kurniawan",
   "license": "ISC",
