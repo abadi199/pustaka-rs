@@ -5,7 +5,7 @@ use diesel::prelude::*;
 
 use actix::prelude::*;
 use db::executor::DbExecutor;
-use models::{Category, NewPublication, Publication, PublicationProgress};
+use models::{Category, NewPublication, Publication, PublicationProgress, RecentPublication};
 use schema::publication::dsl::*;
 
 #[derive(Debug)]
@@ -190,6 +190,52 @@ impl Handler<Get> for DbExecutor {
             println!("{:?}", err);
             actix_web::error::ErrorInternalServerError(err)
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct AddRecent(pub i32);
+impl Message for AddRecent {
+    type Result = Result<(), Error>;
+}
+impl Handler<AddRecent> for DbExecutor {
+    type Result = Result<(), Error>;
+    fn handle(&mut self, msg: AddRecent, _: &mut Self::Context) -> Self::Result {
+        use schema::recent_publication::dsl;
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        println!("Inserting into recent_publication: {:?}", msg.0);
+
+        diesel::delete(dsl::recent_publication.filter(dsl::publication_id.eq(msg.0)))
+            .execute(&*connection)
+            .expect(&format!("Error deleting recent_publication {}", msg.0));
+
+        diesel::insert_into(dsl::recent_publication)
+            .values(RecentPublication {
+                publication_id: msg.0,
+                timestamp: None,
+            })
+            .execute(&*connection)
+            .expect("Error inserting recent_publication");
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct ListRecent;
+impl Message for ListRecent {
+    type Result = Result<Vec<Publication>, Error>;
+}
+impl Handler<ListRecent> for DbExecutor {
+    type Result = Result<Vec<Publication>, Error>;
+    fn handle(&mut self, msg: ListRecent, _: &mut Self::Context) -> Self::Result {
+        use schema::recent_publication::dsl;
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+
+        let mut row: Vec<RecentPublication> = dsl::recent_publication
+            .load(&*connection)
+            .map_err(actix_web::error::ErrorInternalServerError)?;
+        Ok(vec![])
     }
 }
 

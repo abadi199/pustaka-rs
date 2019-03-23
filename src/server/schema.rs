@@ -61,6 +61,13 @@ table! {
 }
 
 table! {
+    recent_publication (publication_id) {
+        publication_id -> Integer,
+        timestamp -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     tag (id) {
         id -> Integer,
         name -> Text,
@@ -82,6 +89,7 @@ joinable!(publication_category -> publication (publication_id));
 joinable!(publication_progress -> publication (publication_id));
 joinable!(publication_tag -> publication (publication_id));
 joinable!(publication_tag -> tag (tag_id));
+joinable!(recent_publication -> publication (publication_id));
 
 allow_tables_to_appear_in_same_query!(
     author,
@@ -92,6 +100,7 @@ allow_tables_to_appear_in_same_query!(
     publication_category,
     publication_progress,
     publication_tag,
+    recent_publication,
     tag,
     user,
 );

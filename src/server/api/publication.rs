@@ -7,8 +7,8 @@ use actix_web::{
 use config::Config;
 use db::executor::DbExecutor;
 use db::publication::{
-    self, Delete, DeleteThumbnail, Get, GetProgress, List, ListByCategory, Update, UpdateProgress,
-    UpdateThumbnail,
+    self, AddRecent, Delete, DeleteThumbnail, Get, GetProgress, List, ListByCategory, ListRecent,
+    Update, UpdateProgress, UpdateThumbnail,
 };
 use fs::executor::{DeleteFile, FsExecutor};
 use fs::thumbnail;
@@ -183,20 +183,29 @@ fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error
 }
 
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
+    println!("read_page");
+    let publication_id = params.0;
     let config = state.config.clone();
-    state
-        .db
+    let db = &state.db;
+    let db_1 = db.clone();
+    let db_2 = db.clone();
+
+    let tasks = db_1
         .send(Get {
-            publication_id: params.0,
+            publication_id: publication_id,
         })
+        .join(db_2.send(AddRecent(publication_id.clone())));
+
+    tasks
         .from_err()
-        .and_then(move |res| {
-            res.and_then(|publication| match publication.media_format.as_ref() {
+        .and_then(|res| res)
+        .and_then(
+            move |(publication, _)| match publication.media_format.as_ref() {
                 CBR => read_page_comic(&config, &publication, params.1),
                 CBZ => read_page_comic(&config, &publication, params.1),
                 _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
-            })
-        })
+            },
+        )
         .map_err(|err| {
             println!("Error: {:?}", err);
             err
@@ -235,6 +244,18 @@ fn list_by_category(
         .responder()
 }
 
+fn list_recent(state: State<AppState>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(ListRecent)
+        .from_err()
+        .and_then(|res| match res {
+            Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
+}
+
 fn generate_thumbnail(
     state: State<AppState>,
     publication_id: Path<i32>,
@@ -243,14 +264,14 @@ fn generate_thumbnail(
     let publication_id = publication_id.into_inner();
     state
         .db
-        .send(Get {
-            publication_id,
-        })
+        .send(Get { publication_id })
         .from_err()
         .and_then(move |res| {
             res.and_then(|publication| match publication.thumbnail {
                 Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
-                None => Err(actix_web::error::ErrorInternalServerError("This publication doesn't have thumbnail")),
+                None => Err(actix_web::error::ErrorInternalServerError(
+                    "This publication doesn't have thumbnail",
+                )),
             })
         })
         .responder()
@@ -263,9 +284,7 @@ fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
     let config = state.config.clone();
     req.state()
         .db
-        .send(Get {
-            publication_id,
-        })
+        .send(Get { publication_id })
         .from_err()
         .and_then(move |res| res.and_then(|publication| download_file(&config, &publication, file)))
         .responder()
@@ -304,7 +323,7 @@ fn save_file(
             _ => {
                 return Box::new(future::err(actix_web::error::ErrorInternalServerError(
                     format!("Unsupported mime type: {:?}", content_type),
-                )))
+                )));
             }
         };
     }
@@ -456,6 +475,7 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
         .route("/category/{category_id}", Method::GET, list_by_category)
+        .route("/recent/", Method::GET, list_recent)
         .route(
             "/thumbnail/{publication_id}",
             Method::GET,

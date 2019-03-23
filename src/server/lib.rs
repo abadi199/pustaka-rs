@@ -20,6 +20,7 @@ extern crate walkdir;
 extern crate zip;
 #[macro_use]
 extern crate custom_error;
+extern crate chrono;
 extern crate image;
 
 pub mod api;

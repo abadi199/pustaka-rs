@@ -1,4 +1,12 @@
-module UI.Parts.Header exposing (Visibility, header, hidden, isVisible, toCounter, visibilityFromCounter, visible)
+module UI.Parts.Header exposing
+    ( Visibility
+    , header
+    , hidden
+    , isVisible
+    , toCounter
+    , visibilityFromCounter
+    , visible
+    )
 
 import Element as E exposing (..)
 import Element.Border as Border

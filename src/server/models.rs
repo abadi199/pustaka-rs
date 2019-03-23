@@ -1,6 +1,6 @@
 use schema::{
     author, category, favorite_category, media_type, publication, publication_category,
-    publication_progress, tag,
+    publication_progress, recent_publication, tag,
 };
 use serde::ser::SerializeStruct;
 use serde::Serialize;
@@ -159,4 +159,12 @@ pub struct FavoriteCategory {
 pub struct PublicationProgress {
     pub publication_id: i32,
     pub progress: f32,
+}
+
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Associations, Insertable)]
+#[table_name = "recent_publication"]
+#[primary_key(publication_id)]
+pub struct RecentPublication {
+    pub publication_id: i32,
+    pub timestamp: Option<chrono::NaiveDateTime>,
 }

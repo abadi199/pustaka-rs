@@ -9,6 +9,7 @@ module Entity.Publication exposing
     , emptyMetaData
     , get
     , getProgress
+    , getRecent
     , id
     , idToInt
     , idToString
@@ -93,6 +94,16 @@ type alias Page =
 
 
 -- HTTP
+
+
+getRecent : (ReloadableWebData () (List MetaData) -> msg) -> Cmd msg
+getRecent msg =
+    ReloadableData.Http.get
+        { initial = ()
+        , url = "/api/publication/recent/"
+        , msg = msg
+        , decoder = JD.list metaDataDecoder
+        }
 
 
 getProgress : { publicationId : Int, msg : ReloadableWebData Int Float -> msg } -> Cmd msg

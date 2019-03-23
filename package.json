@@ -11,7 +11,7 @@
     "watch:elm": "watchexec --restart --exts elm -w src/client/ 'npm run build:elm'",
     "watch:ts": "parcel watch src/client/*.ts -d app/assets/ -t browser",
     "watch:rust": "watchexec --restart -w src/server 'npm run start:server'",
-    "build:elm": "elm make src/client/Main.elm --output app/assets/app.js",
+    "build:elm": "elm make src/client/Main.elm --debug --output app/assets/app.js",
     "build:ts": "parcel build src/client/*.ts -d app/assets/ -t browser",
     "build:prod": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
     "start:server": "cargo run --bin pustaka",
