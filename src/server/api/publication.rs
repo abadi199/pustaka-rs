@@ -50,10 +50,8 @@ fn list(state: State<AppState>) -> FutureResponse<HttpResponse> {
         .db
         .send(List {})
         .from_err()
-        .and_then(|res| match res {
-            Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+        .and_then(|res| res)
+        .and_then(|publications| Ok(HttpResponse::Ok().json(publications)))
         .responder()
 }
 
@@ -62,10 +60,8 @@ fn create(state: State<AppState>, json: Json<NewPublication>) -> FutureResponse<
         .db
         .send(publication::Create(json.into_inner()))
         .from_err()
-        .and_then(|res| match res {
-            Ok(_) => Ok(HttpResponse::Ok().json(())),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+        .and_then(|res| res)
+        .and_then(|_| Ok(HttpResponse::Ok().json(())))
         .responder()
 }
 
@@ -76,10 +72,8 @@ fn update(state: State<AppState>, json: Json<Publication>) -> FutureResponse<Htt
             publication: json.into_inner(),
         })
         .from_err()
-        .and_then(|res| match res {
-            Ok(_) => Ok(HttpResponse::Ok().json(())),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+        .and_then(|res| res)
+        .and_then(|_| Ok(HttpResponse::Ok().json(())))
         .responder()
 }
 
@@ -87,7 +81,6 @@ fn update_progress(
     state: State<AppState>,
     json: Json<PublicationProgress>,
 ) -> FutureResponse<HttpResponse> {
-    // TODO
     let json = json.into_inner();
     state
         .db
@@ -95,8 +88,9 @@ fn update_progress(
             publication_id: json.publication_id,
             progress: json.progress,
         })
-        .map_err(error::ErrorInternalServerError)
-        .map(|_| HttpResponse::Ok().json(()))
+        .from_err()
+        .and_then(|res| res)
+        .and_then(|_| Ok(HttpResponse::Ok().json(())))
         .responder()
 }
 
@@ -106,11 +100,9 @@ fn get_progress(state: State<AppState>, publication_id: Path<i32>) -> FutureResp
         .send(GetProgress {
             publication_id: publication_id.into_inner(),
         })
-        .map_err(error::ErrorInternalServerError)
-        .and_then(|res| match res {
-            Ok(progress) => Ok(HttpResponse::Ok().json(progress)),
-            Err(err) => Ok(error::ErrorInternalServerError(err).into()),
-        })
+        .from_err()
+        .and_then(|res| res)
+        .and_then(|progress| Ok(HttpResponse::Ok().json(progress)))
         .responder()
 }
 
@@ -135,10 +127,8 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
             publication_id: publication_id.into_inner(),
         })
         .from_err()
-        .map(|res| match res {
-            Ok(publication) => HttpResponse::Ok().json(publication),
-            Err(_) => HttpResponse::InternalServerError().into(),
-        })
+        .and_then(|res| res)
+        .map(|publication| HttpResponse::Ok().json(publication))
         .responder()
 }
 
@@ -209,7 +199,6 @@ fn read_page_comic(
     page_num: usize,
 ) -> Result<NamedFile, actix_web::Error> {
     let filename = comic::page(config, &publication, page_num).expect("Unable to read page");
-    println!("File Name: {:?}", filename);
     let file = NamedFile::open(filename);
     file.map_err(|err| {
         println!("File Error: {:?}", err);
@@ -227,10 +216,8 @@ fn list_by_category(
             category_id: category_id.into_inner(),
         })
         .from_err()
-        .and_then(|res| match res {
-            Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+        .and_then(|res| res)
+        .and_then(|publications| Ok(HttpResponse::Ok().json(publications)))
         .responder()
 }
 
@@ -241,10 +228,8 @@ fn list_recent(state: State<AppState>, count: Path<i64>) -> FutureResponse<HttpR
             count: count.into_inner(),
         })
         .from_err()
-        .and_then(|res| match res {
-            Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
+        .and_then(|res| res)
+        .and_then(|publications| Ok(HttpResponse::Ok().json(publications)))
         .responder()
 }
 
@@ -257,13 +242,12 @@ fn generate_thumbnail(
         .db
         .send(Get { publication_id })
         .from_err()
-        .and_then(move |res| {
-            res.and_then(|publication| match publication.thumbnail {
-                Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
-                None => Err(actix_web::error::ErrorInternalServerError(
-                    "This publication doesn't have thumbnail",
-                )),
-            })
+        .and_then(|res| res)
+        .and_then(move |publication| match publication.thumbnail {
+            Some(thumbnail) => NamedFile::open(thumbnail).map_err(|err| err.into()),
+            None => Err(actix_web::error::ErrorInternalServerError(
+                "This publication doesn't have thumbnail",
+            )),
         })
         .responder()
 }
@@ -277,7 +261,8 @@ fn download(req: &HttpRequest<AppState>) -> FutureResponse<NamedFile> {
         .db
         .send(Get { publication_id })
         .from_err()
-        .and_then(move |res| res.and_then(|publication| download_file(&config, &publication, file)))
+        .and_then(|res| res)
+        .and_then(move |publication| download_file(&config, &publication, file))
         .responder()
 }
 
@@ -357,10 +342,8 @@ fn update_publication_thumbnail(
             thumbnail: file_path,
         })
         .from_err()
-        .and_then(move |res| match res {
-            Ok(_) => future::result(Ok(generate_thumbnail_url(publication_id))),
-            Err(err) => future::err(actix_web::error::ErrorInternalServerError(err)),
-        }),
+        .and_then(|res| res)
+        .and_then(move |_| future::result(Ok(generate_thumbnail_url(publication_id)))),
     )
 }
 
@@ -445,7 +428,7 @@ fn delete_thumbnail_file(
                 path: thumbnail_path,
             })
             .into_future()
-            .map_err(actix_web::error::ErrorInternalServerError)
+            .from_err()
             .and_then(|res| {
                 res.map_err(actix_web::error::ErrorInternalServerError)
                     .into_future()

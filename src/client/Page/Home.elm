@@ -108,14 +108,14 @@ view key categories model =
 viewLanding : Model -> Element Msg
 viewLanding model =
     column [ width fill ]
-        [ UI.ReloadableData.view (viewRecentPublications model) model.recentPublications ]
+        [ UI.ReloadableData.view (viewRecentPublications model) model.recentPublications
+        ]
 
 
 viewPerCategory : Model -> Element Msg
 viewPerCategory model =
     column [ width fill ]
-        [ UI.ReloadableData.view (viewRecentPublications model) model.recentPublications
-        , UI.ReloadableData.view (viewPublications model) model.publications
+        [ UI.ReloadableData.view (viewPublications model) model.publications
         ]
 
 
