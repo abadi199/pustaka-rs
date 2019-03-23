@@ -96,11 +96,11 @@ type alias Page =
 -- HTTP
 
 
-getRecent : (ReloadableWebData () (List MetaData) -> msg) -> Cmd msg
-getRecent msg =
+getRecent : Int -> (ReloadableWebData () (List MetaData) -> msg) -> Cmd msg
+getRecent count msg =
     ReloadableData.Http.get
         { initial = ()
-        , url = "/api/publication/recent/"
+        , url = "/api/publication/recent/" ++ String.fromInt count
         , msg = msg
         , decoder = JD.list metaDataDecoder
         }

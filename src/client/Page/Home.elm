@@ -226,21 +226,7 @@ update key msg model =
                             )
                         |> Dict.fromList
               }
-            , publications
-                |> ReloadableData.toMaybe
-                |> Maybe.withDefault []
-                |> List.map
-                    (\pub ->
-                        if Thumbnail.hasThumbnail pub.thumbnail then
-                            Publication.downloadCover
-                                { publicationId = pub.id
-                                , msg = CoverDownloaded pub.id
-                                }
-
-                        else
-                            Cmd.none
-                    )
-                |> Cmd.batch
+            , downloadCovers publications
             )
 
         CoverDownloaded publicationId data ->
@@ -253,13 +239,34 @@ update key msg model =
             )
 
         GetRecentPublicationCompleted data ->
-            ( { model | recentPublications = data }, Cmd.none )
+            ( { model | recentPublications = data }
+            , downloadCovers data
+            )
+
+
+downloadCovers : ReloadableWebData a (List Publication.MetaData) -> Cmd Msg
+downloadCovers data =
+    data
+        |> ReloadableData.toMaybe
+        |> Maybe.withDefault []
+        |> List.map
+            (\pub ->
+                if Thumbnail.hasThumbnail pub.thumbnail then
+                    Publication.downloadCover
+                        { publicationId = pub.id
+                        , msg = CoverDownloaded pub.id
+                        }
+
+                else
+                    Cmd.none
+            )
+        |> Cmd.batch
 
 
 updateRecentPublications : Model -> ( Model, Cmd Msg )
 updateRecentPublications model =
     ( { model | recentPublications = ReloadableData.loading model.recentPublications }
-    , Publication.getRecent GetRecentPublicationCompleted
+    , Publication.getRecent 10 GetRecentPublicationCompleted
     )
 
 

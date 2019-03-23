@@ -143,25 +143,24 @@ fn get(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Http
 }
 
 fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<HttpResponse> {
-    state
-        .db
-        .send(Get {
-            publication_id: publication_id.into_inner(),
-        })
-        .from_err()
-        .and_then(move |res| {
-            let config = state.config.clone();
-            match res {
-                Ok(ref publication) => match publication.media_format.as_ref() {
-                    CBR => read_cbr(&config, &publication),
-                    CBZ => read_cbz(&config, &publication),
-                    EPUB => read_epub(&publication),
-                    _ => Ok(HttpResponse::InternalServerError().into()),
-                },
-                Err(_) => Ok(HttpResponse::InternalServerError().into()),
-            }
-        })
-        .responder()
+    let config = state.config.clone();
+    let publication_id = publication_id.into_inner();
+    let db = &state.db;
+    db.send(Get {
+        publication_id: publication_id,
+    })
+    .join(db.send(AddRecent(publication_id)))
+    .from_err()
+    .and_then(|res| res)
+    .and_then(
+        move |(publication, _)| match publication.media_format.as_ref() {
+            CBR => read_cbr(&config, &publication),
+            CBZ => read_cbz(&config, &publication),
+            EPUB => read_epub(&publication),
+            _ => Ok(HttpResponse::InternalServerError().into()),
+        },
+    )
+    .responder()
 }
 
 fn read_cbz(config: &Config, publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
@@ -183,34 +182,25 @@ fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error
 }
 
 fn read_page(state: State<AppState>, params: Path<(i32, usize)>) -> FutureResponse<NamedFile> {
-    println!("read_page");
     let publication_id = params.0;
     let config = state.config.clone();
     let db = &state.db;
-    let db_1 = db.clone();
-    let db_2 = db.clone();
 
-    let tasks = db_1
-        .send(Get {
-            publication_id: publication_id,
-        })
-        .join(db_2.send(AddRecent(publication_id.clone())));
-
-    tasks
-        .from_err()
-        .and_then(|res| res)
-        .and_then(
-            move |(publication, _)| match publication.media_format.as_ref() {
-                CBR => read_page_comic(&config, &publication, params.1),
-                CBZ => read_page_comic(&config, &publication, params.1),
-                _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
-            },
-        )
-        .map_err(|err| {
-            println!("Error: {:?}", err);
-            err
-        })
-        .responder()
+    db.send(Get {
+        publication_id: publication_id,
+    })
+    .from_err()
+    .and_then(|res| res)
+    .and_then(move |publication| match publication.media_format.as_ref() {
+        CBR => read_page_comic(&config, &publication, params.1),
+        CBZ => read_page_comic(&config, &publication, params.1),
+        _ => Err(ErrorBadRequest(PublicationError::InvalidMediaFormat)),
+    })
+    .map_err(|err| {
+        println!("Error: {:?}", err);
+        err
+    })
+    .responder()
 }
 
 fn read_page_comic(
@@ -244,10 +234,12 @@ fn list_by_category(
         .responder()
 }
 
-fn list_recent(state: State<AppState>) -> FutureResponse<HttpResponse> {
+fn list_recent(state: State<AppState>, count: Path<i64>) -> FutureResponse<HttpResponse> {
     state
         .db
-        .send(ListRecent)
+        .send(ListRecent {
+            count: count.into_inner(),
+        })
         .from_err()
         .and_then(|res| match res {
             Ok(publications) => Ok(HttpResponse::Ok().json(publications)),
@@ -474,7 +466,7 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
         .route("/category/{category_id}", Method::GET, list_by_category)
-        .route("/recent/", Method::GET, list_recent)
+        .route("/recent/{count}", Method::GET, list_recent)
         .route(
             "/thumbnail/{publication_id}",
             Method::GET,

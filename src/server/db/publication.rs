@@ -222,7 +222,9 @@ impl Handler<AddRecent> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct ListRecent;
+pub struct ListRecent {
+    pub count: i64,
+}
 impl Message for ListRecent {
     type Result = Result<Vec<Publication>, Error>;
 }
@@ -234,6 +236,8 @@ impl Handler<ListRecent> for DbExecutor {
 
         let row: Vec<(Publication, RecentPublication)> = publication
             .inner_join(dsl::recent_publication)
+            .order_by(dsl::timestamp.desc())
+            .limit(msg.count)
             .load(&*connection)
             .map_err(actix_web::error::ErrorInternalServerError)?;
         Ok(row
