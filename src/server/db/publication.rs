@@ -232,10 +232,14 @@ impl Handler<ListRecent> for DbExecutor {
         use schema::recent_publication::dsl;
         let connection: &SqliteConnection = &self.0.get().unwrap();
 
-        let mut row: Vec<RecentPublication> = dsl::recent_publication
+        let row: Vec<(Publication, RecentPublication)> = publication
+            .inner_join(dsl::recent_publication)
             .load(&*connection)
             .map_err(actix_web::error::ErrorInternalServerError)?;
-        Ok(vec![])
+        Ok(row
+            .into_iter()
+            .map(|(the_publication, _)| the_publication)
+            .collect())
     }
 }
 

@@ -260,7 +260,6 @@ fn generate_thumbnail(
     state: State<AppState>,
     publication_id: Path<i32>,
 ) -> FutureResponse<NamedFile> {
-    let config = state.config.clone();
     let publication_id = publication_id.into_inner();
     state
         .db
