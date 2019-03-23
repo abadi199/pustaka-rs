@@ -257,6 +257,7 @@ fn insert_publication(connection: &SqliteConnection) {
                         media_format: record.media_format,
                         author_id: author.id,
                         file: record.file,
+                        timestamp: None,
                     },
                     category.id,
                 ));

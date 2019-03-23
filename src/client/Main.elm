@@ -15,9 +15,7 @@ import Page.Publication.Edit as PublicationEditPage
 import Page.Read as ReadPage
 import ReloadableData exposing (ReloadableWebData)
 import Return
-import Set
 import Task
-import Tree exposing (Tree)
 import UI.Layout
 import UI.Nav.Side
 import UI.Parts.Dialog as Dialog

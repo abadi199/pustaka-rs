@@ -7,8 +7,8 @@ use actix_web::{
 use config::Config;
 use db::executor::DbExecutor;
 use db::publication::{
-    self, AddRecent, Delete, DeleteThumbnail, Get, GetProgress, List, ListByCategory, ListRecent,
-    Update, UpdateProgress, UpdateThumbnail,
+    self, AddRecent, Delete, DeleteThumbnail, Get, GetProgress, List, ListByCategory,
+    ListRecentlyAdded, ListRecentlyRead, Update, UpdateProgress, UpdateThumbnail,
 };
 use fs::executor::{DeleteFile, FsExecutor};
 use fs::thumbnail;
@@ -221,10 +221,24 @@ fn list_by_category(
         .responder()
 }
 
-fn list_recent(state: State<AppState>, count: Path<i64>) -> FutureResponse<HttpResponse> {
+fn list_recently_added(
+    state: State<AppState>,
+    path: Path<(i32, i64)>,
+) -> FutureResponse<HttpResponse> {
+    let (category_id, count) = path.into_inner();
     state
         .db
-        .send(ListRecent {
+        .send(ListRecentlyAdded { category_id, count })
+        .from_err()
+        .and_then(|res| res)
+        .and_then(|publications| Ok(HttpResponse::Ok().json(publications)))
+        .responder()
+}
+
+fn list_recently_read(state: State<AppState>, count: Path<i64>) -> FutureResponse<HttpResponse> {
+    state
+        .db
+        .send(ListRecentlyRead {
             count: count.into_inner(),
         })
         .from_err()
@@ -449,7 +463,16 @@ pub fn create_app(state: AppState, prefix: &str) -> App<AppState> {
         .route("/{publication_id}", Method::DELETE, delete)
         .route("/{publication_id}", Method::GET, get)
         .route("/category/{category_id}", Method::GET, list_by_category)
-        .route("/recent/{count}", Method::GET, list_recent)
+        .route(
+            "/recently_added/category_id/{category_id}/count/{count}",
+            Method::GET,
+            list_recently_added,
+        )
+        .route(
+            "/recently_read/count/{count}",
+            Method::GET,
+            list_recently_read,
+        )
         .route(
             "/thumbnail/{publication_id}",
             Method::GET,

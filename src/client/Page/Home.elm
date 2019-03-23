@@ -13,24 +13,19 @@ import Browser.Navigation as Nav
 import Cmd
 import Dict exposing (Dict)
 import Element as E exposing (..)
-import Entity.Category exposing (Category)
+import Entity.Category as Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
 import Html.Attributes as HA
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
-import Set exposing (Set)
-import Tree exposing (Tree)
 import UI.Action as Action
 import UI.Background as Background
 import UI.Card as Card
-import UI.Error
 import UI.Heading as Heading
 import UI.Icon as Icon
 import UI.Layout
-import UI.Loading
-import UI.Menu
 import UI.Nav.Side
 import UI.Parts.BreadCrumb as BreadCrumb
 import UI.Parts.Dialog as Dialog
@@ -47,7 +42,9 @@ import UI.Spacing as UI
 type alias Model =
     { selectedCategoryId : Maybe Int
     , publications : ReloadableWebData () (List Publication.MetaData)
-    , recentPublications : ReloadableWebData () (List Publication.MetaData)
+    , categories : ReloadableWebData () (List Category)
+    , recentlyAddedPublications : Dict Int (ReloadableWebData () (List Publication.MetaData))
+    , recentlyReadPublications : ReloadableWebData () (List Publication.MetaData)
     , covers : Dict Int (ReloadableWebData () Image)
     , searchText : String
     }
@@ -56,14 +53,17 @@ type alias Model =
 init : Maybe Int -> ( Model, Cmd Msg )
 init selectedCategoryId =
     selectCategory selectedCategoryId initialModel
-        |> Cmd.andThen updateRecentPublications
+        |> Cmd.andThen updateRecentlyReadPublications
+        |> Cmd.andThen getCategories
 
 
 initialModel : Model
 initialModel =
     { selectedCategoryId = Nothing
     , publications = ReloadableData.NotAsked ()
-    , recentPublications = ReloadableData.NotAsked ()
+    , categories = ReloadableData.NotAsked ()
+    , recentlyAddedPublications = Dict.empty
+    , recentlyReadPublications = ReloadableData.NotAsked ()
     , covers = Dict.empty
     , searchText = ""
     }
@@ -79,7 +79,9 @@ type Msg
     | CategorySelected (Maybe Int)
     | GetPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
     | CoverDownloaded Int (ReloadableWebData () Image)
-    | GetRecentPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
+    | GetRecentlyReadPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
+    | GetCategoriesCompleted (ReloadableWebData () (List Category))
+    | GetRecentlyAddedPublicationCompleted Int (ReloadableWebData () (List Publication.MetaData))
 
 
 
@@ -108,8 +110,31 @@ view key categories model =
 viewLanding : Model -> Element Msg
 viewLanding model =
     column [ width fill ]
-        [ UI.ReloadableData.view (viewRecentPublications model) model.recentPublications
+        [ UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
+        , UI.ReloadableData.view (viewRecentlyAdded model) model.categories
         ]
+
+
+viewRecentlyAdded : Model -> List Category -> Element Msg
+viewRecentlyAdded model categories =
+    column []
+        (categories |> List.map (viewRecentlyAddedByCategory model))
+
+
+viewRecentlyAddedByCategory : Model -> Category -> Element Msg
+viewRecentlyAddedByCategory model category =
+    let
+        maybeData : Maybe (ReloadableWebData () (List Publication.MetaData))
+        maybeData =
+            model.recentlyAddedPublications
+                |> Dict.get category.id
+    in
+    case maybeData of
+        Just data ->
+            UI.ReloadableData.view (viewPublicationsRow category.name model) data
+
+        Nothing ->
+            E.none
 
 
 viewPerCategory : Model -> Element Msg
@@ -120,12 +145,21 @@ viewPerCategory model =
 
 
 viewRecentPublications : Model -> List Publication.MetaData -> Element Msg
-viewRecentPublications model publications =
-    column [ width fill ]
-        [ Heading.heading 2 "Recently Read"
-        , row [ width fill, height (px 250), Background.transparentLightBlack ]
-            (publications |> List.map (publicationView model))
-        ]
+viewRecentPublications =
+    viewPublicationsRow "Continue Reading"
+
+
+viewPublicationsRow : String -> Model -> List Publication.MetaData -> Element Msg
+viewPublicationsRow title model publications =
+    if List.isEmpty publications then
+        E.none
+
+    else
+        column [ width fill ]
+            [ Heading.heading 2 title
+            , row [ width fill, height (px 250), Background.transparentLightBlack ]
+                (publications |> List.map (publicationView model))
+            ]
 
 
 viewPublications : Model -> List Publication.MetaData -> Element Msg
@@ -238,8 +272,32 @@ update key msg model =
             , Cmd.none
             )
 
-        GetRecentPublicationCompleted data ->
-            ( { model | recentPublications = data }
+        GetRecentlyReadPublicationCompleted data ->
+            ( { model | recentlyReadPublications = data }
+            , downloadCovers data
+            )
+
+        GetCategoriesCompleted data ->
+            ( { model | categories = data }
+            , data
+                |> ReloadableData.toMaybe
+                |> Maybe.withDefault []
+                |> List.map
+                    (\category ->
+                        Publication.getRecentlyAdded
+                            { count = 10
+                            , categoryId = category.id
+                            , msg = GetRecentlyAddedPublicationCompleted category.id
+                            }
+                    )
+                |> Cmd.batch
+            )
+
+        GetRecentlyAddedPublicationCompleted categoryId data ->
+            ( { model
+                | recentlyAddedPublications =
+                    Dict.insert categoryId data model.recentlyAddedPublications
+              }
             , downloadCovers data
             )
 
@@ -263,10 +321,17 @@ downloadCovers data =
         |> Cmd.batch
 
 
-updateRecentPublications : Model -> ( Model, Cmd Msg )
-updateRecentPublications model =
-    ( { model | recentPublications = ReloadableData.loading model.recentPublications }
-    , Publication.getRecent 10 GetRecentPublicationCompleted
+updateRecentlyReadPublications : Model -> ( Model, Cmd Msg )
+updateRecentlyReadPublications model =
+    ( { model | recentlyReadPublications = ReloadableData.loading model.recentlyReadPublications }
+    , Publication.getRecentlyRead { count = 10, msg = GetRecentlyReadPublicationCompleted }
+    )
+
+
+getCategories : Model -> ( Model, Cmd Msg )
+getCategories model =
+    ( { model | categories = ReloadableData.loading model.categories }
+    , Category.list GetCategoriesCompleted
     )
 
 

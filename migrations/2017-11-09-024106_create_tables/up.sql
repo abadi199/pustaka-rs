@@ -29,6 +29,7 @@ CREATE TABLE publication (
   author_id INTEGER NOT NULL,
   thumbnail VARCHAR NULL,
   file VARCHAR NOT NULL,
+  timestamp DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(media_type_id) REFERENCES media_type(id),
   FOREIGN KEY(author_id) REFERENCES author(id)
 );

@@ -5,7 +5,10 @@ use diesel::prelude::*;
 
 use actix::prelude::*;
 use db::executor::DbExecutor;
-use models::{Category, NewPublication, Publication, PublicationProgress, RecentPublication};
+use models::{
+    Category, NewPublication, Publication, PublicationCategory, PublicationProgress,
+    RecentPublication,
+};
 use schema::publication::dsl::*;
 
 #[derive(Debug)]
@@ -222,15 +225,52 @@ impl Handler<AddRecent> for DbExecutor {
 }
 
 #[derive(Debug)]
-pub struct ListRecent {
+pub struct ListRecentlyAdded {
+    pub category_id: i32,
     pub count: i64,
 }
-impl Message for ListRecent {
+impl Message for ListRecentlyAdded {
     type Result = Result<Vec<Publication>, Error>;
 }
-impl Handler<ListRecent> for DbExecutor {
+impl Handler<ListRecentlyAdded> for DbExecutor {
     type Result = Result<Vec<Publication>, Error>;
-    fn handle(&mut self, msg: ListRecent, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: ListRecentlyAdded, _: &mut Self::Context) -> Self::Result {
+        let connection: &SqliteConnection = &self.0.get().unwrap();
+        use schema::publication::dsl as p;
+        use schema::publication_category::dsl as pc;
+
+        let ListRecentlyAdded { category_id, count } = msg;
+
+        let categories: Vec<i32> = get_category_and_descendants(category_id, &connection)
+            .expect("Invalid category id")
+            .iter()
+            .map(|category| category.id)
+            .collect();
+
+        let row: Vec<(Publication, PublicationCategory)> = p::publication
+            .inner_join(pc::publication_category)
+            .filter(pc::category_id.eq_any(categories))
+            .limit(count)
+            .load(&*connection)
+            .expect("Error getting publications id");
+
+        Ok(row
+            .into_iter()
+            .map(|(the_publication, _)| the_publication)
+            .collect())
+    }
+}
+
+#[derive(Debug)]
+pub struct ListRecentlyRead {
+    pub count: i64,
+}
+impl Message for ListRecentlyRead {
+    type Result = Result<Vec<Publication>, Error>;
+}
+impl Handler<ListRecentlyRead> for DbExecutor {
+    type Result = Result<Vec<Publication>, Error>;
+    fn handle(&mut self, msg: ListRecentlyRead, _: &mut Self::Context) -> Self::Result {
         use schema::recent_publication::dsl;
         let connection: &SqliteConnection = &self.0.get().unwrap();
 

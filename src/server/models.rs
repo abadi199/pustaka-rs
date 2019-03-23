@@ -5,6 +5,7 @@ use schema::{
 use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
+use chrono;
 
 pub const CBR: &str = "cbr";
 pub const CBZ: &str = "cbz";
@@ -66,6 +67,7 @@ pub struct NewPublication {
     pub media_format: String,
     pub author_id: i32,
     pub thumbnail: Option<String>,
+    pub timestamp: Option<chrono::NaiveDateTime>,
     pub file: String,
 }
 
@@ -84,6 +86,7 @@ pub struct Publication {
     pub author_id: i32,
     pub thumbnail: Option<String>,
     pub file: String,
+    pub timestamp: Option<chrono::NaiveDateTime>,
 }
 
 impl Publication {

@@ -9,7 +9,8 @@ module Entity.Publication exposing
     , emptyMetaData
     , get
     , getProgress
-    , getRecent
+    , getRecentlyAdded
+    , getRecentlyRead
     , id
     , idToInt
     , idToString
@@ -96,11 +97,24 @@ type alias Page =
 -- HTTP
 
 
-getRecent : Int -> (ReloadableWebData () (List MetaData) -> msg) -> Cmd msg
-getRecent count msg =
+getRecentlyAdded : { count : Int, categoryId : Int, msg : ReloadableWebData () (List MetaData) -> msg } -> Cmd msg
+getRecentlyAdded { count, categoryId, msg } =
     ReloadableData.Http.get
         { initial = ()
-        , url = "/api/publication/recent/" ++ String.fromInt count
+        , url =
+            "/api/publication/recently_added"
+                ++ ("/category_id/" ++ String.fromInt categoryId)
+                ++ ("/count/" ++ String.fromInt count)
+        , msg = msg
+        , decoder = JD.list metaDataDecoder
+        }
+
+
+getRecentlyRead : { count : Int, msg : ReloadableWebData () (List MetaData) -> msg } -> Cmd msg
+getRecentlyRead { count, msg } =
+    ReloadableData.Http.get
+        { initial = ()
+        , url = "/api/publication/recently_read/count/" ++ String.fromInt count
         , msg = msg
         , decoder = JD.list metaDataDecoder
         }

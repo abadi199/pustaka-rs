@@ -100,6 +100,7 @@ fn save_publication(
                 author_id: 1,
                 thumbnail: None,
                 file: file.path.clone(),
+                timestamp: None,
             };
 
             file_map.insert(publication.file.clone(), category_id);

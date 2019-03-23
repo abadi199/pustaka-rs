@@ -36,6 +36,7 @@ table! {
         author_id -> Integer,
         thumbnail -> Nullable<Text>,
         file -> Text,
+        timestamp -> Nullable<Timestamp>,
     }
 }
 
