@@ -109,7 +109,7 @@ view key categories model =
 
 viewLanding : Model -> Element Msg
 viewLanding model =
-    column [ width fill ]
+    column [ width fill, UI.spacing 1 ]
         [ UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
         , UI.ReloadableData.view (viewRecentlyAdded model) model.categories
         ]
@@ -117,7 +117,7 @@ viewLanding model =
 
 viewRecentlyAdded : Model -> List Category -> Element Msg
 viewRecentlyAdded model categories =
-    column []
+    column [ UI.spacing -5 ]
         (categories |> List.map (viewRecentlyAddedByCategory model))
 
 
@@ -145,8 +145,9 @@ viewPerCategory model =
 
 
 viewRecentPublications : Model -> List Publication.MetaData -> Element Msg
-viewRecentPublications =
-    viewPublicationsRow "Continue Reading"
+viewRecentPublications model publications =
+    row [ width fill, Background.transparentMediumBlack, UI.padding -5 ]
+        [ viewPublicationsRow "Continue Reading" model publications ]
 
 
 viewPublicationsRow : String -> Model -> List Publication.MetaData -> Element Msg
@@ -157,7 +158,11 @@ viewPublicationsRow title model publications =
     else
         column [ width fill ]
             [ Heading.heading 2 title
-            , row [ width fill, height (px 250), Background.transparentLightBlack ]
+            , row
+                [ width fill
+                , height (px 250)
+                , UI.spacing -5
+                ]
                 (publications |> List.map (publicationView model))
             ]
 
