@@ -3,14 +3,14 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
-  - script: echo hello from Linux
-- job: macOS
-  pool:
-    vmImage: 'macOS-10.13'
-  steps:
-  - script: echo hello from macOS
-- job: Windows
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - script: echo hello from Windows
+  - script: npm run build:rust
+#- job: macOS
+#  pool:
+#    vmImage: 'macOS-10.13'
+#  steps:
+#  - script: echo hello from macOS
+#- job: Windows
+#  pool:
+#    vmImage: 'windows-2019'
+#  steps:
+#  - script: echo hello from Windows
