@@ -3,6 +3,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
+    - script: apt-get install libsqlite3-dev
     - script: |
         curl https://sh.rustup.rs -sSf | sh -s -- -y
         echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
