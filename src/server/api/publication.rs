@@ -1,4 +1,4 @@
-use actix::prelude::{Addr, Request};
+use actix::prelude::Addr;
 use actix_web::http::Method;
 use actix_web::{
     dev, error, error::ErrorBadRequest, fs::NamedFile, middleware, multipart, App, AsyncResponder,
@@ -20,7 +20,7 @@ use state::AppState;
 use std::{
     error::Error,
     fmt::{Display, Formatter},
-    fs, io,
+    fs,
     io::Write,
     path::PathBuf,
 };
@@ -30,7 +30,6 @@ pub const BASE_PATH: &str = "/api/publication";
 #[derive(Debug)]
 enum PublicationError {
     InvalidMediaFormat,
-    IoError(io::Error),
 }
 
 impl Error for PublicationError {

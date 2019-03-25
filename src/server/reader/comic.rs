@@ -117,7 +117,7 @@ pub fn page(
 ) -> Result<String, ComicError> {
     let extract_location = &generate_extract_location(config, the_publication)?;
     match the_publication.media_format.as_ref() {
-        CBR => page_cbr(config, &the_publication.file, page_number, extract_location),
+        CBR => page_cbr(&the_publication.file, page_number, extract_location),
         CBZ => page_cbz(&the_publication.file, page_number, extract_location),
         _ => Err(ComicError::InvalidMediaFormatError),
     }
@@ -132,7 +132,6 @@ pub fn page_cbz(
 }
 
 pub fn page_cbr(
-    config: &Config,
     file: &str,
     page_number: usize,
     extract_location: &str,

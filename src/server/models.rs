@@ -97,10 +97,6 @@ impl Publication {
             None => false,
         }
     }
-
-    fn generate_url(publication_id: i32) -> String {
-        format!("/api/publication/thumbnail/{}", publication_id)
-    }
 }
 
 impl Serialize for Publication {
