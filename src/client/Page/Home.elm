@@ -27,7 +27,6 @@ import UI.Heading as Heading
 import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
-import UI.Parts.BreadCrumb as BreadCrumb
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.Poster as UI
@@ -40,7 +39,7 @@ import UI.Spacing as UI
 
 
 type alias Model =
-    { selectedCategoryId : Maybe Int
+    { selectedCategoryId : Maybe (ReloadableWebData Int Category)
     , publications : ReloadableWebData () (List Publication.MetaData)
     , categories : ReloadableWebData () (List Category)
     , recentlyAddedPublications : Dict Int (ReloadableWebData () (List Publication.MetaData))
@@ -82,6 +81,7 @@ type Msg
     | GetRecentlyReadPublicationCompleted (ReloadableWebData () (List Publication.MetaData))
     | GetCategoriesCompleted (ReloadableWebData () (List Category))
     | GetRecentlyAddedPublicationCompleted Int (ReloadableWebData () (List Publication.MetaData))
+    | GetCategoryCompleted (ReloadableWebData Int Category)
 
 
 
@@ -140,7 +140,11 @@ viewRecentlyAddedByCategory model category =
 viewPerCategory : Model -> Element Msg
 viewPerCategory model =
     column [ width fill ]
-        [ UI.ReloadableData.view (viewPublications model) model.publications
+        [ model.selectedCategoryId
+            |> Maybe.andThen ReloadableData.toMaybe
+            |> Maybe.map (\category -> Heading.heading 2 category.name)
+            |> Maybe.withDefault E.none
+        , UI.ReloadableData.view (viewPublications model) model.publications
         ]
 
 
@@ -174,8 +178,7 @@ viewPublications model publications =
 
     else
         column [ width fill ]
-            [ BreadCrumb.breadCrumb []
-            , wrappedRow [ UI.padding 1, UI.spacing 1 ]
+            [ wrappedRow [ UI.paddingEach { top = 1, right = 0, bottom = 1, left = 0 }, UI.spacing 1 ]
                 (publications |> List.map (publicationView model))
             ]
 
@@ -306,6 +309,9 @@ update key msg model =
             , downloadCovers data
             )
 
+        GetCategoryCompleted data ->
+            ( { model | selectedCategoryId = Just data }, Cmd.none )
+
 
 downloadCovers : ReloadableWebData a (List Publication.MetaData) -> Cmd Msg
 downloadCovers data =
@@ -343,30 +349,32 @@ getCategories model =
 selectCategory : Maybe Int -> Model -> ( Model, Cmd Msg )
 selectCategory selectedCategoryId model =
     ( { model
-        | selectedCategoryId = selectedCategoryId
+        | selectedCategoryId =
+            selectedCategoryId
+                |> Maybe.map ReloadableData.Loading
         , publications =
-            case selectedCategoryId of
-                Nothing ->
-                    ReloadableData.NotAsked ()
-
-                Just _ ->
-                    ReloadableData.loading model.publications
+            selectedCategoryId
+                |> Maybe.map (\_ -> ReloadableData.loading model.publications)
+                |> Maybe.withDefault (ReloadableData.NotAsked ())
       }
     , selectedCategoryId
         |> Maybe.map
             (\id ->
-                Publication.listByCategory
-                    { categoryId = id
-                    , msg = GetPublicationCompleted
-                    }
+                Cmd.batch
+                    [ Publication.listByCategory
+                        { categoryId = id
+                        , msg = GetPublicationCompleted
+                        }
+                    , Category.get { categoryId = id, msg = GetCategoryCompleted }
+                    ]
             )
         |> Maybe.withDefault Cmd.none
     )
 
 
-selectedItem : Maybe Int -> UI.Nav.Side.SelectedItem
+selectedItem : Maybe (ReloadableWebData Int Category) -> UI.Nav.Side.SelectedItem
 selectedItem selectedCategoryId =
-    case selectedCategoryId of
+    case selectedCategoryId |> Maybe.map ReloadableData.toInitial of
         Just id ->
             UI.Nav.Side.CategoryId id
 

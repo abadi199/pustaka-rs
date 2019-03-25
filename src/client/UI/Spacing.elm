@@ -4,8 +4,12 @@ import Element as E exposing (Attribute, modular)
 
 
 scaled : Int -> Int
-scaled =
-    modular 50 1.25 >> round
+scaled n =
+    if n == 0 then
+        0
+
+    else
+        n |> modular 50 1.25 |> round
 
 
 spacing : Int -> Attribute msg

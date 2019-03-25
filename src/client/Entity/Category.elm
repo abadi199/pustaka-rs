@@ -86,10 +86,10 @@ parentExists category set =
 -- HTTP
 
 
-get : { msg : ReloadableWebData () Category -> msg, categoryId : Int } -> Cmd msg
+get : { msg : ReloadableWebData Int Category -> msg, categoryId : Int } -> Cmd msg
 get { msg, categoryId } =
     ReloadableData.Http.get
-        { initial = ()
+        { initial = categoryId
         , url = "/api/category/" ++ String.fromInt categoryId
         , msg = msg
         , decoder = decoder
