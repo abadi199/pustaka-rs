@@ -1,19 +1,23 @@
 jobs:
-- job: Linux
-  pool:
-    vmImage: 'ubuntu-16.04'
-  steps:
-    - script: sudo apt-get install -y libsqlite3-dev
-    - script: |
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
-      displayName: Install rust
-    - script: npm run prod:rust
-#- job: macOS
-#  pool:
-#    vmImage: 'macOS-10.13'
-#  steps:
-#  - script: echo hello from macOS
+  # - job: Linux
+  #   pool:
+  #     vmImage: 'ubuntu-16.04'
+  #   steps:
+  #     - script: sudo apt-get install -y libsqlite3-dev
+  #     - script: |
+  #         curl https://sh.rustup.rs -sSf | sh -s -- -y
+  #         echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+  #       displayName: Install rust
+  #     - script: npm run prod:rust
+  - job: macOS
+    pool:
+      vmImage: "macOS-10.13"
+    steps:
+      - script: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+        displayName: Install rust
+      - script: npm run prod:rust
 #- job: Windows
 #  pool:
 #    vmImage: 'windows-2019'
