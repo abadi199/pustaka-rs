@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "elm-test",
-    "rustup": "rustup override set nightly-2018-05-15",
     "postinstall": "cargo install --version 1.9.2 watchexec",
     "watch": "run-p watch:elm watch:ts watch:rust",
     "watch:elm": "watchexec --restart --exts elm -w src/client/ 'npm run build:elm'",
@@ -13,7 +12,8 @@
     "watch:rust": "watchexec --restart -w src/server 'npm run start:server'",
     "build:elm": "elm make src/client/Main.elm --debug --output app/assets/app.js",
     "build:ts": "parcel build src/client/*.ts -d app/assets/ -t browser",
-    "build:prod": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
+    "prod:elm": "tput reset && elm make src/client/Main.elm --optimize --output app/assets/app.js",
+    "prod:rust": "cargo build --bin pustaka --release",
     "start:server": "cargo run --bin pustaka",
     "seed": "cargo run --bin seed",
     "start": "npm run watch",
