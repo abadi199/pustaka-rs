@@ -48,7 +48,7 @@ pub fn open(the_publication: &Publication) -> Result<Data, EpubError> {
         title: the_publication.title.clone(),
         media_type_id: the_publication.media_type_id,
         author_id: the_publication.author_id,
-        thumbnail_url: the_publication.thumbnail_url().clone(),
+        has_thumbnail: the_publication.has_thumbnail().clone(),
         file: the_publication.file.clone(),
         total_pages: doc.get_num_pages(),
         media_format: the_publication.media_format.clone(),

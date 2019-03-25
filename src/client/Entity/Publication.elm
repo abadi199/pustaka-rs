@@ -3,6 +3,7 @@ module Entity.Publication exposing
     , Id
     , MetaData
     , Page
+    , addThumbnail
     , deleteThumbnail
     , downloadCover
     , downloadPage
@@ -16,6 +17,7 @@ module Entity.Publication exposing
     , idToString
     , listByCategory
     , read
+    , removeThumbnail
     , update
     , updateProgress
     , uploadThumbnail
@@ -64,6 +66,16 @@ type alias MetaData =
     , mediaFormat : MediaFormat
     , thumbnail : Thumbnail
     }
+
+
+removeThumbnail : MetaData -> MetaData
+removeThumbnail metaData =
+    { metaData | thumbnail = Thumbnail.none }
+
+
+addThumbnail : MetaData -> MetaData
+addThumbnail metaData =
+    { metaData | thumbnail = Thumbnail.thumbnail }
 
 
 emptyMetaData : MetaData
@@ -242,7 +254,7 @@ metaDataDecoder =
         (JD.field "title" JD.string)
         (JD.field "file" JD.string)
         (JD.field "media_format" MediaFormat.decoder)
-        (JD.field "thumbnail_url" thumbnailDecoder)
+        (JD.field "has_thumbnail" thumbnailDecoder)
 
 
 decoder : JD.Decoder Data
@@ -251,7 +263,7 @@ decoder =
         (JD.field "id" JD.int)
         (JD.field "isbn" JD.string)
         (JD.field "title" JD.string)
-        (JD.field "thumbnail_url" thumbnailDecoder)
+        (JD.field "has_thumbnail" thumbnailDecoder)
         (JD.field "total_pages" JD.int)
         (JD.field "media_format" MediaFormat.decoder)
 

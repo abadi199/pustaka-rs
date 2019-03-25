@@ -90,11 +90,11 @@ pub struct Publication {
 }
 
 impl Publication {
-    pub fn thumbnail_url(&self) -> Option<String> {
+    pub fn has_thumbnail(&self) -> bool {
         match self.thumbnail {
-            Some(ref file) if file == "" => None,
-            Some(_) => Some(Self::generate_url(self.id)),
-            None => None,
+            Some(ref file) if file == "" => false,
+            Some(_) => true,
+            None => false,
         }
     }
 
@@ -116,9 +116,9 @@ impl Serialize for Publication {
         state.serialize_field("author_id", &self.author_id)?;
         state.serialize_field("file", &self.file)?;
         state.serialize_field("media_format", &self.media_format)?;
-        match self.thumbnail_url() {
-            Some(url) => state.serialize_field("thumbnail_url", &url)?,
-            None => state.serialize_field("thumbnail_url", &self.thumbnail)?,
+        match self.has_thumbnail() {
+            true => state.serialize_field("has_thumbnail", &true)?,
+            false => state.serialize_field("has_thumbnail", &false)?,
         }
         state.end()
     }

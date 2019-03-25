@@ -1,13 +1,12 @@
 module Entity.Thumbnail exposing
     ( Thumbnail(..)
-    , fromUrl
     , hasThumbnail
     , new
     , none
+    , thumbnail
     , thumbnailDecoder
     )
 
-import Entity.Image as Image exposing (Image)
 import File exposing (File)
 import Json.Decode as JD
 
@@ -15,19 +14,19 @@ import Json.Decode as JD
 type Thumbnail
     = NoThumbnail
     | New File
-    | Url String
+    | Thumbnail
 
 
 hasThumbnail : Thumbnail -> Bool
-hasThumbnail thumbnail =
-    case thumbnail of
+hasThumbnail t =
+    case t of
         NoThumbnail ->
             False
 
         New _ ->
             False
 
-        Url _ ->
+        Thumbnail ->
             True
 
 
@@ -41,23 +40,23 @@ new =
     New
 
 
-fromUrl : String -> Thumbnail
-fromUrl =
-    Url
+thumbnail : Thumbnail
+thumbnail =
+    Thumbnail
 
 
 thumbnailDecoder : JD.Decoder Thumbnail
 thumbnailDecoder =
     JD.oneOf
-        [ JD.string
+        [ JD.bool
             |> JD.map
-                (\urlValue ->
-                    case urlValue of
-                        "" ->
+                (\has ->
+                    case has of
+                        False ->
                             NoThumbnail
 
-                        fileUrl ->
-                            Url fileUrl
+                        True ->
+                            Thumbnail
                 )
         , JD.null NoThumbnail
         ]

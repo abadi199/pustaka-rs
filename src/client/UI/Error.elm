@@ -21,4 +21,4 @@ string error =
 
 http : Http.Error -> Element msg
 http error =
-    string <| Debug.toString error
+    string <| "Error"

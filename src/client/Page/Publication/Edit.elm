@@ -81,7 +81,8 @@ type Msg
     | BrowseClicked
     | FileSelected File
     | FilesDropped File (List File)
-    | ThumbnailUpdated (ReloadableWebData () ())
+    | ThumbnailUploaded (ReloadableWebData () ())
+    | ThumbnailDeleted (ReloadableWebData () ())
     | DragEnter
     | DragLeave
     | DeleteClicked
@@ -168,7 +169,7 @@ viewPoster { isHover, publication, cover } =
                 , content = [ dropZone isHover ]
                 }
 
-            Url _ ->
+            Thumbnail ->
                 { actions =
                     [ Action.compact <|
                         Action.clickable
@@ -254,10 +255,14 @@ update key msg model =
                 |> ReloadableData.toSuccess
                 |> Maybe.map
                     (\publication ->
-                        Publication.downloadCover
-                            { publicationId = publication.id
-                            , msg = CoverDownloaded
-                            }
+                        if Thumbnail.hasThumbnail publication.thumbnail then
+                            Publication.downloadCover
+                                { publicationId = publication.id
+                                , msg = CoverDownloaded
+                                }
+
+                        else
+                            Cmd.none
                     )
                 |> Maybe.withDefault Cmd.none
             )
@@ -302,11 +307,33 @@ update key msg model =
         FileSelected file ->
             uploadFile file model
 
-        ThumbnailUpdated remoteData ->
-            remoteData
-                |> ReloadableData.toResult
-                |> Result.map (Maybe.map (refreshThumbnail model) >> Maybe.withDefault ( model, Cmd.none ))
-                |> Result.withDefault (Debug.todo "Handle Error")
+        ThumbnailUploaded data ->
+            case data |> ReloadableData.toResult of
+                Ok _ ->
+                    ( { model
+                        | publication =
+                            model.publication
+                                |> ReloadableData.map Publication.addThumbnail
+                      }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        ThumbnailDeleted data ->
+            case data |> ReloadableData.toResult of
+                Ok _ ->
+                    ( { model
+                        | publication =
+                            model.publication
+                                |> ReloadableData.map Publication.removeThumbnail
+                      }
+                    , Cmd.none
+                    )
+
+                Err _ ->
+                    ( model, Cmd.none )
 
         FilesDropped file _ ->
             uploadFile file model
@@ -339,7 +366,7 @@ update key msg model =
                     (\publication ->
                         Publication.deleteThumbnail
                             { publicationId = publication.id
-                            , msg = ThumbnailUpdated |> ReloadableData.mapF (always ())
+                            , msg = ThumbnailDeleted
                             }
                     )
                 |> Maybe.withDefault Cmd.none
@@ -367,7 +394,7 @@ uploadFile file model =
                     { publicationId = publication.id
                     , fileName = "thumbnail"
                     , file = file
-                    , msg = ThumbnailUpdated |> ReloadableData.mapF (always ())
+                    , msg = ThumbnailUploaded
                     }
             )
         |> Maybe.withDefault Cmd.none

@@ -5,7 +5,7 @@ pub struct Data {
     pub title: String,
     pub media_type_id: i32,
     pub author_id: i32,
-    pub thumbnail_url: Option<String>,
+    pub has_thumbnail: bool,
     pub file: String,
     pub total_pages: usize,
     pub media_format: String,
