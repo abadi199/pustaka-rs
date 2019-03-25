@@ -3,7 +3,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-16.04'
   steps:
-  - script: npm run build:rust
+  - script: npm run prod:rust
 #- job: macOS
 #  pool:
 #    vmImage: 'macOS-10.13'
