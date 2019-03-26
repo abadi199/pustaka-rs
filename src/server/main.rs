@@ -13,15 +13,22 @@ use pustaka::fs::executor::FsExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
 
+fn js(req: &HttpRequest<AppState>) -> Result<NamedFile> {
+    let mut path: PathBuf = PathBuf::from("./js");
+    let file: PathBuf = req.match_info().query("tail").unwrap();
+    path.push(file);
+    Ok(NamedFile::open(path)?)
+}
+
 fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let mut path: PathBuf = PathBuf::from("./app/assets");
+    let mut path: PathBuf = PathBuf::from("./assets");
     let file: PathBuf = req.match_info().query("tail").unwrap();
     path.push(file);
     Ok(NamedFile::open(path)?)
 }
 
 fn index(_req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let mut path: PathBuf = PathBuf::from("./app");
+    let mut path: PathBuf = PathBuf::from("./");
     let index: PathBuf = PathBuf::from("index.html");
     path.push(index);
 
@@ -50,6 +57,7 @@ fn main() {
             tag::create_app(state.clone(), "/api/tag"),
             App::with_state(state.clone())
                 .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
+                .resource("/js/{tail:.*}", |r| r.method(Method::GET).f(js))
                 .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
         ]
     })

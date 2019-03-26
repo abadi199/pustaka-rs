@@ -4,6 +4,7 @@ node_modules/
 elm-stuff/
 *.db
 app/**/*.js
+dist/
 .env
 *.map
 .cache/
