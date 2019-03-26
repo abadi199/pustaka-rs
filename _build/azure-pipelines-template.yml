@@ -20,4 +20,4 @@ jobs:
       - bash: |
           cargo -V
       - bash: |
-          npm run prod:rust
+          cargo build --bin pustaka --release
