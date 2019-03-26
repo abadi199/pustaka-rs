@@ -18,6 +18,7 @@ jobs:
           rust_version: $(RUSTUP_TOOLCHAIN)
       - bash: |
           echo $PATH
+          echo $SQLITE3_LIB_DIR
         displayName: Sanity check path
       - bash: |
           mkdir dist
