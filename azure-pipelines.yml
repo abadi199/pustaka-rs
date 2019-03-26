@@ -7,7 +7,8 @@ jobs:
       name: macOS
       displayName: macOS SQLite
       vmImage: macOS-10.13
-      variables:
+      variables: 
+        BACKEND: sqlite
       setup:
         - bash: |
             brew update &&
@@ -19,6 +20,7 @@ jobs:
       displayName: Linux SQLite
       vmImage: ubuntu-16.04
       variables:
+        BACKEND: sqlite
       setup:
         - bash: |
             sudo apt-get update &&
@@ -30,6 +32,7 @@ jobs:
       displayName: Windows SQLite
       vmImage: vs2017-win2016
       variables:
+        BACKEND: sqlite
         SQLITE3_LIB_DIR: C:\sqlite
       setup:
         - script: |
