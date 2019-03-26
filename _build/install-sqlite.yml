@@ -11,6 +11,6 @@ steps:
         set PATH=%PATH%;C:\sqlite
         echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\sqlite"
       displayName: Install sqlite3 (Windows)
-  - ${{ if (startsWith(parameters.platform, 'Linux')) }}:
+  - ${{ if startsWith(parameters.platform, 'Linux') }}:
     - script: sudo apt-get install -y libsqlite3-dev
       displayName: Install sqlite3 (Linux)
