@@ -7,6 +7,7 @@ jobs:
   #     name: macOS
   #     displayName: macOS SQLite
   #     vmImage: macOS-10.13
+  #     variables:
   #     setup:
   #       - bash: |
   #           brew update &&
@@ -17,6 +18,7 @@ jobs:
   #     name: Linux_sqlite
   #     displayName: Linux SQLite
   #     vmImage: ubuntu-16.04
+  #     variables:
   #     setup:
   #       - bash: |
   #           sudo apt-get update &&
@@ -27,6 +29,8 @@ jobs:
       name: Windows_sqlite
       displayName: Windows SQLite
       vmImage: vs2017-win2016
+      variables:
+        SQLITE3_LIB_DIR: C:\sqlite
       setup:
         - script: |
             choco install 7zip

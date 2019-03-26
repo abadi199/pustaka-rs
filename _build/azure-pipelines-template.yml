@@ -2,6 +2,8 @@ jobs:
   - job: ${{ parameters.name }}
     pool:
       vmImage: ${{ parameters.vmImage }}
+    variables:
+      ${{ insert }}: ${{ parameters.variables }}
     strategy:
       # 10 parallel builds are free, so use 10
       maxParallel: 10
@@ -18,6 +20,23 @@ jobs:
           echo $PATH
         displayName: Sanity check path
       - bash: |
-          cargo -V
+          mkdir dist
+          cargo build --bins --release
+          npm install
+          npm run prod
+        displayName: Building
+      - ${{ if not(startsWith(parameters.platform, 'Windows')) }}:
+        - bash: |
+            cp target/release/pustaka dist
+            cp target/release/seed dist
+            cp target/release/scanner dist
+          displayName: Copy binaries 
+      - ${{ if startsWith(parameters.platform, 'Windows') }}:
+        - bash: |
+            cp target/release/*.exe dist
+          displayName: Copy binaries (Windows)
       - bash: |
-          cargo build --bin pustaka --release
+          cp -R app dist
+          ls -R dist
+        displayName: Copy assets
+ 
