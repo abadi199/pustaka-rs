@@ -14,4 +14,4 @@ jobs:
         parameters:
           platform: ${{parameters.name}}
           rust_version: $(RUSTUP_TOOLCHAIN)
-      - script: npm run prod:rust
+      - script: cargo build --bin pustaka --release
