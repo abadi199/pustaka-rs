@@ -1,19 +1,19 @@
 jobs:
-- job: ${{ parameters.name }}
-  pool:
-    vmImage: ${{ parameters.vmImage }}
-  variables:
-    ${{ insert }}: ${{ parameters.variables }}
-  strategy:
-    # 10 parallel builds are free, so use 10
-    maxParallel: 10
-    matrix:
-      stable:
-        rustup_toolchain: stable
- steps:
-  - ${{ parameters.setup }}
-  - template: install-rust.yml
-    parameters:
-      platform: ${{parameters.name}}
-      rust_version: $(RUSTUP_TOOLCHAIN)
-  - script: npm run prod:rust
+  - job: ${{ parameters.name }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      ${{ insert }}: ${{ parameters.variables }}
+    strategy:
+      # 10 parallel builds are free, so use 10
+      maxParallel: 10
+      matrix:
+        stable:
+          rustup_toolchain: stable
+    steps:
+      - ${{ parameters.setup }}
+      - template: install-rust.yml
+        parameters:
+          platform: ${{parameters.name}}
+          rust_version: $(RUSTUP_TOOLCHAIN)
+      - script: npm run prod:rust
