@@ -37,7 +37,7 @@ jobs:
             cp target/release/*.exe dist
           displayName: Copy binaries (Windows)
       - bash: |
-          cp -R app dist
+          cp -R app/* dist
           ls -R dist
         displayName: Copy assets
  

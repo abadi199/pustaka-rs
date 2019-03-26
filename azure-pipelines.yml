@@ -2,28 +2,28 @@ trigger: ["master"]
 pr: ["master"]
 
 jobs:
-  # - template: _build/azure-pipelines-template.yml
-  #   parameters:
-  #     name: macOS
-  #     displayName: macOS SQLite
-  #     vmImage: macOS-10.13
-  #     variables:
-  #     setup:
-  #       - bash: |
-  #           brew update &&
-  #           brew install sqlite
-  #         displayName: Install sqlite
-  # - template: _build/azure-pipelines-template.yml
-  #   parameters:
-  #     name: Linux_sqlite
-  #     displayName: Linux SQLite
-  #     vmImage: ubuntu-16.04
-  #     variables:
-  #     setup:
-  #       - bash: |
-  #           sudo apt-get update &&
-  #           sudo apt-get -y install sqlite3 libsqlite3-dev
-  #         displayName: Install sqlite
+  - template: _build/azure-pipelines-template.yml
+    parameters:
+      name: macOS
+      displayName: macOS SQLite
+      vmImage: macOS-10.13
+      variables:
+      setup:
+        - bash: |
+            brew update &&
+            brew install sqlite
+          displayName: Install sqlite
+  - template: _build/azure-pipelines-template.yml
+    parameters:
+      name: Linux_sqlite
+      displayName: Linux SQLite
+      vmImage: ubuntu-16.04
+      variables:
+      setup:
+        - bash: |
+            sudo apt-get update &&
+            sudo apt-get -y install sqlite3 libsqlite3-dev
+          displayName: Install sqlite
   - template: _build/azure-pipelines-template.yml
     parameters:
       name: Windows_sqlite
