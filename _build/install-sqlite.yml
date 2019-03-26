@@ -1,5 +1,5 @@
 steps:
-   - ${{ if (startsWith(parameters.platform, 'Windows')) }}:
+  - ${{ if startsWith(parameters.platform, 'Windows') }}:
     - script: |
         choco install 7zip
         mkdir C:\sqlite
