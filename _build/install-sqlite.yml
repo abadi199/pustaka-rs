@@ -1,0 +1,16 @@
+steps:
+   - ${{ if (startsWith(parameters.platform, 'Windows')) }}:
+    - script: |
+        choco install 7zip
+        mkdir C:\sqlite
+        CD /D C:\sqlite
+        curl -fsS --retry 3 --retry-connrefused -o sqlite3.zip https://sqlite.org/2017/sqlite-dll-win64-x64-3160200.zip
+        7z e sqlite3.zip -y
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        lib /machine:x64 /def:sqlite3.def /out:sqlite3.lib
+        set PATH=%PATH%;C:\sqlite
+        echo "##vso[task.setvariable variable=PATH;]%PATH%;C:\sqlite"
+      displayName: Install sqlite3 (Windows)
+  - ${{ if (startsWith(parameters.platform, 'Linux')) }}:
+    - script: sudo apt-get install -y libsqlite3-dev
+      displayName: Install sqlite3 (Linux)
