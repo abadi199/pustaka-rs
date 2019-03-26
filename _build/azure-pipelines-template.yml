@@ -9,7 +9,7 @@ jobs:
         stable:
           rustup_toolchain: stable
     steps:
-      - ${{ parameters.setup }}
+      # - ${{ parameters.setup }}
       - template: install-rust.yml
         parameters:
           platform: ${{parameters.name}}
