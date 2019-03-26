@@ -14,4 +14,10 @@ jobs:
         parameters:
           platform: ${{parameters.name}}
           rust_version: $(RUSTUP_TOOLCHAIN)
-      - bash: npm run prod
+      - bash: |
+          echo $PATH
+        displayName: Sanity check path
+      - bash: |
+          cargo -V
+      - bash: |
+          npm run prod:rust
