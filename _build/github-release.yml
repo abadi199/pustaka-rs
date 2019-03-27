@@ -28,7 +28,7 @@ steps:
       rootFolderOrFile: "$(Build.BinariesDirectory)/dist"
       archiveType: "tar"
       tarCompression: "gz"
-      archiveFile: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-$(TARGET).tar.gz"
+      archiveFile: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-${{parameters.platform}}.tar.gz"
   - task: GithubRelease@0
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     inputs:
@@ -38,7 +38,7 @@ steps:
       target: "$(build.sourceVersion)"
       tagSource: "manual"
       tag: "$(build.my_tag)"
-      assets: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-$(TARGET).tar.gz"
-      title: "$(build.my_tag) - $(build.date)"
+      assets: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-${{parameters.platform}}.tar.gz"
+      title: "$(build.my_tag)"
       assetUploadMode: "replace"
       addChangeLog: false

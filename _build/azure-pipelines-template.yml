@@ -26,3 +26,5 @@ jobs:
           npm run prod
         displayName: Building
       - template: github-release.yml
+        parameters:
+          platform: ${{parameters.name}}
