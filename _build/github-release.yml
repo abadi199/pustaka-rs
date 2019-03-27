@@ -1,4 +1,10 @@
 steps:
+  - bash: |
+      MY_TAG="$(Build.SourceBranch)"
+      MY_TAG=${MY_TAG#refs/tags/}
+      echo $MY_TAG
+      echo "##vso[task.setvariable variable=build.my_tag]$MY_TAG"
+    displayName: "Create tag variable"
   - task: CopyFiles@2
     displayName: Copy assets
     inputs:
