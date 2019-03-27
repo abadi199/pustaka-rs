@@ -13,7 +13,7 @@ steps:
   - task: CopyFiles@2
     displayName: Copy binaries
     inputs:
-      sourceFolder: "$(Build.SourcesDirectory)/target/$(TARGET)/release"
+      sourceFolder: "$(Build.SourcesDirectory)/target/release"
       contents: |
         pustaka
         pustaka.exe
