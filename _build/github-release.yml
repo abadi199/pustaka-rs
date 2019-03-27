@@ -12,7 +12,7 @@ steps:
       contents: |
         pustaka.db
       targetFolder: "$(Build.BinariesDirectory)/dist"
-   - task: CopyFiles@2
+  - task: CopyFiles@2
     displayName: Copy assets
     inputs:
       sourceFolder: "$(Build.SourcesDirectory)/app"
