@@ -22,9 +22,14 @@ jobs:
         displayName: Sanity check path
       - bash: |
           cargo build --bins --release
+        displayName: Building Server
+      - bash: |
           npm install
           npm run prod
-        displayName: Building
+        displayName: Building Client
+      - bash: |
+          npm run diesel:run
+        displayName: Creating Database
       - template: github-release.yml
         parameters:
           platform: ${{parameters.name}}

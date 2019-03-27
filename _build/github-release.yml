@@ -6,6 +6,13 @@ steps:
       echo "##vso[task.setvariable variable=build.my_tag]$MY_TAG"
     displayName: "Create tag variable"
   - task: CopyFiles@2
+    displayName: Copy database
+    inputs:
+      sourceFolder: "$(Build.SourcesDirectory)"
+      contents: |
+        pustaka.db
+      targetFolder: "$(Build.BinariesDirectory)/dist"
+   - task: CopyFiles@2
     displayName: Copy assets
     inputs:
       sourceFolder: "$(Build.SourcesDirectory)/app"

@@ -19,7 +19,10 @@ steps:
         RUSTUP_TOOLCHAIN: ${{parameters.rust_version}}
       displayName: Install rust (windows)
   # All platforms.
+  - script: |
+      npm run diesel:install
   - bash: |
         rustc -Vv
         cargo -V
+        diesel -V
     displayName: Query rust and cargo versions
