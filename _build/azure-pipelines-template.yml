@@ -25,3 +25,4 @@ jobs:
           npm install
           npm run prod
         displayName: Building
+      - template: github-release.yml
