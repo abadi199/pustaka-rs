@@ -21,23 +21,7 @@ jobs:
           echo $SQLITE3_LIB_DIR
         displayName: Sanity check path
       - bash: |
-          mkdir dist
           cargo build --bins --release
           npm install
           npm run prod
         displayName: Building
-      - ${{ if not(startsWith(parameters.platform, 'Windows')) }}:
-        - bash: |
-            cp target/release/pustaka dist
-            cp target/release/seed dist
-            cp target/release/scanner dist
-          displayName: Copy binaries 
-      - ${{ if startsWith(parameters.platform, 'Windows') }}:
-        - bash: |
-            cp target/release/*.exe dist
-          displayName: Copy binaries (Windows)
-      - bash: |
-          cp -R app/* dist
-          ls -R dist
-        displayName: Copy assets
- 

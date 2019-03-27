@@ -1,5 +1,8 @@
-trigger: ["master"]
-pr: ["master"]
+trigger:
+  branches:
+    include: ["*"]
+  tags:
+    include: ["*"]
 
 jobs:
   - template: _build/azure-pipelines-template.yml
@@ -7,7 +10,7 @@ jobs:
       name: macOS
       displayName: macOS SQLite
       vmImage: macOS-10.13
-      variables: 
+      variables:
         BACKEND: sqlite
       setup:
         - bash: |
@@ -16,7 +19,7 @@ jobs:
           displayName: Install sqlite
   - template: _build/azure-pipelines-template.yml
     parameters:
-      name: Linux_sqlite
+      name: Linux
       displayName: Linux SQLite
       vmImage: ubuntu-16.04
       variables:
@@ -28,7 +31,7 @@ jobs:
           displayName: Install sqlite
   - template: _build/azure-pipelines-template.yml
     parameters:
-      name: Windows_sqlite
+      name: Windows
       displayName: Windows SQLite
       vmImage: vs2017-win2016
       variables:

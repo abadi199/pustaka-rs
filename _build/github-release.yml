@@ -1,0 +1,38 @@
+steps:
+  - task: CopyFiles@2
+    displayName: Copy assets
+    inputs:
+      sourceFolder: "$(Build.SourcesDirectory)/app"
+      targetFolder: "$(Build.BinariesDirectory)/dist"
+   - task: CopyFiles@2
+    displayName: Copy binaries
+    inputs:
+      sourceFolder: "$(Build.SourcesDirectory)/target/$(TARGET)/release"
+      contents: |
+        pustaka
+        pustaka.exe
+        scanner
+        scanner.exe
+        seed
+        seed.exe
+      targetFolder: "$(Build.BinariesDirectory)/dist"
+  - task: ArchiveFiles@2
+    displayName: Gather assets
+    inputs:
+      rootFolderOrFile: "$(Build.BinariesDirectory)/dist"
+      archiveType: "tar"
+      tarCompression: "gz"
+      archiveFile: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-$(TARGET).tar.gz"
+  - task: GithubRelease@0
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+    inputs:
+      gitHubConnection: "abadi199"
+      repositoryName: "abadi199/pustaka-rs"
+      action: "edit"
+      target: "$(build.sourceVersion)"
+      tagSource: "manual"
+      tag: "$(build.my_tag)"
+      assets: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-$(TARGET).tar.gz"
+      title: "$(build.my_tag) - $(build.date)"
+      assetUploadMode: "replace"
+      addChangeLog: false
