@@ -4,7 +4,7 @@ steps:
     inputs:
       sourceFolder: "$(Build.SourcesDirectory)/app"
       targetFolder: "$(Build.BinariesDirectory)/dist"
-   - task: CopyFiles@2
+  - task: CopyFiles@2
     displayName: Copy binaries
     inputs:
       sourceFolder: "$(Build.SourcesDirectory)/target/$(TARGET)/release"
