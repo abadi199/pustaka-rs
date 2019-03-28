@@ -10,7 +10,7 @@ use futures::future::{join_all, Future};
 use pustaka::config::{self, Config};
 use pustaka::db::executor::DbExecutor;
 use pustaka::db::{publication, publication_category};
-use pustaka::models::{NewPublication, Publication, PublicationCategory, PublicationId};
+use pustaka::models::{NewPublication, Publication, PublicationCategory};
 use pustaka::scan::actor::{
     load_metadata::LoadMetadata,
     process_file::ProcessFile,
@@ -22,7 +22,8 @@ use std::collections::HashMap;
 
 fn main() {
     let sys = System::new("pustaka-scanner");
-    let pool = pustaka::db::create_db_pool();
+    let config = config::get_config();
+    let pool = pustaka::db::create_db_pool(&config.database);
     let db = SyncArbiter::start(1, move || DbExecutor(pool.clone()));
     let db_1 = db.clone();
     let db_2 = db.clone();

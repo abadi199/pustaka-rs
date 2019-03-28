@@ -1,23 +1,18 @@
 extern crate csv;
 extern crate diesel;
 extern crate pustaka;
-#[macro_use]
 extern crate serde_derive;
 
 use diesel::prelude::*;
 use pustaka::models::*;
 use pustaka::*;
-use std::env;
 
 fn main() {
-    let connection = db::create_db_pool().get().unwrap();
-
-    let path = env::current_dir().unwrap();
-
+    let config = pustaka::config::get_config();
+    let connection = db::create_db_pool(&config.database).get().unwrap();
     insert_category(&*connection);
     insert_media_type(&*connection);
     insert_author(&*connection);
-    // insert_publication(&*connection);
     insert_favorite_category(&*connection);
 }
 
@@ -182,124 +177,9 @@ fn insert_author(connection: &SqliteConnection) {
     }
 }
 
-fn insert_publication(connection: &SqliteConnection) {
-    use schema::publication::dsl::*;
-    use schema::publication_category::dsl::publication_category;
-
-    diesel::delete(publication_category)
-        .execute(&*connection)
-        .expect("Error deleting publication category");
-
-    diesel::delete(publication)
-        .execute(&*connection)
-        .expect("Error deleting publication");
-
-    // Publication
-    let publications: Vec<(NewPublication, i32)> = read_publication_csv(connection);
-
-    for (the_publication, category_id) in publications {
-        let the_isbn = &the_publication.isbn.clone();
-        diesel::insert_into(publication)
-            .values(the_publication)
-            .execute(connection)
-            .expect("Error inserting publication");
-        match get_publication(the_isbn, connection) {
-            Ok(new_publication) => {
-                diesel::insert_into(publication_category)
-                    .values(PublicationCategory {
-                        publication_id: new_publication.id,
-                        category_id: category_id,
-                    })
-                    .execute(connection)
-                    .expect("Error inserting publication category");
-            }
-            Err(..) => {}
-        }
-    }
-
-    fn read_publication_csv(connection: &SqliteConnection) -> Vec<(NewPublication, i32)> {
-        #[derive(Debug, Deserialize)]
-        struct Record {
-            isbn: String,
-            title: String,
-            media_type: String,
-            media_format: String,
-            author: String,
-            category: String,
-            thumbnail: String,
-            file: String,
-        }
-
-        let mut rdr = csv::Reader::from_path("./data/publication.csv")
-            .expect("Unable to read publication.csv");
-
-        let mut publications: Vec<(NewPublication, i32)> = vec![];
-        for result in rdr.deserialize() {
-            if let Ok(record) = result {
-                let record: Record = record;
-                let media_type = get_media_type(&record.media_type, connection)
-                    .expect("Error getting media type");
-                let category =
-                    get_category(&record.category, connection).expect("Error getting category");
-                let author: Author =
-                    get_or_insert_author(&record.author, connection).expect("Error getting author");
-
-                publications.push((
-                    NewPublication {
-                        isbn: record.isbn,
-                        title: record.title,
-                        thumbnail: if record.thumbnail != "" {
-                            Some(record.thumbnail)
-                        } else {
-                            None::<String>
-                        },
-                        media_type_id: media_type.id,
-                        media_format: record.media_format,
-                        author_id: author.id,
-                        file: record.file,
-                        timestamp: None,
-                    },
-                    category.id,
-                ));
-            }
-        }
-
-        publications
-    }
-}
-fn get_publication(the_isbn: &str, connection: &SqliteConnection) -> QueryResult<Publication> {
-    use schema::publication::dsl::*;
-    publication
-        .filter(isbn.eq(the_isbn))
-        .first::<Publication>(connection)
-}
-
 fn get_category(the_name: &str, connection: &SqliteConnection) -> QueryResult<Category> {
     use schema::category::dsl::*;
     category
         .filter(name.eq(the_name))
         .first::<Category>(connection)
-}
-
-fn get_media_type(the_name: &str, connection: &SqliteConnection) -> QueryResult<MediaType> {
-    use schema::media_type::dsl::*;
-    media_type
-        .filter(name.eq(the_name))
-        .first::<MediaType>(connection)
-}
-
-fn get_or_insert_author(the_name: &str, connection: &SqliteConnection) -> QueryResult<Author> {
-    use schema::author::dsl::*;
-    let mut the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
-    if let Err(_e) = the_author {
-        diesel::insert_into(author)
-            .values(&NewAuthor {
-                name: the_name.to_string(),
-            })
-            .execute(connection)
-            .expect("Error inserting author");
-        the_author = author.filter(name.eq(the_name)).first::<Author>(connection);
-    }
-
-    the_author
 }
