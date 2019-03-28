@@ -3,7 +3,8 @@
 node_modules/
 elm-stuff/
 *.db
-app/**/*.js
+!app/assets
+app/
 dist/
 .env
 *.map

@@ -25,7 +25,7 @@ jobs:
         displayName: Building Server
       - bash: |
           npm install
-          npm run prod
+          npm run prod:client
         displayName: Building Client
       - bash: |
           diesel migration run --database-url pustaka.db
