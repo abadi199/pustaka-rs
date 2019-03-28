@@ -1,4 +1,8 @@
 steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "11.9.0"
+    displayName: Install node
   - ${{ if not(startsWith(parameters.platform, 'Windows')) }}:
       # Linux and macOS.
       - script: |

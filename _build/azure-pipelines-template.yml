@@ -12,7 +12,7 @@ jobs:
           rustup_toolchain: stable
     steps:
       - ${{ parameters.setup }}
-      - template: install-rust.yml
+      - template: install.yml
         parameters:
           platform: ${{parameters.name}}
           rust_version: $(RUSTUP_TOOLCHAIN)
@@ -23,6 +23,10 @@ jobs:
       - bash: |
           cargo build --bins --release
         displayName: Building Server
+      - bash: |
+          node --version
+          npm version
+        displayName: Query node & npm versions
       - bash: |
           npm install
           npm run prod:client
