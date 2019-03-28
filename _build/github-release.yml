@@ -11,12 +11,12 @@ steps:
       sourceFolder: "$(Build.SourcesDirectory)"
       contents: |
         pustaka.db
-      targetFolder: "$(Build.BinariesDirectory)/dist"
+      targetFolder: "$(Build.BinariesDirectory)/"
   - task: CopyFiles@2
     displayName: Copy assets
     inputs:
       sourceFolder: "$(Build.SourcesDirectory)/app"
-      targetFolder: "$(Build.BinariesDirectory)/dist"
+      targetFolder: "$(Build.BinariesDirectory)/app"
   - task: CopyFiles@2
     displayName: Copy binaries
     inputs:
@@ -28,11 +28,11 @@ steps:
         scanner.exe
         seed
         seed.exe
-      targetFolder: "$(Build.BinariesDirectory)/dist"
+      targetFolder: "$(Build.BinariesDirectory)/"
   - task: ArchiveFiles@2
     displayName: Gather assets
     inputs:
-      rootFolderOrFile: "$(Build.BinariesDirectory)/dist"
+      rootFolderOrFile: "$(Build.BinariesDirectory)/"
       archiveType: "tar"
       tarCompression: "gz"
       archiveFile: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-${{parameters.platform}}.tar.gz"

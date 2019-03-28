@@ -13,26 +13,15 @@ use pustaka::fs::executor::FsExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
 
-fn js(req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let mut path: PathBuf = PathBuf::from("./js");
-    let file: PathBuf = req.match_info().query("tail").unwrap();
-    path.push(file);
-    Ok(NamedFile::open(path)?)
-}
-
 fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let mut path: PathBuf = PathBuf::from("./assets");
-    let file: PathBuf = req.match_info().query("tail").unwrap();
-    path.push(file);
-    Ok(NamedFile::open(path)?)
-}
-
-fn index(_req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let mut path: PathBuf = PathBuf::from("./");
-    let index: PathBuf = PathBuf::from("index.html");
-    path.push(index);
-
-    Ok(NamedFile::open(path)?)
+    let index_html: PathBuf = ["app", "index.html"].iter().collect();
+    let file: String = req.match_info().query("tail").unwrap();
+    if file.is_empty() {
+        return Ok(NamedFile::open(index_html)?);
+    } else {
+        let path: PathBuf = ["app", &file].iter().collect();
+        Ok(NamedFile::open(path).or(NamedFile::open(index_html))?)
+    }
 }
 
 fn main() {
@@ -56,9 +45,7 @@ fn main() {
             media_type::create_app(state.clone(), "/api/media_type"),
             tag::create_app(state.clone(), "/api/tag"),
             App::with_state(state.clone())
-                .resource("/assets/{tail:.*}", |r| r.method(Method::GET).f(assets))
-                .resource("/js/{tail:.*}", |r| r.method(Method::GET).f(js))
-                .resource("/{tail:.*}", |r| r.method(Method::GET).f(index)),
+                .resource("/{tail:.*}", |r| r.method(Method::GET).f(assets)),
         ]
     })
     .bind("0.0.0.0:8081")
