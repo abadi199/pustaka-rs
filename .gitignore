@@ -3,10 +3,11 @@
 node_modules/
 elm-stuff/
 *.db
-!app/assets
+!app/assets/
 app/
 dist/
 .env
 *.map
-.cache/
+cache/
+thumbnail/
 .idea
