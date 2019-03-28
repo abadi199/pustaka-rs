@@ -33,6 +33,7 @@ steps:
     displayName: Gather assets
     inputs:
       rootFolderOrFile: "$(Build.BinariesDirectory)/"
+      includeRootFolder: false
       archiveType: "tar"
       tarCompression: "gz"
       archiveFile: "$(Build.ArtifactStagingDirectory)/pustaka-$(build.my_tag)-${{parameters.platform}}.tar.gz"
