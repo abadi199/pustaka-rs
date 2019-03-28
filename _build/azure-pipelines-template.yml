@@ -28,7 +28,7 @@ jobs:
           npm run prod
         displayName: Building Client
       - bash: |
-          diesel migration run
+          diesel migration run --database-url pustaka.db
         displayName: Creating Database
       - template: github-release.yml
         parameters:
