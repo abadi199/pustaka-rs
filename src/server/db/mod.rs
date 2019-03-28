@@ -12,11 +12,7 @@ pub mod publication;
 pub mod publication_category;
 pub mod tag;
 
-pub fn create_db_pool() -> Pool<ConnectionManager<SqliteConnection>> {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
+pub fn create_db_pool(database_url: &str) -> Pool<ConnectionManager<SqliteConnection>> {
     let manager = ConnectionManager::<SqliteConnection>::new(database_url);
     Pool::builder()
         .build(manager)

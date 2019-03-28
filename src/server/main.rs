@@ -28,8 +28,8 @@ fn main() {
     let sys = actix::System::new("pustaka");
 
     // start db executor
-    let pool = pustaka::db::create_db_pool();
     let config = config::get_config();
+    let pool = pustaka::db::create_db_pool(&config.database);
     let state = AppState {
         db: SyncArbiter::start(1, move || DbExecutor(pool.clone())),
         fs: SyncArbiter::start(1, move || FsExecutor()),
