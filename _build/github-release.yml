@@ -29,6 +29,14 @@ steps:
         seed
         seed.exe
       targetFolder: "$(Build.BinariesDirectory)/"
+  - ${{ if startsWith(parameters.platform, 'Windows') }}:
+    - task: CopyFiles@2
+      displayName: Copy sqlite3.dll
+      inputs:
+        sourceFolder: "C:\sqlite\"
+        contents: |
+          sqlite3.dll
+        targetFolder: "$(Build.BinariesDirectory)/"
   - task: ArchiveFiles@2
     displayName: Gather assets
     inputs:
