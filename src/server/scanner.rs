@@ -136,7 +136,6 @@ fn update_metadata(
     let publications = result.unwrap();
     for data in publications.into_iter() {
         let scanner = scanner.clone();
-        println!("Publication: {:?}", data.0.file);
         let task = scanner.send(LoadMetadata {
             config: config.clone(),
             publication: data.0,

@@ -400,7 +400,7 @@ fn upload(req: HttpRequest<AppState>, publication_id: Path<i32>) -> FutureRespon
             })
             .map(|image_url| HttpResponse::Ok().json(image_url))
             .map_err(|e| {
-                println!("failed: {}", e);
+                println!("Failed: {}", e);
                 e
             }),
     )

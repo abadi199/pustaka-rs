@@ -20,10 +20,8 @@ impl Handler<LoadMetadata> for Scanner {
     type Result = Result<(Publication, CategoryId), ScannerError>;
 
     fn handle(&mut self, msg: LoadMetadata, _: &mut Self::Context) -> Self::Result {
-        println!("Load MetaData");
         let publication = msg.publication;
         let thumbnail = get_thumbnail(&msg.config, &publication);
-        println!("Thumbnail: {:?}", thumbnail);
         let updated_publication = Publication {
             thumbnail,
             ..publication
@@ -45,7 +43,6 @@ fn get_thumbnail_cbr(config: &Config, publication: &Publication) -> Option<Strin
     let thumbnail_location =
         thumbnail::generate_thumbnail_location(&config.pustaka_home, publication.id);
     let thumbnail_location = thumbnail_location.to_str()?;
-    println!("CBR:{:?}", thumbnail_location);
     let thumbnail_path = comic::page_cbr(&publication.file, 0, thumbnail_location).ok();
     match thumbnail_path {
         Some(thumbnail_path) => thumbnail::resize(&thumbnail_path).ok(),
@@ -57,7 +54,6 @@ fn get_thumbnail_cbz(config: &Config, publication: &Publication) -> Option<Strin
     let thumbnail_location =
         thumbnail::generate_thumbnail_location(&config.pustaka_home, publication.id);
     let thumbnail_location = thumbnail_location.to_str()?;
-    println!("CBZ:{:?}", thumbnail_location);
     let thumbnail_path = comic::page_cbz(&publication.file, 0, thumbnail_location).ok();
     match thumbnail_path {
         Some(thumbnail_path) => thumbnail::resize(&thumbnail_path).ok(),

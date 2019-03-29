@@ -1,8 +1,6 @@
 use diesel::prelude::*;
-use dotenv::dotenv;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use std::env;
 
 pub mod author;
 pub mod category;

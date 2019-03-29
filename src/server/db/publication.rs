@@ -70,6 +70,7 @@ impl Handler<CreateBatch> for DbExecutor {
             let existing_publication =
                 get_publication_by_file(connection, &new_publication.file).ok();
             if existing_publication.is_none() {
+                println!("Adding {} into database", new_publication.title);
                 diesel::insert_into(publication)
                     .values(new_publication)
                     .execute(&*connection)
@@ -206,7 +207,6 @@ impl Handler<AddRecent> for DbExecutor {
     fn handle(&mut self, msg: AddRecent, _: &mut Self::Context) -> Self::Result {
         use schema::recent_publication::dsl;
         let connection: &SqliteConnection = &self.0.get().unwrap();
-        println!("Inserting into recent_publication: {:?}", msg.0);
 
         diesel::delete(dsl::recent_publication.filter(dsl::publication_id.eq(msg.0)))
             .execute(&*connection)
