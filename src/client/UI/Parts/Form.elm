@@ -1,7 +1,9 @@
 module UI.Parts.Form exposing (Field, field, form)
 
-import Html.Styled as H
-import Html.Styled.Events as HA
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE
 import UI.Action as Action
 import UI.Icon as Icon
 import UI.Spacing as UI
@@ -20,36 +22,29 @@ field =
     Field
 
 
-form : { fields : List (Field msg), onSubmit : msg } -> Element msg
+form : { fields : List (Field msg), onSubmit : msg } -> Html msg
 form { fields, onSubmit } =
-    el [ width fill ]
-        (html <|
-            H.form [ HA.onSubmit onSubmit ]
-                [ layoutWith { options = [ noStaticStyleSheet ] } [] <|
-                    column [ width fill, UI.spacing 1 ]
-                        [ column [ width fill, UI.spacing -5 ]
-                            (fields
-                                |> List.map viewField
-                            )
-                        , viewActions { onSubmit = onSubmit }
-                        ]
-                ]
-        )
-
-
-viewField : Field msg -> Element msg
-viewField (Field { label, value, onChange }) =
-    row [ width fill ]
-        [ EI.text []
-            { onChange = onChange
-            , label = EI.labelAbove [] (text label)
-            , text = value
-            , placeholder = Nothing
-            }
+    H.form [ HE.onSubmit onSubmit ]
+        [ div [ css [ width (pct 100), UI.spacing 1 ] ]
+            [ div [ css [ width (pct 100), UI.spacing -5 ] ]
+                (fields
+                    |> List.map viewField
+                )
+            , viewActions { onSubmit = onSubmit }
+            ]
         ]
 
 
-viewActions : { onSubmit : msg } -> Element msg
+viewField : Field msg -> Html msg
+viewField (Field { label, value, onChange }) =
+    H.label [ css [ width (pct 100) ] ]
+        [ text label
+        , input [ HA.type_ "text", HE.onInput onChange ]
+            []
+        ]
+
+
+viewActions : { onSubmit : msg } -> Html msg
 viewActions { onSubmit } =
     let
         actions =
@@ -61,8 +56,12 @@ viewActions { onSubmit } =
                     }
             ]
     in
-    row
-        [ alignRight
-        , alignBottom
+    div
+        [ css
+            [ displayFlex
+            , flexDirection row
+            , justifyContent flexStart
+            , alignItems flexEnd
+            ]
         ]
-        (actions |> List.map Action.toElement)
+        (actions |> List.map Action.toHtml)

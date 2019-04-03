@@ -5,7 +5,7 @@ module UI.Action exposing
     , disable
     , large
     , link
-    , toElement
+    , toHtml
     )
 
 import Css exposing (..)
@@ -53,8 +53,8 @@ large =
     LargeAction
 
 
-toElement : Action msg -> Html msg
-toElement action =
+toHtml : Action msg -> Html msg
+toHtml action =
     case action of
         CompactAction data ->
             viewCompact data
