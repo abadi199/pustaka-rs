@@ -8,7 +8,9 @@ module UI.Action exposing
     , toElement
     )
 
+import Css exposing (..)
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE
 import UI.Icon exposing (Icon)
 import UI.Link as UI
@@ -51,7 +53,7 @@ large =
     LargeAction
 
 
-toElement : Action msg -> Element msg
+toElement : Action msg -> Html msg
 toElement action =
     case action of
         CompactAction data ->
@@ -61,35 +63,31 @@ toElement action =
             viewLarge data
 
 
-viewCompact : ActionType msg -> Element msg
+viewCompact : ActionType msg -> Html msg
 viewCompact actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [ pointer ] { url = url, msg = onClick, label = icon }
+            UI.link [ css [ cursor pointer ] ] { url = url, msg = onClick, label = icon }
 
         Clickable { text, icon, onClick } ->
-            el [ pointer, EV.onClick onClick ] icon
+            div [ css [ cursor pointer ], HE.onClick onClick ] [ icon ]
 
         Disable { text, icon } ->
-            el [] icon
+            div [] [ icon ]
 
 
-viewLarge : ActionType msg -> Element msg
+viewLarge : ActionType msg -> Html msg
 viewLarge actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [ pointer ] { url = url, msg = onClick, label = row [] [ icon, E.text text ] }
+            UI.link [ css [ cursor pointer ] ] { url = url, msg = onClick, label = div [] [ icon, H.text text ] }
 
         Clickable { text, icon, onClick } ->
-            row
-                [ Spacing.paddingEach { top = -10, bottom = -10, right = -2, left = -2 }
-                , Border.width 1
-                , Border.solid
-                , Border.color (rgba 0 0 0 0.5)
-                , pointer
-                , EV.onClick onClick
+            div
+                [ css [ cursor pointer ]
+                , HE.onClick onClick
                 ]
-                [ icon, E.text text ]
+                [ icon, H.text text ]
 
         Disable { text, icon } ->
-            row [] [ icon, E.text text ]
+            div [] [ icon, H.text text ]
