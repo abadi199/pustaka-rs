@@ -8,7 +8,10 @@ module UI.Parts.Header exposing
     , visible
     )
 
+import Css exposing (..)
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE
 import Route
 import UI.Action as Action
 import UI.Background as Background
@@ -73,22 +76,19 @@ header :
 header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
     case visibility of
         Hidden ->
-            none
+            text ""
 
         Visible _ ->
-            row
-                [ width fill
-                , Background.solidWhite
-                , Border.shadow
-                    { offset = ( 0, 0 )
-                    , size = 0
-                    , blur = 10
-                    , color = rgba 0 0 0 0.5
-                    }
-                , UI.padding -5
+            div
+                [ css
+                    [ width (pct 100)
+                    , Background.solidWhite
+                    , boxShadow5 zero zero zero (px 10) (rgba 0 0 0 0.5)
+                    , UI.padding 5
+                    ]
                 , UI.Events.onMouseMove onMouseMove
                 ]
-                [ Action.toElement <|
+                [ Action.toHtml <|
                     Action.large <|
                         Action.link
                             { text = "Back"
@@ -96,5 +96,5 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                             , url = backUrl
                             , onClick = onLinkClicked
                             }
-                , el [ centerX ] (Heading.heading 1 title)
+                , div [] [ Heading.heading 1 title ]
                 ]
