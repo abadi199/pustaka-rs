@@ -8,11 +8,11 @@ module UI.Poster exposing
     , thumbnailDimension
     )
 
+import Css exposing (..)
 import Entity.Image as Image exposing (Image)
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
-import Html as H
-import Html.Attributes as HA
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Image as Image
 import UI.ReloadableData
@@ -22,7 +22,7 @@ dimensionForHeight : Int -> { width : Int, height : Int }
 dimensionForHeight height =
     let
         width =
-            toFloat height / 1.6 |> round
+            toFloat height / 1.6 |> Basics.round
     in
     { width = width, height = height }
 
@@ -37,17 +37,19 @@ thumbnailDimension =
     dimensionForHeight 200
 
 
-reloadableThumbnail : { title : String, image : ReloadableWebData i Image } -> Element msg
+reloadableThumbnail : { title : String, image : ReloadableWebData i Image } -> Html msg
 reloadableThumbnail { title, image } =
     let
         { height, width } =
             thumbnailDimension
     in
-    el
-        [ E.height <| px <| height
-        , E.width <| px <| width
+    div
+        [ css
+            [ Css.height (px (toFloat height))
+            , Css.width (px (toFloat width))
+            ]
         ]
-        (UI.ReloadableData.view
+        [ UI.ReloadableData.view
             (\img ->
                 img
                     |> Image.toBase64
@@ -69,10 +71,10 @@ reloadableThumbnail { title, image } =
                         )
             )
             image
-        )
+        ]
 
 
-thumbnail : { title : String, image : Image } -> Element msg
+thumbnail : { title : String, image : Image } -> Html msg
 thumbnail { title, image } =
     let
         { height, width } =
@@ -98,17 +100,19 @@ thumbnail { title, image } =
             )
 
 
-reloadablePoster : { title : String, image : ReloadableWebData i Image } -> Element msg
+reloadablePoster : { title : String, image : ReloadableWebData i Image } -> Html msg
 reloadablePoster { title, image } =
     let
         { width, height } =
             posterDimension
     in
-    el
-        [ E.height <| px <| height
-        , E.width <| px <| width
+    div
+        [ css
+            [ Css.height (px <| toFloat height)
+            , Css.width (px <| toFloat width)
+            ]
         ]
-        (UI.ReloadableData.view
+        [ UI.ReloadableData.view
             (\img ->
                 img
                     |> Image.toBase64
@@ -125,10 +129,10 @@ reloadablePoster { title, image } =
                         (empty { width = width, height = height } title)
             )
             image
-        )
+        ]
 
 
-poster : { title : String, image : Image } -> Element msg
+poster : { title : String, image : Image } -> Html msg
 poster { title, image } =
     let
         { width, height } =
@@ -146,26 +150,30 @@ poster { title, image } =
                     }
             )
         |> Maybe.withDefault
-            (el
-                [ E.height <| px <| height
-                , E.width <| px <| width
+            (div
+                [ css
+                    [ Css.height (px <| toFloat height)
+                    , Css.width (px <| toFloat width)
+                    ]
                 ]
-                (empty { width = width, height = height } title)
+                [ empty { width = width, height = height } title ]
             )
 
 
-empty : { width : Int, height : Int } -> String -> Element msg
+empty : { width : Int, height : Int } -> String -> Html msg
 empty { width, height } title =
-    el
-        [ E.width (px width)
-        , E.height (px height)
-        , alignBottom
-        , Background.color (rgba 0 0 0 0.35)
-        , E.htmlAttribute <| HA.title title
-        , E.htmlAttribute <| HA.style "white-space" "normal"
-        , E.htmlAttribute <| HA.style "overflow" "hidden"
-        , E.htmlAttribute <| HA.style "justify-content" "center"
-        , E.htmlAttribute <| HA.style "align-items" "center"
-        , E.htmlAttribute <| HA.style "text-align" "center"
+    div
+        [ css
+            [ Css.width (px <| toFloat width)
+            , Css.height (px <| toFloat height)
+            , displayFlex
+            , alignItems flexEnd
+            , backgroundColor (rgba 0 0 0 0.35)
+            , whiteSpace normal
+            , overflow hidden
+            , justifyContent center
+            , textAlign center
+            ]
+        , HA.title title
         ]
-        (E.html <| H.text title)
+        [ H.text title ]
