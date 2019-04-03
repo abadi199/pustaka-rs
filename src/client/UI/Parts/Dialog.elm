@@ -7,9 +7,9 @@ module UI.Parts.Dialog exposing
     , toElement
     )
 
-import Element as E exposing (..)
-import Element.Events as Events exposing (onClick)
-import Html.Attributes as HA
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA
+import Html.Styled.Events as HE exposing (onClick)
 import UI.Action as Action
 import UI.Background as Background
 import UI.Icon as Icon
@@ -32,10 +32,10 @@ none =
 
 
 type DialogType msg
-    = ConfirmationDialog { element : Element msg, onPositive : msg, onNegative : msg, onClose : msg }
+    = ConfirmationDialog { element : Html msg, onPositive : msg, onNegative : msg, onClose : msg }
 
 
-confirmation : { content : Element msg, onPositive : msg, onNegative : msg, onClose : msg } -> DialogType msg
+confirmation : { content : Html msg, onPositive : msg, onNegative : msg, onClose : msg } -> DialogType msg
 confirmation { content, onPositive, onNegative, onClose } =
     ConfirmationDialog
         { onPositive = onPositive
@@ -61,7 +61,7 @@ confirmation { content, onPositive, onNegative, onClose } =
         }
 
 
-toElement : Dialog msg -> Element msg
+toElement : Dialog msg -> Html msg
 toElement dialog =
     case dialog of
         NoDialog ->

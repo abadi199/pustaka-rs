@@ -8,8 +8,8 @@ module Page.ByCategory exposing
 
 import Browser
 import Browser.Navigation as Nav
-import Element as E exposing (..)
 import Entity.Category exposing (Category)
+import Html.Styled as H exposing (..)
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import Set

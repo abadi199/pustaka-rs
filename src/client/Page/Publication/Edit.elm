@@ -8,12 +8,6 @@ module Page.Publication.Edit exposing
 
 import Browser
 import Browser.Navigation as Nav
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Events as Events exposing (onClick)
-import Element.Font as Font
-import Element.Input as Input
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication

@@ -9,14 +9,12 @@ module Page.Publication exposing
 
 import Browser
 import Browser.Navigation as Nav
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Region as Region
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
+import Html.Styled as H exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set

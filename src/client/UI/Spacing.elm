@@ -1,23 +1,15 @@
 module UI.Spacing exposing (padding, paddingEach, spacing)
 
-import Element as E exposing (Attribute, modular)
+import Css exposing (..)
+import Html.Styled as H exposing (Attribute)
 
 
-scaled : Int -> Int
-scaled n =
-    if n == 0 then
-        0
-
-    else
-        n |> modular 50 1.25 |> round
-
-
-spacing : Int -> Attribute msg
+spacing : Int -> Style
 spacing scale =
-    E.spacing (scaled scale)
+    batch []
 
 
-padding : Int -> Attribute msg
+padding : Int -> Style
 padding scale =
     paddingEach
         { top = scale
@@ -27,11 +19,10 @@ padding scale =
         }
 
 
-paddingEach : { top : Int, right : Int, bottom : Int, left : Int } -> Attribute msg
+paddingEach : { top : Int, right : Int, bottom : Int, left : Int } -> Style
 paddingEach { top, right, bottom, left } =
-    E.paddingEach
-        { top = scaled top
-        , bottom = scaled bottom
-        , left = scaled left
-        , right = scaled right
-        }
+    padding4
+        (px <| toFloat top)
+        (px <| toFloat bottom)
+        (px <| toFloat left)
+        (px <| toFloat right)

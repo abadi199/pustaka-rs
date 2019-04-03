@@ -1,9 +1,7 @@
 module UI.Layout exposing (withSideNav)
 
 import Browser
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Border as Border
+import Html.Styled as H exposing (..)
 import UI.Nav.Side exposing (SideNav)
 import UI.Parts.Dialog as Dialog exposing (Dialog)
 import UI.Parts.Search exposing (Search)
@@ -32,6 +30,6 @@ withSideNav { title, sideNav, content, dialog } =
     }
 
 
-viewDialog : Dialog msg -> Element msg
+viewDialog : Dialog msg -> Html msg
 viewDialog dialog =
     Dialog.toElement dialog

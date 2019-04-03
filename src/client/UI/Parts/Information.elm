@@ -1,7 +1,7 @@
 module UI.Parts.Information exposing (panel)
 
-import Element exposing (..)
 import Entity.Publication as Publication
+import Html.Styled as H exposing (..)
 import Svg exposing (Svg)
 import UI.Action as Action exposing (Action)
 import UI.Background as Background

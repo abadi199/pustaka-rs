@@ -4,9 +4,9 @@ import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
-import Element as E
 import Entity.Category exposing (Category)
 import Html exposing (..)
+import Html.Styled as H
 import Page.ByCategory as ByCategoryPage
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
@@ -24,7 +24,11 @@ import Url
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, top)
 
 
-main : Program () Model Msg
+type alias Flags =
+    { logo : String }
+
+
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -46,6 +50,7 @@ type alias Model =
     , favoriteCategories : ReloadableWebData () (List Category)
     , viewport : Viewport
     , searchText : String
+    , flags : Flags
     }
 
 
@@ -59,8 +64,8 @@ type Page
     | Problem String
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
     let
         ( model, cmd ) =
             stepUrl url
@@ -72,6 +77,7 @@ init _ url key =
                     , viewport = { x = 0, y = 0, width = 0, height = 0 }
                     }
                 , searchText = ""
+                , flags = flags
                 }
     in
     ( model

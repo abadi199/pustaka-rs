@@ -11,10 +11,6 @@ import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
-import Element as E exposing (..)
-import Element.Border as Border exposing (shadow)
-import Element.Events as Events exposing (onClick)
-import Element.Font as Font
 import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
 import Entity.Publication as Publication
 import Html as H exposing (Html)

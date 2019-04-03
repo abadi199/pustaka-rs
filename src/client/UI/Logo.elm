@@ -1,16 +1,19 @@
 module UI.Logo exposing (full)
 
-import Element as E exposing (..)
-import Element.Font as Font
+import Html.Styled as H exposing (..)
 import UI.Spacing as Spacing
 
 
-full : Element msg
-full =
-    el
-        [ Spacing.padding -2, Font.bold ]
-        (image [ height (px 50) ]
-            { src = "/assets/logo.svg"
-            , description = "Pustaka"
-            }
-        )
+full : String -> Html msg
+full logoUrl =
+    Debug.todo "UI.Logo.full"
+
+
+
+-- el
+--     [ Spacing.padding -2, Font.bold ]
+--     (image [ height (px 50) ]
+--         { src = logoUrl
+--         , description = "Pustaka"
+--         }
+--     )

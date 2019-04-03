@@ -1,20 +1,17 @@
 module UI.Heading exposing (heading)
 
-import Element as E exposing (..)
-import Element.Font as Font
-import Element.Region as Region
+import Html.Styled as H exposing (..)
 
 
-scaled : Int -> Int
-scaled =
-    modular 24 1.25 >> round
-
-
-heading : Int -> String -> Element msg
+heading : Int -> String -> Html msg
 heading level content =
-    el
-        [ Region.heading level
-        , Font.size (scaled (1 - level))
-        , Font.bold
-        ]
-        (text content)
+    Debug.todo "UI.Heading.heading"
+
+
+
+-- el
+--     [ Region.heading level
+--     , Font.size (scaled (1 - level))
+--     , Font.bold
+--     ]
+--     (text content)

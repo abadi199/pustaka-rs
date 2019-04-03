@@ -12,12 +12,12 @@ import Browser
 import Browser.Navigation as Nav
 import Cmd
 import Dict exposing (Dict)
-import Element as E exposing (..)
 import Entity.Category as Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
-import Html.Attributes as HA
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import UI.Action as Action

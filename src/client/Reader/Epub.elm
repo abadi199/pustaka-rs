@@ -3,13 +3,13 @@ module Reader.Epub exposing (Model, Msg, header, initialModel, next, previous, r
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
-import Element as E exposing (..)
-import Element.Events exposing (onClick)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
+import Html.Styled as H exposing (..)
+import Html.Styled.Events as HE exposing (onClick)
 import Http
 import Json.Decode as JD
 import Json.Encode as JE

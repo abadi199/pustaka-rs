@@ -1,37 +1,42 @@
 module UI.List exposing (DD, DT, dd, dl, dt)
 
-import Element exposing (..)
-import Html exposing (Html, dd, dl, dt, span)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE exposing (onClick)
 import UI.Spacing as UI
 
 
-dl : List ( DT msg, DD msg ) -> Element msg
+dl : List ( DT msg, DD msg ) -> Html msg
 dl list =
-    el [ width fill ] <|
-        html
-            (Html.dl resetStyles
-                [ column [ width fill, UI.spacing -5 ] (list |> List.map viewDescription)
-                    |> layoutWith { options = [ noStaticStyleSheet ] } []
-                ]
-            )
+    Debug.todo "UI.List.dl"
 
 
-viewDescription : ( DT msg, DD msg ) -> Element msg
+
+-- H.dl resetStyles
+--     [ column [ width fill, UI.spacing -5 ] (list |> List.map viewDescription)
+--         |> layoutWith { options = [ noStaticStyleSheet ] } []
+--     ]
+
+
+viewDescription : ( DT msg, DD msg ) -> Html msg
 viewDescription ( DT term termOnClick, DD details detailsOnClick ) =
-    row [ width fill ]
-        [ el [ width (px 100) ] <|
-            html
-                (Html.dt (onClick termOnClick :: resetStyles)
-                    [ Html.text term ]
-                )
-        , el [] <|
-            html
-                (Html.dd (onClick detailsOnClick :: resetStyles)
-                    [ Html.text details ]
-                )
-        ]
+    Debug.todo "UI.List.viewDescription"
+
+
+
+-- row [ width fill ]
+--     [ el [ width (px 100) ] <|
+--         html
+--             (Html.dt (onClick termOnClick :: resetStyles)
+--                 [ Html.text term ]
+--             )
+--     , el [] <|
+--         html
+--             (Html.dd (onClick detailsOnClick :: resetStyles)
+--                 [ Html.text details ]
+--             )
+--     ]
 
 
 type DT msg
@@ -52,8 +57,7 @@ dd { details, onClick } =
     DD details onClick
 
 
-resetStyles : List (Html.Attribute msg)
+resetStyles : List (H.Attribute msg)
 resetStyles =
-    [ style "margin" "0"
-    , style "padding" "0"
+    [ css [ margin zero, padding zero ]
     ]

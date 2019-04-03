@@ -9,45 +9,45 @@ module UI.Background exposing
     , transparentMediumWhite
     )
 
-import Element exposing (..)
-import Element.Background exposing (color)
+import Css exposing (Style, backgroundColor, rgba)
+import Html.Styled as H exposing (..)
 
 
-solidWhite : Attribute msg
+solidWhite : Style
 solidWhite =
-    color (rgba 1 1 1 1)
+    backgroundColor <| rgba 255 255 255 1
 
 
-transparentLightWhite : Attribute msg
+transparentLightWhite : Style
 transparentLightWhite =
-    color (rgba 1 1 1 0.025)
+    backgroundColor <| rgba 255 255 255 0.025
 
 
-transparentHeavyWhite : Attribute msg
+transparentHeavyWhite : Style
 transparentHeavyWhite =
-    color (rgba 1 1 1 0.5)
+    backgroundColor <| rgba 255 255 255 0.5
 
 
-transparentMediumWhite : Attribute msg
+transparentMediumWhite : Style
 transparentMediumWhite =
-    color (rgba 1 1 1 0.125)
+    backgroundColor <| rgba 255 255 255 0.125
 
 
-transparentLightBlack : Attribute msg
+transparentLightBlack : Style
 transparentLightBlack =
-    color (rgba 0 0 0 0.025)
+    backgroundColor <| rgba 0 0 0 0.025
 
 
-transparentHeavyBlack : Attribute msg
+transparentHeavyBlack : Style
 transparentHeavyBlack =
-    color (rgba 0 0 0 0.25)
+    backgroundColor <| rgba 0 0 0 0.25
 
 
-transparentMediumBlack : Attribute msg
+transparentMediumBlack : Style
 transparentMediumBlack =
-    color (rgba 0 0 0 0.125)
+    backgroundColor <| rgba 0 0 0 0.125
 
 
-lightRed : Attribute msg
+lightRed : Style
 lightRed =
-    color (rgba255 255 186 186 1)
+    backgroundColor <| rgba 255 186 186 1

@@ -8,10 +8,8 @@ module UI.Nav.Side exposing
 
 import Browser.Navigation as Nav
 import Css.Global exposing (a, global)
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Border as Border
 import Entity.Category exposing (Category)
+import Html.Styled as H exposing (..)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set exposing (Set)
@@ -25,8 +23,8 @@ import UI.Parts.Search exposing (Search)
 
 
 type SideNav msg
-    = SideNav (List (Element msg))
-    | SideNavWithSearch (Search msg) (List (Element msg))
+    = SideNav (List (Html msg))
+    | SideNavWithSearch (Search msg) (List (Html msg))
 
 
 type SelectedItem
@@ -38,7 +36,7 @@ type SelectedItem
     | Settings
 
 
-toElement : SideNav msg -> Element msg
+toElement : SideNav msg -> Html msg
 toElement sideNav =
     E.column
         [ alignTop
@@ -101,7 +99,7 @@ isSelectedCategoryId categoryId selectedItem =
             False
 
 
-categoriesView : (String -> msg) -> SelectedItem -> List Category -> Element msg
+categoriesView : (String -> msg) -> SelectedItem -> List Category -> Html msg
 categoriesView onLinkClicked selectedItem categories =
     E.column
         []

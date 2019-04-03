@@ -1,9 +1,7 @@
 module UI.Parts.Form exposing (Field, field, form)
 
-import Element as E exposing (..)
-import Element.Input as EI
-import Html as H
-import Html.Events as HA
+import Html.Styled as H
+import Html.Styled.Events as HA
 import UI.Action as Action
 import UI.Icon as Icon
 import UI.Spacing as UI

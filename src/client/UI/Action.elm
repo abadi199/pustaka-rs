@@ -8,9 +8,8 @@ module UI.Action exposing
     , toElement
     )
 
-import Element as E exposing (..)
-import Element.Border as Border
-import Element.Events as EV
+import Html.Styled as H exposing (..)
+import Html.Styled.Events as HE
 import UI.Icon exposing (Icon)
 import UI.Link as UI
 import UI.Spacing as Spacing

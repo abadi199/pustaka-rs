@@ -1,15 +1,24 @@
 module UI.Loading exposing (view)
 
-import Element exposing (..)
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import UI.Background
 import UI.Icon as Icon
 
 
-view : Element msg
+view : Html msg
 view =
-    el
-        [ width fill
-        , height fill
-        , UI.Background.transparentHeavyWhite
+    div
+        [ css
+            [ displayFlex
+            , width (pct 100)
+            , height (pct 100)
+            , UI.Background.transparentHeavyWhite
+            ]
         ]
-        (el [ centerX, centerY ] <| Icon.spinner Icon.large)
+        [ div
+            [ css [ displayFlex, alignItems center ]
+            ]
+            [ Icon.spinner Icon.large ]
+        ]

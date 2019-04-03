@@ -8,8 +8,7 @@ module UI.Parts.Header exposing
     , visible
     )
 
-import Element as E exposing (..)
-import Element.Border as Border
+import Html.Styled as H exposing (..)
 import Route
 import UI.Action as Action
 import UI.Background as Background
@@ -70,7 +69,7 @@ header :
     , onLinkClicked : String -> msg
     , title : String
     }
-    -> Element msg
+    -> Html msg
 header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
     case visibility of
         Hidden ->

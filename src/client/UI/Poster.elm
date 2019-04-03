@@ -8,12 +8,11 @@ module UI.Poster exposing
     , thumbnailDimension
     )
 
-import Element as E exposing (..)
-import Element.Background as Background
 import Entity.Image as Image exposing (Image)
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
 import Html as H
 import Html.Attributes as HA
+import Html.Styled as H exposing (..)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Image as Image
 import UI.ReloadableData

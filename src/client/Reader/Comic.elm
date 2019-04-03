@@ -16,13 +16,13 @@ module Reader.Comic exposing
 import Browser.Events
 import Browser.Navigation as Nav
 import Cmd
-import Element as E exposing (..)
-import Element.Events as EE exposing (onClick)
 import Entity.Image as Image exposing (Image)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html as H
 import Html.Attributes as HA
+import Html.Styled as H exposing (..)
+import Html.Styled.Events as HE exposing (onClick)
 import Keyboard
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
