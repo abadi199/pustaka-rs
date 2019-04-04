@@ -167,7 +167,7 @@ empty { width, height } title =
             [ Css.width (px <| toFloat width)
             , Css.height (px <| toFloat height)
             , displayFlex
-            , alignItems flexEnd
+            , alignItems center
             , backgroundColor (rgba 0 0 0 0.35)
             , whiteSpace normal
             , overflow hidden

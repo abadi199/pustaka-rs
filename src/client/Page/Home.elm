@@ -211,7 +211,7 @@ publicationView model publication =
         noImage =
             ReloadableData.Success () Image.none
     in
-    Card.bordered [ css [ UI.padding UI.Small ] ]
+    Card.bordered [ css [ UI.padding UI.Small, position relative ] ]
         { actions = []
         , content =
             [ a
@@ -237,6 +237,7 @@ publicationActionView publicationId =
         [ css
             [ position absolute
             , bottom (px 0)
+            , right (px 10)
             , UI.padding UI.Small
             ]
         ]

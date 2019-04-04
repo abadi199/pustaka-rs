@@ -1,9 +1,10 @@
 module UI.Image exposing (fullHeight, poster)
 
 import Bytes exposing (Bytes)
+import Css exposing (..)
 import Entity.Image exposing (Image(..))
 import Html.Styled as H exposing (..)
-import Html.Styled.Attributes as HA
+import Html.Styled.Attributes as HA exposing (css)
 
 
 fullHeight : Image -> Html msg
@@ -27,8 +28,11 @@ poster { width, height, title, image } =
     case image of
         Image base64 ->
             H.img
-                [ HA.style "height" (String.fromInt height ++ "px")
-                , HA.style "width" (String.fromInt width ++ "px")
+                [ css
+                    [ Css.height (px <| toFloat height)
+                    , Css.width (px <| toFloat width)
+                    , border3 (px 10) solid (rgba 0 0 0 0.125)
+                    ]
                 , HA.alt title
                 , HA.title title
                 , HA.src <| "data:*/*;base64," ++ base64
