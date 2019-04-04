@@ -3,20 +3,15 @@ module Reader.Epub exposing (Model, Msg, header, initialModel, next, previous, r
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
+import Css exposing (..)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
-import Html as H
-import Html.Attributes as HA
-import Html.Events as HE
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE exposing (onClick)
-import Http
 import Json.Decode as JD
-import Json.Encode as JE
 import Keyboard
-import Reader exposing (PageView(..))
 import ReloadableData exposing (ReloadableWebData)
-import Route
 import UI.Events
 import UI.Icon as Icon
 import UI.Parts.Header as Header
@@ -88,30 +83,29 @@ reader :
     , publication : Publication.Data
     , model : Model
     }
-    -> Element Msg
+    -> Html Msg
 reader { viewport, publication, model } =
-    E.html <|
-        H.node "epub-viewer"
-            [ publication.id
-                |> String.fromInt
-                |> (\id ->
-                        "/api/publication/download/"
-                            ++ id
-                            ++ "/epub"
-                   )
-                |> HA.attribute "epub"
-            , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
-            , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
-            , HA.attribute "page" (model.pageCounter |> String.fromInt)
-            , HA.attribute "percentage" (model.progress |> Progress.toFloat |> String.fromFloat)
-            , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
-            , HE.on "ready" (JD.succeed Ready)
-            , UI.Events.onHtmlMouseMove MouseMoved
-            ]
-            []
+    H.node "epub-viewer"
+        [ publication.id
+            |> String.fromInt
+            |> (\id ->
+                    "/api/publication/download/"
+                        ++ id
+                        ++ "/epub"
+               )
+            |> HA.attribute "epub"
+        , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
+        , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
+        , HA.attribute "page" (model.pageCounter |> String.fromInt)
+        , HA.attribute "percentage" (model.progress |> Progress.toFloat |> String.fromFloat)
+        , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
+        , HE.on "ready" (JD.succeed Ready)
+        , UI.Events.onMouseMove MouseMoved
+        ]
+        []
 
 
-header : { backUrl : String, publication : Publication.Data, model : Model } -> Element Msg
+header : { backUrl : String, publication : Publication.Data, model : Model } -> Html Msg
 header { backUrl, publication, model } =
     Header.header
         { visibility = model.overlayVisibility
@@ -122,11 +116,11 @@ header { backUrl, publication, model } =
         }
 
 
-slider : Model -> Element Msg
+slider : Model -> Html Msg
 slider model =
     case ( model.isReady, Header.isVisible model.overlayVisibility ) of
         ( False, _ ) ->
-            none
+            text ""
 
         ( True, False ) ->
             Slider.compact
@@ -143,24 +137,30 @@ slider model =
                 }
 
 
-previous : Element Msg
+previous : Html Msg
 previous =
-    row
+    div
         [ onClick PreviousPage
-        , alignLeft
-        , height fill
-        , pointer
+        , css
+            [ displayFlex
+            , alignItems flexEnd
+            , height (pct 100)
+            , cursor pointer
+            ]
         ]
         [ Icon.previous Icon.large ]
 
 
-next : Element Msg
+next : Html Msg
 next =
-    row
+    div
         [ onClick NextPage
-        , alignRight
-        , height fill
-        , pointer
+        , css
+            [ displayFlex
+            , alignItems flexEnd
+            , height (pct 100)
+            , cursor pointer
+            ]
         ]
         [ Icon.next Icon.large ]
 

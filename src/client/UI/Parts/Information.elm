@@ -1,8 +1,8 @@
 module UI.Parts.Information exposing (panel)
 
-import Entity.Publication as Publication
+import Css exposing (..)
 import Html.Styled as H exposing (..)
-import Svg exposing (Svg)
+import Html.Styled.Attributes as HA exposing (css)
 import UI.Action as Action exposing (Action)
 import UI.Background as Background
 import UI.Card as Card
@@ -15,17 +15,21 @@ type alias Description msg =
     { term : String, details : String, onClick : msg }
 
 
-panel : { a | title : String, informationList : List (Description msg), actions : List (Action msg) } -> Element msg
+panel : { a | title : String, informationList : List (Description msg), actions : List (Action msg) } -> Html msg
 panel { title, informationList, actions } =
     Card.simple
-        [ alignTop
-        , Background.transparentMediumBlack
-        , width fill
-        , UI.padding -2
+        [ css
+            [ displayFlex
+            , Background.transparentMediumBlack
+            , width (pct 100)
+            , UI.padding -2
+            ]
         ]
-        [ column
-            [ UI.spacing -2
-            , width fill
+        [ div
+            [ css
+                [ UI.spacing -2
+                , width (pct 100)
+                ]
             ]
             [ UI.heading 1 title
             , UI.List.dl (informationList |> List.map viewDescription)
@@ -41,11 +45,12 @@ viewDescription { term, details, onClick } =
     )
 
 
-viewActions : List (Action msg) -> Element msg
+viewActions : List (Action msg) -> Html msg
 viewActions actions =
-    row
-        [ alignBottom
-        , alignRight
-        , UI.spacing -5
+    div
+        [ css
+            [ displayFlex
+            , UI.spacing -5
+            ]
         ]
-        (actions |> List.map Action.toElement)
+        (actions |> List.map Action.toHtml)
