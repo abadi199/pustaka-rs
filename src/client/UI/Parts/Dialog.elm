@@ -48,14 +48,14 @@ confirmation { content, onPositive, onNegative, onClose } =
                     [ displayFlex
                     , alignItems center
                     , justifyContent center
-                    , UI.padding 1
+                    , UI.padding UI.Large
                     , Background.solidWhite
                     ]
                 ]
                 [ content
                 , div
                     [ css
-                        [ UI.paddingEach { top = 1, bottom = -10, right = -10, left = -10 }
+                        [ UI.paddingEach { top = UI.Small, bottom = UI.Small, right = UI.Small, left = UI.Small }
                         , UI.spacing -5
                         , displayFlex
                         , justifyContent center

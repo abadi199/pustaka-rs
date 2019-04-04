@@ -7,7 +7,7 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import UI.Nav.Side exposing (SideNav)
 import UI.Parts.Dialog as Dialog exposing (Dialog)
-import UI.Spacing as UI
+import UI.Spacing as Spacing
 
 
 reset : Html msg
@@ -18,6 +18,7 @@ reset =
             , fontSize (px 18)
             , fontFamilies [ "Source Sans Pro", "sans-serif" ]
             , fontWeight normal
+            , overflowX hidden
             ]
         , Global.selector "*, *:before, *:after"
             [ boxSizing inherit
@@ -25,7 +26,11 @@ reset =
             , padding zero
             , fontSize (Css.em 1)
             ]
-        , Global.body [ margin zero, padding zero ]
+        , Global.body
+            [ margin zero
+            , padding zero
+            , overflowX hidden
+            ]
         ]
 
 
@@ -44,26 +49,28 @@ withSideNav { title, sideNav, content, dialog } =
             div
                 [ css
                     [ displayFlex
-                    , minWidth (vw 100)
+                    , width (vw 100)
                     , minHeight (vh 100)
                     , position relative
+                    , overflowX hidden
                     ]
                 ]
                 [ viewDialog dialog
                 , div
                     [ css
-                        [ minWidth (pct 100)
+                        [ width (pct 100)
                         , minHeight (pct 100)
                         , displayFlex
                         , flexDirection row
+                        , overflowX hidden
                         ]
                     ]
                     ((sideNav |> UI.Nav.Side.toHtml)
                         :: [ div
                                 [ css
-                                    [ width (pct 100)
-                                    , height (pct 100)
-                                    , UI.padding 1
+                                    [ height (pct 100)
+                                    , Spacing.padding Spacing.Large
+                                    , overflowX hidden
                                     ]
                                 ]
                                 [ content ]

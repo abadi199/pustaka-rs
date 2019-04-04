@@ -84,7 +84,7 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                     [ width (pct 100)
                     , Background.solidWhite
                     , boxShadow5 zero zero zero (px 10) (rgba 0 0 0 0.5)
-                    , UI.padding 5
+                    , UI.padding UI.Large
                     ]
                 , UI.Events.onMouseMove onMouseMove
                 ]

@@ -24,6 +24,7 @@ import Route
 import UI.Action as Action
 import UI.Background as Background
 import UI.Card as Card
+import UI.Css.Grid as Grid
 import UI.Heading as Heading
 import UI.Icon as Icon
 import UI.Layout
@@ -110,16 +111,13 @@ view key categories model =
 
 viewLanding : Model -> Html Msg
 viewLanding model =
-    div [ css [ width (pct 100), UI.spacing 1 ] ]
-        [ UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
-        , UI.ReloadableData.view (viewRecentlyAdded model) model.categories
-        ]
-
-
-viewRecentlyAdded : Model -> List Category -> Html Msg
-viewRecentlyAdded model categories =
-    div [ css [ UI.spacing -5 ] ]
-        (categories |> List.map (viewRecentlyAddedByCategory model))
+    div [ css [ Grid.display, Grid.rowGap 20, Grid.templateColumns [ "100%" ] ] ]
+        (UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
+            :: (model.categories
+                    |> ReloadableData.expand
+                    |> List.map (UI.ReloadableData.view (viewRecentlyAddedByCategory model))
+               )
+        )
 
 
 viewRecentlyAddedByCategory : Model -> Category -> Html Msg
@@ -140,7 +138,8 @@ viewRecentlyAddedByCategory model category =
 
 viewPerCategory : Model -> Html Msg
 viewPerCategory model =
-    div [ css [ width (pct 100) ] ]
+    div
+        [ css [ width (pct 100) ] ]
         [ model.selectedCategoryId
             |> Maybe.andThen ReloadableData.toMaybe
             |> Maybe.map (\category -> Heading.heading 2 category.name)
@@ -151,7 +150,14 @@ viewPerCategory model =
 
 viewRecentPublications : Model -> List Publication.MetaData -> Html Msg
 viewRecentPublications model publications =
-    div [ css [ width (pct 100), Background.transparentMediumBlack, UI.padding -5 ] ]
+    div
+        [ css
+            [ width (pct 100)
+            , Background.transparentMediumBlack
+            , UI.padding UI.Small
+            , UI.marginBottom UI.Large
+            ]
+        ]
         [ viewPublicationsRow "Continue Reading" model publications ]
 
 
@@ -161,13 +167,19 @@ viewPublicationsRow title model publications =
         text ""
 
     else
-        div [ css [ width (pct 100) ] ]
+        div
+            [ css
+                [ width (pct 100)
+                , UI.padding UI.Medium
+                ]
+            ]
             [ Heading.heading 2 title
             , div
                 [ css
-                    [ width (pct 100)
-                    , height (px 250)
-                    , UI.spacing -5
+                    [ displayFlex
+                    , flexDirection row
+                    , overflowX auto
+                    , UI.paddingTop UI.Small
                     ]
                 ]
                 (publications |> List.map (publicationView model))
@@ -181,7 +193,11 @@ viewPublications model publications =
 
     else
         div [ css [ width (pct 100) ] ]
-            [ div [ css [ UI.paddingEach { top = 1, right = 0, bottom = 1, left = 0 }, UI.spacing 1 ] ]
+            [ div
+                [ css
+                    [ UI.paddingEach { top = UI.Large, right = UI.Medium, bottom = UI.Medium, left = UI.Medium }
+                    ]
+                ]
                 (publications |> List.map (publicationView model))
             ]
 
@@ -195,7 +211,7 @@ publicationView model publication =
         noImage =
             ReloadableData.Success () Image.none
     in
-    Card.bordered []
+    Card.bordered [ css [ UI.padding UI.Small ] ]
         { actions = []
         , content =
             [ a
@@ -221,8 +237,7 @@ publicationActionView publicationId =
         [ css
             [ position absolute
             , bottom (px 0)
-            , UI.spacing -5
-            , UI.padding -10
+            , UI.padding UI.Small
             ]
         ]
         [ Action.toHtml <|

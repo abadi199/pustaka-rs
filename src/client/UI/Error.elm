@@ -18,7 +18,7 @@ string error =
             , justifyContent center
             , UI.Background.lightRed
             , UI.Font.darkRed
-            , UI.Spacing.padding 5
+            , UI.Spacing.padding UI.Spacing.Large
             ]
         ]
         [ text error ]

@@ -22,13 +22,12 @@ panel { title, informationList, actions } =
             [ displayFlex
             , Background.transparentMediumBlack
             , width (pct 100)
-            , UI.padding -2
+            , UI.padding UI.Small
             ]
         ]
         [ div
             [ css
-                [ UI.spacing -2
-                , width (pct 100)
+                [ width (pct 100)
                 ]
             ]
             [ UI.heading 1 title
@@ -50,7 +49,6 @@ viewActions actions =
     div
         [ css
             [ displayFlex
-            , UI.spacing -5
             ]
         ]
         (actions |> List.map Action.toHtml)

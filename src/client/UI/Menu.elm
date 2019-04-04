@@ -27,14 +27,14 @@ view items =
                             [ displayFlex
                             , flexDirection column
                             , if level == 0 then
-                                UI.padding 5
+                                UI.padding UI.Small
 
                               else
                                 UI.paddingEach
-                                    { top = 5
-                                    , right = 20
-                                    , bottom = 20
-                                    , left = 5
+                                    { top = UI.Small
+                                    , right = UI.Large
+                                    , bottom = UI.Large
+                                    , left = UI.Small
                                     }
                             ]
                         ]
