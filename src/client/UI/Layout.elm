@@ -69,6 +69,7 @@ withSideNav { title, sideNav, content, dialog } =
                         :: [ div
                                 [ css
                                     [ height (pct 100)
+                                    , width (pct 100)
                                     , Spacing.padding Spacing.Large
                                     , overflowX hidden
                                     ]

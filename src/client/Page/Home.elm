@@ -139,7 +139,7 @@ viewRecentlyAddedByCategory model category =
 viewPerCategory : Model -> Html Msg
 viewPerCategory model =
     div
-        [ css [ width (pct 100) ] ]
+        [ css [ Grid.display, width (pct 100) ] ]
         [ model.selectedCategoryId
             |> Maybe.andThen ReloadableData.toMaybe
             |> Maybe.map (\category -> Heading.heading 2 category.name)
@@ -192,10 +192,15 @@ viewPublications model publications =
         text <| "No publications"
 
     else
-        div [ css [ width (pct 100) ] ]
+        div [ css [ width (pct 100), Grid.display ] ]
             [ div
                 [ css
                     [ UI.paddingEach { top = UI.Large, right = UI.Medium, bottom = UI.Medium, left = UI.Medium }
+                    , width (pct 100)
+                    , Grid.display
+                    , Grid.templateColumns [ "repeat(auto-fill, minmax(150px, 1fr))" ]
+                    , Grid.rowGap 10
+                    , Grid.columnGap 10
                     ]
                 ]
                 (publications |> List.map (publicationView model))
@@ -211,13 +216,28 @@ publicationView model publication =
         noImage =
             ReloadableData.Success () Image.none
     in
-    Card.bordered [ css [ UI.padding UI.Small, position relative ] ]
-        { actions = []
+    Card.bordered
+        [ css
+            [ UI.padding UI.Small
+            , position relative
+            ]
+        ]
+        { actions =
+            [ Action.compact <|
+                Action.link
+                    { text = "Read"
+                    , icon = Icon.read Icon.small
+                    , url = Route.readUrl publication.id
+                    , onClick = LinkClicked
+                    }
+            ]
         , content =
             [ a
                 [ css
                     [ width (pct 100)
                     , height (pct 100)
+                    , displayFlex
+                    , justifyContent center
                     ]
                 , HA.href url
                 ]
@@ -241,15 +261,7 @@ publicationActionView publicationId =
             , UI.padding UI.Small
             ]
         ]
-        [ Action.toHtml <|
-            Action.compact <|
-                Action.link
-                    { text = "Read"
-                    , icon = Icon.read Icon.small
-                    , url = Route.readUrl publicationId
-                    , onClick = LinkClicked
-                    }
-        ]
+        []
 
 
 

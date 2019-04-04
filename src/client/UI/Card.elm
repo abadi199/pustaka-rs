@@ -28,8 +28,11 @@ bordered : List (Attribute msg) -> { actions : List (Action msg), content : List
 bordered attributes { actions, content } =
     card 1
         (css
-            [ borderColor (rgba 0 0 0 0.125)
+            [ borderColor (rgba 255 0 0 0.125)
             , borderWidth (px 10)
+            , position relative
+            , displayFlex
+            , justifyContent center
             ]
             :: attributes
         )
@@ -38,7 +41,17 @@ bordered attributes { actions, content } =
 
 viewActions : List (Action msg) -> Html msg
 viewActions actions =
-    div [ css [ displayFlex, alignItems flexEnd, width (pct 100), backgroundColor (rgba 255 255 255 0.75) ] ]
+    div
+        [ css
+            [ position absolute
+            , displayFlex
+            , justifyContent flexEnd
+            , bottom (px 0)
+            , alignItems flexEnd
+            , width (pct 100)
+            , backgroundColor (rgba 255 255 255 0.75)
+            ]
+        ]
         [ div [] (actions |> List.map Action.toHtml) ]
 
 
