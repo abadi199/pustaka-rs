@@ -9,32 +9,21 @@ module Page.Read exposing
 
 import Browser
 import Browser.Dom exposing (Viewport)
-import Browser.Events
 import Browser.Navigation as Nav
-import Entity.MediaFormat as MediaFormat exposing (MediaFormat)
+import Css exposing (..)
+import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
-import Html as H exposing (Html)
-import Html.Attributes as HA
-import Html.Events as HE
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import Http
-import Json.Decode as JD
 import Keyboard
-import Reader exposing (PageView(..))
 import Reader.Comic as Comic
 import Reader.Epub as Epub
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
-import Task
-import UI.Action as Action
-import UI.Background as Background
 import UI.Error
 import UI.Events
-import UI.Icon as Icon
-import UI.Link as UI
-import UI.Parts.Header as Header
-import UI.Parts.Slider as Slider
 import UI.ReloadableData
-import UI.Spacing as UI
 
 
 
@@ -101,10 +90,10 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ case model.publication |> ReloadableData.toMaybe of
-            Just (Epub publication epubModel) ->
+            Just (Epub _ epubModel) ->
                 Epub.subscription epubModel |> Sub.map EpubMsg
 
-            Just (Comic publication comicModel) ->
+            Just (Comic _ comicModel) ->
                 Comic.subscription comicModel |> Sub.map ComicMsg
 
             Nothing ->
@@ -133,82 +122,85 @@ type Msg
 view : Viewport -> Model -> Browser.Document Msg
 view viewport model =
     { title = "Read"
-    , body =
-        UI.ReloadableData.custom
-            (\error ->
-                case error of
-                    SimpleError string ->
-                        UI.Error.string string
+    , body = []
 
-                    HttpError httpError ->
-                        UI.Error.http httpError
-            )
-            (\publicationType ->
-                case publicationType of
-                    Comic publication comicModel ->
-                        layout ComicMsg
-                            { header =
-                                Comic.header
-                                    { backUrl = model.backUrl }
-                                    publication
-                                    comicModel
-                            , slider = Comic.slider comicModel
-                            , reader = Comic.reader publication comicModel
-                            , previous = Comic.previous
-                            , next = Comic.next
-                            }
-
-                    Epub publication epubModel ->
-                        layout EpubMsg
-                            { header =
-                                Epub.header
-                                    { backUrl = model.backUrl
-                                    , publication = publication
-                                    , model = epubModel
-                                    }
-                            , slider = Epub.slider epubModel
-                            , reader =
-                                Epub.reader
-                                    { viewport = viewport
-                                    , publication = publication
-                                    , model = epubModel
-                                    }
-                            , previous = Epub.previous
-                            , next = Epub.next
-                            }
-            )
-            model.publication
-            |> E.layout []
-            |> List.singleton
+    --        [ UI.ReloadableData.custom
+    --            (\error ->
+    --                case error of
+    --                    SimpleError string ->
+    --                        UI.Error.string string
+    --
+    --                    HttpError httpError ->
+    --                        UI.Error.http httpError
+    --            )
+    --            (\publicationType ->
+    --                case publicationType of
+    --                    Comic publication comicModel ->
+    --                        layout ComicMsg
+    --                            { header =
+    --                                Comic.header
+    --                                    { backUrl = model.backUrl }
+    --                                    publication
+    --                                    comicModel
+    --                            , slider = Comic.slider comicModel
+    --                            , reader = Comic.reader publication comicModel
+    --                            , previous = Comic.previous
+    --                            , next = Comic.next
+    --                            }
+    --
+    --                    Epub publication epubModel ->
+    --                        layout EpubMsg
+    --                            { header =
+    --                                Epub.header
+    --                                    { backUrl = model.backUrl
+    --                                    , publication = publication
+    --                                    , model = epubModel
+    --                                    }
+    --                            , slider = Epub.slider epubModel
+    --                            , reader =
+    --                                Epub.reader
+    --                                    { viewport = viewport
+    --                                    , publication = publication
+    --                                    , model = epubModel
+    --                                    }
+    --                            , previous = Epub.previous
+    --                            , next = Epub.next
+    --                            }
+    --            )
+    --            model.publication
+    --        ]
     }
 
 
 layout :
     (msg -> Msg)
     ->
-        { previous : Element msg
-        , next : Element msg
-        , header : Element msg
-        , slider : Element msg
-        , reader : Element msg
+        { previous : Html msg
+        , next : Html msg
+        , header : Html msg
+        , slider : Html msg
+        , reader : Html msg
         }
-    -> Element Msg
+    -> Html Msg
 layout tagger { header, slider, reader, previous, next } =
-    row
-        [ inFront <| E.map tagger <| header
-        , inFront <| E.map tagger <| slider
-        , width fill
-        , height fill
-        ]
-        [ previous |> E.map tagger
-        , E.el
-            [ centerX
-            , UI.Events.onMouseMove MouseMoved
-            , width fill
-            , height fill
+    div
+        [ css
+            [ width (pct 100)
+            , height (pct 100)
             ]
-            (reader |> E.map tagger)
-        , next |> E.map tagger
+        ]
+        [ H.map tagger <| previous
+        , H.map tagger <| slider
+        , H.map tagger <| header
+        , div
+            [ css
+                [ width (pct 100)
+                , height (pct 100)
+                ]
+            , UI.Events.onMouseMove MouseMoved
+            ]
+            [ reader |> H.map tagger ]
+        , next |> H.map tagger
         ]
 
 

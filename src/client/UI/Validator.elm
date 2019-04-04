@@ -1,9 +1,8 @@
-module UI.Validator
-    exposing
-        ( ValidationResult
-        , Validator
-        , view
-        )
+module UI.Validator exposing
+    ( ValidationResult
+    , Validator
+    , view
+    )
 
 import Html.Styled exposing (..)
 import Result
@@ -60,7 +59,7 @@ view validators value =
             div [] [ ul [] (errors |> List.map errorView) ]
 
         Result.Ok _ ->
-            Html.text ""
+            text ""
 
 
 errorView : String -> Html msg

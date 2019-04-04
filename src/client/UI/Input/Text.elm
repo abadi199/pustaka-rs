@@ -1,11 +1,10 @@
-module UI.Input.Text
-    exposing
-        ( Config
-        , State
-        , initialState
-        , value
-        , view
-        )
+module UI.Input.Text exposing
+    ( Config
+    , State
+    , initialState
+    , value
+    , view
+    )
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -75,7 +74,7 @@ view configurations (Internal.State state) =
             |> Maybe.withDefault (Html.text "")
         , input
             [ config.onUpdate
-                |> Maybe.map (\onUpdate -> onInput (\value -> onUpdate (Internal.State { state | value = value, shouldValidate = True })))
+                |> Maybe.map (\onUpdate -> onInput (\val -> onUpdate (Internal.State { state | value = val, shouldValidate = True })))
                 |> Maybe.withDefault (id domId)
             , id domId
             , Html.Attributes.value state.value
@@ -99,5 +98,4 @@ configure configurations =
 
 generateDomId : Internal.Config config -> String
 generateDomId (Internal.Config config) =
-    toString <|
-        Murmur3.hashString seed (toString config)
+    config.labelText |> Maybe.withDefault "pustakaInput"

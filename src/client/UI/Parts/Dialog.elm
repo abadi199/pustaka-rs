@@ -7,8 +7,9 @@ module UI.Parts.Dialog exposing
     , toElement
     )
 
+import Css exposing (..)
 import Html.Styled as H exposing (..)
-import Html.Styled.Attributes as HA
+import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE exposing (onClick)
 import UI.Action as Action
 import UI.Background as Background
@@ -42,20 +43,26 @@ confirmation { content, onPositive, onNegative, onClose } =
         , onNegative = onNegative
         , onClose = onClose
         , element =
-            column
-                [ centerX
-                , centerY
-                , UI.padding 1
-                , Background.solidWhite
+            div
+                [ css
+                    [ displayFlex
+                    , alignItems center
+                    , justifyContent center
+                    , UI.padding 1
+                    , Background.solidWhite
+                    ]
                 ]
                 [ content
-                , row
-                    [ UI.paddingEach { top = 1, bottom = -10, right = -10, left = -10 }
-                    , UI.spacing -5
-                    , centerX
+                , div
+                    [ css
+                        [ UI.paddingEach { top = 1, bottom = -10, right = -10, left = -10 }
+                        , UI.spacing -5
+                        , displayFlex
+                        , justifyContent center
+                        ]
                     ]
-                    [ Action.toElement <| Action.large <| Action.clickable { text = "Yes", icon = Icon.none, onClick = onPositive }
-                    , Action.toElement <| Action.large <| Action.clickable { text = "No", icon = Icon.none, onClick = onNegative }
+                    [ Action.toHtml <| Action.large <| Action.clickable { text = "Yes", icon = Icon.none, onClick = onPositive }
+                    , Action.toHtml <| Action.large <| Action.clickable { text = "No", icon = Icon.none, onClick = onNegative }
                     ]
                 ]
         }
@@ -65,13 +72,15 @@ toElement : Dialog msg -> Html msg
 toElement dialog =
     case dialog of
         NoDialog ->
-            E.none
+            text ""
 
         Modal (ConfirmationDialog { element, onPositive, onNegative, onClose }) ->
-            el
-                [ width fill
-                , height fill
-                , Background.transparentHeavyBlack
+            div
+                [ css
+                    [ width (pct 100)
+                    , height (pct 100)
+                    , Background.transparentHeavyBlack
+                    ]
                 , onClick onClose
                 ]
-                element
+                [ element ]
