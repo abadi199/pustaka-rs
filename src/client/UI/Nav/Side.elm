@@ -1,20 +1,18 @@
 module UI.Nav.Side exposing
     ( SelectedItem(..)
     , SideNav
-    , toElement
+    , toHtml
     , view
     , withSearch
     )
 
-import Browser.Navigation as Nav
-import Css.Global exposing (a, global)
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
-import Set exposing (Set)
 import Tree
-import UI.Css.Basics
 import UI.Error
 import UI.Loading
 import UI.Logo as Logo
@@ -36,13 +34,17 @@ type SelectedItem
     | Settings
 
 
-toElement : SideNav msg -> Html msg
-toElement sideNav =
-    E.column
-        [ alignTop
-        , height fill
-        , Background.color (rgba 0 0 0 0.125)
-        , padding 20
+toHtml : SideNav msg -> Html msg
+toHtml sideNav =
+    div
+        [ css
+            [ height (pct 100)
+            , minHeight (vh 100)
+            , displayFlex
+            , flexDirection column
+            , backgroundColor (rgba 0 0 0 0.125)
+            , padding (px 20)
+            ]
         ]
         (case sideNav of
             SideNav element ->
@@ -101,8 +103,8 @@ isSelectedCategoryId categoryId selectedItem =
 
 categoriesView : (String -> msg) -> SelectedItem -> List Category -> Html msg
 categoriesView onLinkClicked selectedItem categories =
-    E.column
-        []
+    div
+        [ css [] ]
         [ UI.Menu.view
             [ Tree.node
                 { text = "Home"

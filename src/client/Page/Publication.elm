@@ -9,12 +9,14 @@ module Page.Publication exposing
 
 import Browser
 import Browser.Navigation as Nav
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Set
@@ -96,12 +98,12 @@ view categoryData model =
         }
 
 
-viewPublication : Model -> Publication.MetaData -> Element Msg
+viewPublication : Model -> Publication.MetaData -> Html Msg
 viewPublication model publication =
-    column [ UI.spacing 1, width fill ]
+    div [ css [ UI.spacing 1, width (pct 100) ] ]
         [ UI.breadCrumb []
-        , row
-            [ UI.spacing 1, width fill ]
+        , div
+            [ css [ UI.spacing 1, width (pct 100) ] ]
             [ viewCover
                 { publicationId = publication.id
                 , cover = model.cover
@@ -112,7 +114,7 @@ viewPublication model publication =
         ]
 
 
-viewInformation : Publication.MetaData -> Element Msg
+viewInformation : Publication.MetaData -> Html Msg
 viewInformation publication =
     Information.panel
         { title = publication.title
@@ -142,13 +144,13 @@ viewInformation publication =
         }
 
 
-viewCover : { publicationId : Int, cover : ReloadableWebData () Image, title : String } -> Element Msg
+viewCover : { publicationId : Int, cover : ReloadableWebData () Image, title : String } -> Html Msg
 viewCover { publicationId, cover, title } =
-    Card.bordered [ alignTop ]
+    Card.bordered [ css [] ]
         { actions = []
         , content =
             [ UI.link
-                [ height fill ]
+                [ css [ height (pct 100) ] ]
                 { msg = LinkClicked
                 , url = Route.readUrl publicationId
                 , label = UI.reloadablePoster { title = title, image = cover }

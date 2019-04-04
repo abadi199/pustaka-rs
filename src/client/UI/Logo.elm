@@ -4,9 +4,9 @@ import Html.Styled as H exposing (..)
 import UI.Spacing as Spacing
 
 
-full : String -> Html msg
-full logoUrl =
-    Debug.todo "UI.Logo.full"
+full : Html msg
+full =
+    text "UI.Logo.full"
 
 
 

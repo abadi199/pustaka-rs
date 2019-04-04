@@ -11,13 +11,14 @@ module Page.Home exposing
 import Browser
 import Browser.Navigation as Nav
 import Cmd
+import Css exposing (..)
 import Dict exposing (Dict)
 import Entity.Category as Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail
 import Html.Styled as H exposing (..)
-import Html.Styled.Attributes as HA
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import UI.Action as Action
@@ -107,21 +108,21 @@ view key categories model =
         }
 
 
-viewLanding : Model -> Element Msg
+viewLanding : Model -> Html Msg
 viewLanding model =
-    column [ width fill, UI.spacing 1 ]
+    div [ css [ width (pct 100), UI.spacing 1 ] ]
         [ UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
         , UI.ReloadableData.view (viewRecentlyAdded model) model.categories
         ]
 
 
-viewRecentlyAdded : Model -> List Category -> Element Msg
+viewRecentlyAdded : Model -> List Category -> Html Msg
 viewRecentlyAdded model categories =
-    column [ UI.spacing -5 ]
+    div [ css [ UI.spacing -5 ] ]
         (categories |> List.map (viewRecentlyAddedByCategory model))
 
 
-viewRecentlyAddedByCategory : Model -> Category -> Element Msg
+viewRecentlyAddedByCategory : Model -> Category -> Html Msg
 viewRecentlyAddedByCategory model category =
     let
         maybeData : Maybe (ReloadableWebData () (List Publication.MetaData))
@@ -134,56 +135,58 @@ viewRecentlyAddedByCategory model category =
             UI.ReloadableData.view (viewPublicationsRow category.name model) data
 
         Nothing ->
-            E.none
+            text ""
 
 
-viewPerCategory : Model -> Element Msg
+viewPerCategory : Model -> Html Msg
 viewPerCategory model =
-    column [ width fill ]
+    div [ css [ width (pct 100) ] ]
         [ model.selectedCategoryId
             |> Maybe.andThen ReloadableData.toMaybe
             |> Maybe.map (\category -> Heading.heading 2 category.name)
-            |> Maybe.withDefault E.none
+            |> Maybe.withDefault (text "")
         , UI.ReloadableData.view (viewPublications model) model.publications
         ]
 
 
-viewRecentPublications : Model -> List Publication.MetaData -> Element Msg
+viewRecentPublications : Model -> List Publication.MetaData -> Html Msg
 viewRecentPublications model publications =
-    row [ width fill, Background.transparentMediumBlack, UI.padding -5 ]
+    div [ css [ width (pct 100), Background.transparentMediumBlack, UI.padding -5 ] ]
         [ viewPublicationsRow "Continue Reading" model publications ]
 
 
-viewPublicationsRow : String -> Model -> List Publication.MetaData -> Element Msg
+viewPublicationsRow : String -> Model -> List Publication.MetaData -> Html Msg
 viewPublicationsRow title model publications =
     if List.isEmpty publications then
-        E.none
+        text ""
 
     else
-        column [ width fill ]
+        div [ css [ width (pct 100) ] ]
             [ Heading.heading 2 title
-            , row
-                [ width fill
-                , height (px 250)
-                , UI.spacing -5
+            , div
+                [ css
+                    [ width (pct 100)
+                    , height (px 250)
+                    , UI.spacing -5
+                    ]
                 ]
                 (publications |> List.map (publicationView model))
             ]
 
 
-viewPublications : Model -> List Publication.MetaData -> Element Msg
+viewPublications : Model -> List Publication.MetaData -> Html Msg
 viewPublications model publications =
     if List.isEmpty publications then
         text <| "No publications"
 
     else
-        column [ width fill ]
-            [ wrappedRow [ UI.paddingEach { top = 1, right = 0, bottom = 1, left = 0 }, UI.spacing 1 ]
+        div [ css [ width (pct 100) ] ]
+            [ div [ css [ UI.paddingEach { top = 1, right = 0, bottom = 1, left = 0 }, UI.spacing 1 ] ]
                 (publications |> List.map (publicationView model))
             ]
 
 
-publicationView : Model -> Publication.MetaData -> Element Msg
+publicationView : Model -> Publication.MetaData -> Html Msg
 publicationView model publication =
     let
         url =
@@ -195,34 +198,34 @@ publicationView model publication =
     Card.bordered []
         { actions = []
         , content =
-            [ link
-                [ width fill
-                , height fill
+            [ a
+                [ css
+                    [ width (pct 100)
+                    , height (pct 100)
+                    ]
+                , HA.href url
                 ]
-                { url = url
-                , label =
-                    UI.reloadableThumbnail
-                        { title = publication.title
-                        , image = Dict.get publication.id model.covers |> Maybe.withDefault noImage
-                        }
-                }
+                [ UI.reloadableThumbnail
+                    { title = publication.title
+                    , image = Dict.get publication.id model.covers |> Maybe.withDefault noImage
+                    }
+                ]
             , publicationActionView publication.id
             ]
         }
 
 
-publicationActionView : Int -> Element Msg
+publicationActionView : Int -> Html Msg
 publicationActionView publicationId =
-    row
-        [ alignRight
-        , alignBottom
-        , height shrink
-        , htmlAttribute <| HA.style "position" "absolute"
-        , htmlAttribute <| HA.style "bottom" "0"
-        , UI.spacing -5
-        , UI.padding -10
+    div
+        [ css
+            [ position absolute
+            , bottom (px 0)
+            , UI.spacing -5
+            , UI.padding -10
+            ]
         ]
-        [ Action.toElement <|
+        [ Action.toHtml <|
             Action.compact <|
                 Action.link
                     { text = "Read"

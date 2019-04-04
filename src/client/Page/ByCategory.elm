@@ -8,13 +8,12 @@ module Page.ByCategory exposing
 
 import Browser
 import Browser.Navigation as Nav
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableWebData)
 import Route
-import Set
-import UI.Css.Basics
-import UI.Css.Color
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
@@ -72,11 +71,11 @@ view key categories model =
         }
 
 
-categorySliderView : Nav.Key -> Model -> Element Msg
+categorySliderView : Nav.Key -> Model -> Html Msg
 categorySliderView key model =
-    el
+    div
         []
-        (row
+        [ div
             []
             (UI.ReloadableData.view (categoriesView key model) model.categories
                 :: [ UI.link
@@ -84,7 +83,7 @@ categorySliderView key model =
                         { msg = MenuItemClicked
                         , url = ""
                         , label =
-                            row
+                            div
                                 []
                                 [ Icon.expandMore Icon.small
                                 , text "All Categories"
@@ -92,12 +91,12 @@ categorySliderView key model =
                         }
                    ]
             )
-        )
+        ]
 
 
-categoriesView : Nav.Key -> Model -> List Category -> Element Msg
+categoriesView : Nav.Key -> Model -> List Category -> Html Msg
 categoriesView key model categories =
-    row
+    div
         []
         (categoryView key model "All" Nothing
             :: (categories
@@ -107,10 +106,10 @@ categoriesView key model categories =
         )
 
 
-categoryView : Nav.Key -> Model -> String -> Maybe Int -> Element Msg
+categoryView : Nav.Key -> Model -> String -> Maybe Int -> Html Msg
 categoryView key model categoryName maybeCategoryId =
-    el []
-        (case maybeCategoryId of
+    div []
+        [ case maybeCategoryId of
             Just categoryId ->
                 UI.link
                     []
@@ -126,7 +125,7 @@ categoryView key model categoryName maybeCategoryId =
                     , url = Route.browseByCategoryUrl
                     , label = text categoryName
                     }
-        )
+        ]
 
 
 

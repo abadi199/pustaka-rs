@@ -4,7 +4,7 @@ module UI.Parts.Dialog exposing
     , confirmation
     , modal
     , none
-    , toElement
+    , toHtml
     )
 
 import Css exposing (..)
@@ -68,8 +68,8 @@ confirmation { content, onPositive, onNegative, onClose } =
         }
 
 
-toElement : Dialog msg -> Html msg
-toElement dialog =
+toHtml : Dialog msg -> Html msg
+toHtml dialog =
     case dialog of
         NoDialog ->
             text ""

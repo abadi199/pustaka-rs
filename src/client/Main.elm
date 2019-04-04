@@ -4,9 +4,12 @@ import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
+import Css
 import Entity.Category exposing (Category)
-import Html exposing (..)
-import Html.Styled as H
+import Html
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE
 import Page.ByCategory as ByCategoryPage
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
@@ -158,7 +161,7 @@ view model =
                     model.favoriteCategories
                         |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
                         |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-                , content = E.none
+                , content = text ""
                 , dialog = Dialog.none
                 }
 

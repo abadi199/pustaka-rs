@@ -4,7 +4,6 @@ import Css exposing (..)
 import Css.Global
 import Css.Transitions
 import Html.Styled as H exposing (..)
-import UI.Input.Text as Input
 
 
 type Search msg

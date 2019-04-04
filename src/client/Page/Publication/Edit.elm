@@ -8,19 +8,19 @@ module Page.Publication.Edit exposing
 
 import Browser
 import Browser.Navigation as Nav
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail(..))
 import File exposing (File)
 import File.Select as Select
-import Html as H
-import Html.Attributes as HA
-import Html.Events as HE
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE
 import Json.Decode as JD
 import ReloadableData exposing (ReloadableWebData)
 import Route
-import Task
 import UI.Action as Action
 import UI.Card as Card
 import UI.Heading as UI
@@ -121,13 +121,13 @@ viewEdit :
     , publication : Publication.MetaData
     , cover : ReloadableWebData () Image
     }
-    -> Element Msg
+    -> Html Msg
 viewEdit { isHover, publication, cover } =
-    column [ UI.spacing 1, width fill ]
+    div [ css [ UI.spacing 1, width (pct 100) ] ]
         [ UI.breadCrumb []
-        , row [ width fill, UI.spacing 1 ]
+        , div [ css [ width (pct 100), UI.spacing 1 ] ]
             [ viewPoster { isHover = isHover, publication = publication, cover = cover }
-            , column [ width fill, UI.spacing 1 ]
+            , div [ css [ width (pct 100), UI.spacing 1 ] ]
                 [ UI.heading 1 "Edit Publication"
                 , Form.form
                     { fields =
@@ -154,9 +154,9 @@ viewPoster :
     , publication : Publication.MetaData
     , cover : ReloadableWebData () Image
     }
-    -> Element Msg
+    -> Html Msg
 viewPoster { isHover, publication, cover } =
-    Card.bordered [ alignTop ]
+    Card.bordered [ css [] ]
         (case publication.thumbnail of
             NoThumbnail ->
                 { actions = []
@@ -173,7 +173,7 @@ viewPoster { isHover, publication, cover } =
                             }
                     ]
                 , content =
-                    [ el [] <| UI.reloadablePoster { title = publication.title, image = cover } ]
+                    [ div [] [ UI.reloadablePoster { title = publication.title, image = cover } ] ]
                 }
 
             New _ ->
@@ -183,41 +183,43 @@ viewPoster { isHover, publication, cover } =
         )
 
 
-dropZone : Bool -> Element Msg
+dropZone : Bool -> Html Msg
 dropZone isHover =
     let
         { width, height } =
             UI.posterDimension
     in
-    el
-        [ Background.color (rgba 0 0 0 0.25)
-        , Border.color (rgba255 223 52 92 1)
-        , Border.dashed
-        , if isHover then
-            Border.width 5
+    div
+        [ css
+            [ backgroundColor (rgba 0 0 0 0.25)
+            , borderColor (rgba 223 52 92 1)
+            , borderStyle dashed
+            , if isHover then
+                borderWidth (px 5)
 
-          else
-            Border.width 0
-        , E.width (px width)
-        , E.height (px height)
+              else
+                borderWidth (px 0)
+            , Css.width (px <| toFloat width)
+            , Css.height (px <| toFloat height)
+            , cursor pointer
+            ]
         , hijackOn "drop" dropDecoder
         , hijackOn "dragenter" (JD.succeed DragEnter)
         , hijackOn "dragover" (JD.succeed DragEnter)
         , hijackOn "dragleave" (JD.succeed DragLeave)
-        , onClick BrowseClicked
-        , pointer
+        , HE.onClick BrowseClicked
         ]
-        (column [ centerX, centerY, UI.spacing -10 ]
-            [ el [ centerX ] (text "Drop file here")
-            , el [ centerX ] (text "or")
-            , el [ centerX ] (text "click to browse")
+        [ div [ css [ UI.spacing -10 ] ]
+            [ div [] [ text "Drop file here" ]
+            , div [] [ text "or" ]
+            , div [] [ text "click to browse" ]
             ]
-        )
+        ]
 
 
 hijackOn : String -> JD.Decoder msg -> Attribute msg
 hijackOn event decoder =
-    htmlAttribute <| HE.preventDefaultOn event (JD.map hijack decoder)
+    HE.preventDefaultOn event (JD.map hijack decoder)
 
 
 hijack : msg -> ( msg, Bool )

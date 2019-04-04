@@ -122,53 +122,53 @@ type Msg
 view : Viewport -> Model -> Browser.Document Msg
 view viewport model =
     { title = "Read"
-    , body = []
+    , body =
+        [ H.toUnstyled <|
+            UI.ReloadableData.custom
+                (\error ->
+                    case error of
+                        SimpleError string ->
+                            UI.Error.string string
 
-    --        [ UI.ReloadableData.custom
-    --            (\error ->
-    --                case error of
-    --                    SimpleError string ->
-    --                        UI.Error.string string
-    --
-    --                    HttpError httpError ->
-    --                        UI.Error.http httpError
-    --            )
-    --            (\publicationType ->
-    --                case publicationType of
-    --                    Comic publication comicModel ->
-    --                        layout ComicMsg
-    --                            { header =
-    --                                Comic.header
-    --                                    { backUrl = model.backUrl }
-    --                                    publication
-    --                                    comicModel
-    --                            , slider = Comic.slider comicModel
-    --                            , reader = Comic.reader publication comicModel
-    --                            , previous = Comic.previous
-    --                            , next = Comic.next
-    --                            }
-    --
-    --                    Epub publication epubModel ->
-    --                        layout EpubMsg
-    --                            { header =
-    --                                Epub.header
-    --                                    { backUrl = model.backUrl
-    --                                    , publication = publication
-    --                                    , model = epubModel
-    --                                    }
-    --                            , slider = Epub.slider epubModel
-    --                            , reader =
-    --                                Epub.reader
-    --                                    { viewport = viewport
-    --                                    , publication = publication
-    --                                    , model = epubModel
-    --                                    }
-    --                            , previous = Epub.previous
-    --                            , next = Epub.next
-    --                            }
-    --            )
-    --            model.publication
-    --        ]
+                        HttpError httpError ->
+                            UI.Error.http httpError
+                )
+                (\publicationType ->
+                    case publicationType of
+                        Comic publication comicModel ->
+                            layout ComicMsg
+                                { header =
+                                    Comic.header
+                                        { backUrl = model.backUrl }
+                                        publication
+                                        comicModel
+                                , slider = Comic.slider comicModel
+                                , reader = Comic.reader publication comicModel
+                                , previous = Comic.previous
+                                , next = Comic.next
+                                }
+
+                        Epub publication epubModel ->
+                            layout EpubMsg
+                                { header =
+                                    Epub.header
+                                        { backUrl = model.backUrl
+                                        , publication = publication
+                                        , model = epubModel
+                                        }
+                                , slider = Epub.slider epubModel
+                                , reader =
+                                    Epub.reader
+                                        { viewport = viewport
+                                        , publication = publication
+                                        , model = epubModel
+                                        }
+                                , previous = Epub.previous
+                                , next = Epub.next
+                                }
+                )
+                model.publication
+        ]
     }
 
 

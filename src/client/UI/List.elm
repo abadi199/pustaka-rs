@@ -9,34 +9,23 @@ import UI.Spacing as UI
 
 dl : List ( DT msg, DD msg ) -> Html msg
 dl list =
-    Debug.todo "UI.List.dl"
-
-
-
--- H.dl resetStyles
---     [ column [ width fill, UI.spacing -5 ] (list |> List.map viewDescription)
---         |> layoutWith { options = [ noStaticStyleSheet ] } []
---     ]
+    H.dl resetStyles
+        [ div [ css [ width (pct 100), UI.spacing -5 ] ] (list |> List.map viewDescription)
+        ]
 
 
 viewDescription : ( DT msg, DD msg ) -> Html msg
 viewDescription ( DT term termOnClick, DD details detailsOnClick ) =
-    Debug.todo "UI.List.viewDescription"
-
-
-
--- row [ width fill ]
---     [ el [ width (px 100) ] <|
---         html
---             (Html.dt (onClick termOnClick :: resetStyles)
---                 [ Html.text term ]
---             )
---     , el [] <|
---         html
---             (Html.dd (onClick detailsOnClick :: resetStyles)
---                 [ Html.text details ]
---             )
---     ]
+    div [ css [ width (pct 100) ] ]
+        [ div [ css [ width (px 100) ] ] <|
+            [ H.dt (onClick termOnClick :: resetStyles)
+                [ text term ]
+            ]
+        , div []
+            [ H.dd (onClick detailsOnClick :: resetStyles)
+                [ text details ]
+            ]
+        ]
 
 
 type DT msg
