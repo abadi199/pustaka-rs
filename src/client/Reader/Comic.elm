@@ -27,6 +27,7 @@ import Keyboard
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
+import UI.Css.Grid as Grid
 import UI.Error
 import UI.Events
 import UI.Icon as Icon
@@ -34,6 +35,7 @@ import UI.Image as Image
 import UI.Parts.Header as Header
 import UI.Parts.Slider as Slider
 import UI.ReloadableData
+import UI.Spacing as Spacing
 
 
 
@@ -119,29 +121,33 @@ reader _ model =
         [ css
             [ width (pct 100)
             , height (pct 100)
+            , Grid.display
+            , Grid.templateColumns [ "50%", "50%" ]
+            , Grid.templateAreas [ "left right" ]
             ]
         , UI.Events.onMouseMove MouseMoved
         ]
-        [ div
-            [ css [ width (pct 100), height (pct 100) ] ]
-            [ div
-                [ css
-                    [ width (pct 100)
-                    , height (pct 100)
-                    , Background.solidWhite
-                    ]
+        [ viewPage
+            (css
+                [ displayFlex
+                , justifyContent flexEnd
+                , position relative
+                , height (pct 100)
+                , Grid.area "left"
                 ]
-                [ viewPage (css []) model.leftPage
-                , div
-                    [ css
-                        [ width (pct 100)
-                        , height (pct 100)
-                        , Background.solidWhite
-                        ]
-                    ]
-                    [ viewPage (css []) model.rightPage ]
+            )
+            model.leftPage
+        , viewPage
+            (css
+                [ textAlign left
+                , displayFlex
+                , justifyContent flexStart
+                , position relative
+                , height (pct 100)
+                , Grid.area "right"
                 ]
-            ]
+            )
+            model.rightPage
         ]
 
 
@@ -154,13 +160,9 @@ viewPage alignment page =
         ComicPage.Page number data ->
             UI.ReloadableData.view
                 (\pageImage ->
-                    div
-                        [ css [ width (pct 100) ]
-                        ]
-                        [ div [ alignment ]
-                            [ Image.fullHeight pageImage
-                            , viewPageNumber number
-                            ]
+                    div [ alignment ]
+                        [ Image.fullHeight pageImage
+                        , viewPageNumber number
                         ]
                 )
                 data
@@ -172,16 +174,22 @@ viewPage alignment page =
 viewPageNumber : Int -> Html msg
 viewPageNumber number =
     div
-        [ css []
+        [ css
+            [ position absolute
+            , bottom (px 0)
+            , if remainderBy 2 number == 0 then
+                right (px 0)
 
-        --            [ alignBottom
-        --            , if remainderBy 2 number == 0 then
-        --                alignRight
-        --
-        --              else
-        --                alignLeft
-        --            , paddingEach { bottom = 10, top = 0, left = 0, right = 0 }
-        --            ]
+              else
+                left (px 0)
+            , Spacing.paddingEach
+                { bottom = Spacing.Large
+                , top = Spacing.None
+                , left = Spacing.Large
+                , right = Spacing.Large
+                }
+            , textShadow4 (px 0) (px 0) (px 2) (rgba 255 255 255 0.5)
+            ]
         ]
         [ text <| String.fromInt number ]
 
@@ -214,6 +222,12 @@ previous =
         , css
             [ height (pct 100)
             , cursor pointer
+            , displayFlex
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
             ]
         ]
         [ Icon.previous Icon.large ]
@@ -226,6 +240,12 @@ next =
         , css
             [ height (pct 100)
             , cursor pointer
+            , displayFlex
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
             ]
         ]
         [ Icon.next Icon.large ]

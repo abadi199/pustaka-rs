@@ -12,8 +12,13 @@ view =
     div
         [ css
             [ displayFlex
+            , justifyContent center
+            , alignItems center
             , width (pct 100)
             , height (pct 100)
+            , position absolute
+            , top (px 0)
+            , left (px 0)
             , UI.Background.transparentHeavyWhite
             ]
         ]

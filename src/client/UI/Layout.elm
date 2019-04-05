@@ -7,31 +7,8 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import UI.Nav.Side exposing (SideNav)
 import UI.Parts.Dialog as Dialog exposing (Dialog)
+import UI.Reset exposing (reset)
 import UI.Spacing as Spacing
-
-
-reset : Html msg
-reset =
-    global
-        [ Global.html
-            [ boxSizing borderBox
-            , fontSize (px 18)
-            , fontFamilies [ "Source Sans Pro", "sans-serif" ]
-            , fontWeight normal
-            , overflowX hidden
-            ]
-        , Global.selector "*, *:before, *:after"
-            [ boxSizing inherit
-            , margin zero
-            , padding zero
-            , fontSize (Css.em 1)
-            ]
-        , Global.body
-            [ margin zero
-            , padding zero
-            , overflowX hidden
-            ]
-        ]
 
 
 withSideNav :

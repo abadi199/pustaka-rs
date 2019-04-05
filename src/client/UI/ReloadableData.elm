@@ -21,7 +21,7 @@ custom errorElement successElement reloadableData =
             div
                 [ css
                     [ height (pct 100)
-                    , width (pct 10)
+                    , width (pct 100)
                     , position relative
                     ]
                 ]

@@ -15,6 +15,7 @@ import Html.Styled.Events as HE
 import Route
 import UI.Action as Action
 import UI.Background as Background
+import UI.Css.Grid as Grid
 import UI.Events
 import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
@@ -82,9 +83,10 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
             div
                 [ css
                     [ width (pct 100)
+                    , Grid.display
+                    , Grid.templateColumns [ "auto", "1fr" ]
                     , Background.solidWhite
-                    , boxShadow5 zero zero zero (px 10) (rgba 0 0 0 0.5)
-                    , UI.padding UI.Large
+                    , boxShadow5 zero zero (px 5) (px 5) (rgba 0 0 0 0.25)
                     ]
                 , UI.Events.onMouseMove onMouseMove
                 ]

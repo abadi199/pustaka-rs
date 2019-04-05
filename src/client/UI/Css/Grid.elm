@@ -1,14 +1,26 @@
 module UI.Css.Grid exposing
-    ( columnEnd
+    ( area
+    , columnEnd
     , columnGap
     , columnStart
     , display
     , rowGap
+    , templateAreas
     , templateColumns
     , templateRows
     )
 
 import Css exposing (Style, property)
+
+
+area : String -> Style
+area name =
+    property "grid-area" name
+
+
+templateAreas : List String -> Style
+templateAreas areas =
+    property "grid-template-areas" (areas |> List.map (\line -> "\"" ++ line ++ "\"") |> String.join " ")
 
 
 display : Style

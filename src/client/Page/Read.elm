@@ -24,6 +24,7 @@ import Route
 import UI.Error
 import UI.Events
 import UI.ReloadableData
+import UI.Reset exposing (reset)
 
 
 
@@ -123,7 +124,8 @@ view : Viewport -> Model -> Browser.Document Msg
 view viewport model =
     { title = "Read"
     , body =
-        [ H.toUnstyled <|
+        [ H.toUnstyled <| reset
+        , H.toUnstyled <|
             UI.ReloadableData.custom
                 (\error ->
                     case error of
@@ -186,21 +188,52 @@ layout tagger { header, slider, reader, previous, next } =
     div
         [ css
             [ width (pct 100)
-            , height (pct 100)
+            , height (vh 100)
+            , position relative
             ]
         ]
-        [ H.map tagger <| previous
-        , H.map tagger <| slider
-        , H.map tagger <| header
-        , div
+        [ div
             [ css
-                [ width (pct 100)
-                , height (pct 100)
-                ]
+                [ height (pct 100) ]
             , UI.Events.onMouseMove MouseMoved
             ]
             [ reader |> H.map tagger ]
-        , next |> H.map tagger
+        , div
+            [ css
+                [ position absolute
+                , top (px 0)
+                , left (px 0)
+                , height (pct 100)
+                ]
+            ]
+            [ H.map tagger <| previous ]
+        , div
+            [ css
+                [ position absolute
+                , width (pct 100)
+                , bottom (px 0)
+                , left (px 0)
+                ]
+            ]
+            [ H.map tagger <| slider ]
+        , div
+            [ css
+                [ position absolute
+                , width (pct 100)
+                , top (px 0)
+                , left (px 0)
+                ]
+            ]
+            [ H.map tagger <| header ]
+        , div
+            [ css
+                [ position absolute
+                , top (px 0)
+                , right (px 0)
+                , height (pct 100)
+                ]
+            ]
+            [ next |> H.map tagger ]
         ]
 
 

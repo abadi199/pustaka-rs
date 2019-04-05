@@ -34,6 +34,7 @@ slider height { onMouseMove, onClick, percentage } =
             [ css
                 [ UI.Background.transparentHeavyBlack
                 , Css.height (pct 100)
+                , width (pct <| percentageInHundred)
                 , flexBasis (pct 100)
                 ]
             ]
