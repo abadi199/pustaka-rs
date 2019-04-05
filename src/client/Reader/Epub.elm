@@ -143,9 +143,13 @@ previous =
         [ onClick PreviousPage
         , css
             [ displayFlex
-            , alignItems flexEnd
             , height (pct 100)
             , cursor pointer
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
             ]
         ]
         [ Icon.previous Icon.large ]
@@ -157,9 +161,13 @@ next =
         [ onClick NextPage
         , css
             [ displayFlex
-            , alignItems flexEnd
             , height (pct 100)
             , cursor pointer
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
             ]
         ]
         [ Icon.next Icon.large ]
