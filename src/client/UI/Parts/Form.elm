@@ -5,6 +5,7 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE
 import UI.Action as Action
+import UI.Css.Grid as Grid
 import UI.Icon as Icon
 import UI.Spacing as UI
 
@@ -14,10 +15,10 @@ type Field msg
 
 
 type alias FieldData msg =
-    { label : String, value : String, onChange : String -> msg }
+    { id : String, label : String, value : String, onChange : String -> msg }
 
 
-field : { label : String, value : String, onChange : String -> msg } -> Field msg
+field : { id : String, label : String, value : String, onChange : String -> msg } -> Field msg
 field =
     Field
 
@@ -25,21 +26,32 @@ field =
 form : { fields : List (Field msg), onSubmit : msg } -> Html msg
 form { fields, onSubmit } =
     H.form [ HE.onSubmit onSubmit ]
-        [ div [ css [ width (pct 100), UI.spacing 1 ] ]
-            [ div [ css [ width (pct 100), UI.spacing -5 ] ]
-                (fields
-                    |> List.map viewField
-                )
-            , viewActions { onSubmit = onSubmit }
+        [ div
+            [ css
+                [ width (pct 100)
+                , UI.paddingBottom UI.Large
+                , Grid.display
+                , Grid.rowGap 20
+                ]
             ]
+            (fields
+                |> List.map viewField
+            )
+        , viewActions { onSubmit = onSubmit }
         ]
 
 
 viewField : Field msg -> Html msg
-viewField (Field { label, value, onChange }) =
-    H.label [ css [ width (pct 100) ] ]
+viewField (Field { id, label, value, onChange }) =
+    H.label
+        [ css
+            [ width (pct 100)
+            , displayFlex
+            , flexDirection column
+            ]
+        ]
         [ text label
-        , input [ HA.type_ "text", HE.onInput onChange ]
+        , input [ HA.type_ "text", HE.onInput onChange, HA.value value ]
             []
         ]
 
@@ -58,10 +70,11 @@ viewActions { onSubmit } =
     in
     div
         [ css
-            [ displayFlex
-            , flexDirection row
-            , justifyContent flexStart
-            , alignItems flexEnd
+            [ Grid.display
+            , Grid.templateColumns [ "auto" ]
+            , UI.paddingTop UI.Large
+            , borderTop3 (px 1) solid (rgba 0 0 0 0.25)
+            , justifyContent flexEnd
             ]
         ]
         (actions |> List.map Action.toHtml)

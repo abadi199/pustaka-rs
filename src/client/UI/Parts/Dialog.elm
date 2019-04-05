@@ -56,7 +56,6 @@ confirmation { content, onPositive, onNegative, onClose } =
                 , div
                     [ css
                         [ UI.paddingEach { top = UI.Small, bottom = UI.Small, right = UI.Small, left = UI.Small }
-                        , UI.spacing -5
                         , displayFlex
                         , justifyContent center
                         ]

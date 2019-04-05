@@ -102,7 +102,7 @@ view logoUrl categoryData model =
 
 viewPublication : Model -> Publication.MetaData -> Html Msg
 viewPublication model publication =
-    div [ css [ UI.spacing 1, width (pct 100) ] ]
+    div [ css [ width (pct 100) ] ]
         [ UI.breadCrumb []
         , div
             [ css

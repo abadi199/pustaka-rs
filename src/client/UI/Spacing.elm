@@ -12,16 +12,10 @@ module UI.Spacing exposing
     , paddingLeft
     , paddingRight
     , paddingTop
-    , spacing
     )
 
 import Css exposing (..)
 import Html.Styled as H exposing (Attribute)
-
-
-spacing : Int -> Style
-spacing scale =
-    batch []
 
 
 type Size

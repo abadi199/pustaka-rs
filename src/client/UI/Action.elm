@@ -94,33 +94,32 @@ viewLarge actionType =
                 { url = url
                 , msg = onClick
                 , label =
-                    div
-                        [ css
-                            [ border3 (px 1) solid (rgba 0 0 0 0.25)
-                            , Grid.display
-                            , Grid.templateColumns [ "auto", "auto" ]
-                            , Grid.columnGap 10
-                            , UI.paddingEach
-                                { top = UI.Small
-                                , bottom = UI.Small
-                                , left = UI.Large
-                                , right = UI.Large
-                                }
-                            ]
-                        ]
-                        [ icon, H.text text ]
+                    div [ css [ buttonStyle ] ] [ icon, H.text text ]
                 }
 
         Clickable { text, icon, onClick } ->
             div
-                [ css
-                    [ cursor pointer
-                    , displayFlex
-                    , border3 (px 1) solid (rgba 0 0 0 0.25)
-                    ]
+                [ css [ buttonStyle ]
                 , HE.onClick onClick
                 ]
                 [ icon, H.text text ]
 
         Disable { text, icon } ->
             div [] [ icon, H.text text ]
+
+
+buttonStyle : Style
+buttonStyle =
+    batch
+        [ border3 (px 1) solid (rgba 0 0 0 0.25)
+        , Grid.display
+        , Grid.templateColumns [ "auto", "auto" ]
+        , Grid.columnGap 10
+        , cursor pointer
+        , UI.paddingEach
+            { top = UI.Small
+            , bottom = UI.Small
+            , left = UI.Large
+            , right = UI.Large
+            }
+        ]

@@ -23,6 +23,7 @@ import ReloadableData exposing (ReloadableWebData)
 import Route
 import UI.Action as Action
 import UI.Card as Card
+import UI.Css.Grid as Grid
 import UI.Heading as UI exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
@@ -124,21 +125,46 @@ viewEdit :
     }
     -> Html Msg
 viewEdit { isHover, publication, cover } =
-    div [ css [ UI.spacing 1, width (pct 100) ] ]
+    div
+        [ css
+            [ Grid.display
+            , Grid.templateRows [ "auto", "1fr" ]
+            , Grid.templateColumns [ "1fr" ]
+            , Grid.rowGap 40
+            , width (pct 100)
+            ]
+        ]
         [ UI.breadCrumb []
-        , div [ css [ width (pct 100), UI.spacing 1 ] ]
+        , div
+            [ css
+                [ width (pct 100)
+                , backgroundColor (rgba 0 0 0 0.125)
+                , Grid.display
+                , Grid.templateColumns [ "auto", "1fr" ]
+                , Grid.columnGap 20
+                , UI.padding UI.Large
+                ]
+            ]
             [ viewPoster { isHover = isHover, publication = publication, cover = cover }
-            , div [ css [ width (pct 100), UI.spacing 1 ] ]
+            , div
+                [ css
+                    [ Grid.display
+                    , Grid.templateRows [ "auto", "1fr" ]
+                    , Grid.rowGap 20
+                    ]
+                ]
                 [ UI.heading One "Edit Publication"
                 , Form.form
                     { fields =
                         [ Form.field
                             { label = "Title"
+                            , id = "title"
                             , value = publication.title
                             , onChange = TitleField >> PublicationChanged
                             }
                         , Form.field
                             { label = "ISBN"
+                            , id = "isbn"
                             , value = publication.isbn
                             , onChange = ISBNField >> PublicationChanged
                             }
@@ -210,7 +236,7 @@ dropZone isHover =
         , hijackOn "dragleave" (JD.succeed DragLeave)
         , HE.onClick BrowseClicked
         ]
-        [ div [ css [ UI.spacing -10 ] ]
+        [ div [ css [] ]
             [ div [] [ text "Drop file here" ]
             , div [] [ text "or" ]
             , div [] [ text "click to browse" ]
