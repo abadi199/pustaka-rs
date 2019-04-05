@@ -13,11 +13,13 @@ import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import Tree
+import UI.Css.Grid as Grid
 import UI.Error
 import UI.Loading
 import UI.Logo as Logo
 import UI.Menu
 import UI.Parts.Search exposing (Search)
+import UI.Spacing as Spacing
 
 
 type SideNav msg
@@ -34,25 +36,25 @@ type SelectedItem
     | Settings
 
 
-toHtml : SideNav msg -> Html msg
-toHtml sideNav =
+toHtml : String -> SideNav msg -> Html msg
+toHtml logoUrl sideNav =
     div
         [ css
             [ height (pct 100)
             , minHeight (vh 100)
-            , displayFlex
-            , flexDirection column
+            , Grid.display
+            , Grid.templateRows [ "auto", "1fr" ]
+            , Grid.rowGap 40
             , backgroundColor (rgba 0 0 0 0.125)
-            , padding (px 20)
+            , Spacing.padding Spacing.ExtraLarge
             ]
         ]
         (case sideNav of
             SideNav element ->
-                Logo.full :: element
+                Logo.full logoUrl :: element
 
             SideNavWithSearch search element ->
-                Logo.full
-                    -- :: UI.Parts.Search.toElement search
+                Logo.full logoUrl
                     :: element
         )
 

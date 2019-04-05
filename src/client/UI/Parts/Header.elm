@@ -16,7 +16,7 @@ import Route
 import UI.Action as Action
 import UI.Background as Background
 import UI.Events
-import UI.Heading as Heading
+import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
 import UI.Spacing as UI
 
@@ -96,5 +96,5 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                             , url = backUrl
                             , onClick = onLinkClicked
                             }
-                , div [] [ Heading.heading 1 title ]
+                , div [] [ Heading.heading One title ]
                 ]

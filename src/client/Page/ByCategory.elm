@@ -58,10 +58,11 @@ type Msg
 -- VIEW
 
 
-view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view key categories model =
+view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
+view key logoUrl categories model =
     UI.Layout.withSideNav
         { title = "Pustaka - Browse By Category"
+        , logoUrl = logoUrl
         , sideNav =
             categories
                 |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory

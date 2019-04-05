@@ -140,11 +140,11 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         Home homeModel ->
-            HomePage.view model.key model.favoriteCategories homeModel
+            HomePage.view model.key model.flags.logo model.favoriteCategories homeModel
                 |> mapPage (PageMsg << HomeMsg)
 
         Publication publicationModel ->
-            PublicationPage.view model.favoriteCategories publicationModel
+            PublicationPage.view model.flags.logo model.favoriteCategories publicationModel
                 |> mapPage (PageMsg << PublicationMsg)
 
         Read readModel ->
@@ -157,6 +157,7 @@ view model =
         ByMediaType ->
             UI.Layout.withSideNav
                 { title = "Pustaka - Browse By Media Type"
+                , logoUrl = model.flags.logo
                 , sideNav =
                     model.favoriteCategories
                         |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
@@ -166,11 +167,11 @@ view model =
                 }
 
         ByCategory byCategoryModel ->
-            ByCategoryPage.view model.key model.favoriteCategories byCategoryModel
+            ByCategoryPage.view model.key model.flags.logo model.favoriteCategories byCategoryModel
                 |> mapPage (PageMsg << ByCategoryMsg)
 
         PublicationEdit pageModel ->
-            PublicationEditPage.view model.favoriteCategories pageModel
+            PublicationEditPage.view model.flags.logo model.favoriteCategories pageModel
                 |> mapPage (PageMsg << PublicationEditMsg)
 
 

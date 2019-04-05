@@ -23,7 +23,7 @@ import ReloadableData exposing (ReloadableWebData)
 import Route
 import UI.Action as Action
 import UI.Card as Card
-import UI.Heading as UI
+import UI.Heading as UI exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
@@ -94,10 +94,11 @@ type Field
 -- VIEW
 
 
-view : ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view categories model =
+view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
+view logoUrl categories model =
     UI.Layout.withSideNav
         { title = "Pustaka - Edit Publication"
+        , logoUrl = logoUrl
         , sideNav =
             categories
                 |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
@@ -128,7 +129,7 @@ viewEdit { isHover, publication, cover } =
         , div [ css [ width (pct 100), UI.spacing 1 ] ]
             [ viewPoster { isHover = isHover, publication = publication, cover = cover }
             , div [ css [ width (pct 100), UI.spacing 1 ] ]
-                [ UI.heading 1 "Edit Publication"
+                [ UI.heading One "Edit Publication"
                 , Form.form
                     { fields =
                         [ Form.field

@@ -25,14 +25,19 @@ spacing scale =
 
 
 type Size
-    = Large
+    = ExtraLarge
+    | Large
     | Medium
     | Small
+    | None
 
 
 toFloat : Size -> Float
 toFloat size =
     case size of
+        ExtraLarge ->
+            40
+
         Large ->
             20
 
@@ -41,6 +46,9 @@ toFloat size =
 
         Small ->
             5
+
+        None ->
+            0
 
 
 marginLeft : Size -> Style
@@ -116,6 +124,6 @@ paddingEach : { top : Size, right : Size, bottom : Size, left : Size } -> Style
 paddingEach { top, right, bottom, left } =
     padding4
         (px <| toFloat top)
-        (px <| toFloat bottom)
         (px <| toFloat left)
+        (px <| toFloat bottom)
         (px <| toFloat right)

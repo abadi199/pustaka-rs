@@ -26,6 +26,7 @@ import Tree exposing (Tree)
 import UI.Action as Action
 import UI.Background as Background
 import UI.Card as Card
+import UI.Css.Grid as Grid
 import UI.Heading as UI
 import UI.Icon as Icon
 import UI.Layout
@@ -82,10 +83,11 @@ type Msg
 -- VIEW
 
 
-view : ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view categoryData model =
+view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
+view logoUrl categoryData model =
     UI.Layout.withSideNav
         { title = "Pustaka - Publication"
+        , logoUrl = logoUrl
         , sideNav =
             categoryData
                 |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
@@ -103,21 +105,28 @@ viewPublication model publication =
     div [ css [ UI.spacing 1, width (pct 100) ] ]
         [ UI.breadCrumb []
         , div
-            [ css [ UI.spacing 1, width (pct 100) ] ]
-            [ viewCover
-                { publicationId = publication.id
-                , cover = model.cover
-                , title = publication.title
-                }
-            , viewInformation publication
+            [ css
+                [ width (pct 100)
+                , Grid.display
+                , UI.paddingTop UI.ExtraLarge
+                , Grid.templateColumns [ "auto", "1fr" ]
+                ]
+            ]
+            [ viewInformation model publication
             ]
         ]
 
 
-viewInformation : Publication.MetaData -> Html Msg
-viewInformation publication =
+viewInformation : Model -> Publication.MetaData -> Html Msg
+viewInformation model publication =
     Information.panel
         { title = publication.title
+        , poster =
+            viewCover
+                { publicationId = publication.id
+                , cover = model.cover
+                , title = publication.title
+                }
         , informationList =
             [ { term = "Author", details = "N/A", onClick = NoOp }
             , { term = "ISBN", details = publication.isbn, onClick = NoOp }

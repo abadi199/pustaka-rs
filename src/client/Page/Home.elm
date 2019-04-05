@@ -25,7 +25,7 @@ import UI.Action as Action
 import UI.Background as Background
 import UI.Card as Card
 import UI.Css.Grid as Grid
-import UI.Heading as Heading
+import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
 import UI.Nav.Side
@@ -90,10 +90,11 @@ type Msg
 -- VIEW
 
 
-view : Nav.Key -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view key categories model =
+view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
+view key logoUrl categories model =
     UI.Layout.withSideNav
         { title = "Pustaka - Home"
+        , logoUrl = logoUrl
         , sideNav =
             categories
                 |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
@@ -142,7 +143,7 @@ viewPerCategory model =
         [ css [ Grid.display, width (pct 100) ] ]
         [ model.selectedCategoryId
             |> Maybe.andThen ReloadableData.toMaybe
-            |> Maybe.map (\category -> Heading.heading 2 category.name)
+            |> Maybe.map (\category -> Heading.heading Two category.name)
             |> Maybe.withDefault (text "")
         , UI.ReloadableData.view (viewPublications model) model.publications
         ]
@@ -173,7 +174,7 @@ viewPublicationsRow title model publications =
                 , UI.padding UI.Medium
                 ]
             ]
-            [ Heading.heading 2 title
+            [ Heading.heading Two title
             , div
                 [ css
                     [ displayFlex

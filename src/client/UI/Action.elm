@@ -12,9 +12,10 @@ import Css exposing (..)
 import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE
+import UI.Css.Grid as Grid
 import UI.Icon exposing (Icon)
 import UI.Link as UI
-import UI.Spacing as Spacing
+import UI.Spacing as UI
 
 
 type Action msg
@@ -67,10 +68,19 @@ viewCompact : ActionType msg -> Html msg
 viewCompact actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [ css [ cursor pointer ] ] { url = url, msg = onClick, label = icon }
+            UI.link
+                [ css [ cursor pointer ]
+                ]
+                { url = url, msg = onClick, label = icon }
 
         Clickable { text, icon, onClick } ->
-            div [ css [ cursor pointer ], HE.onClick onClick ] [ icon ]
+            div
+                [ css
+                    [ cursor pointer
+                    ]
+                , HE.onClick onClick
+                ]
+                [ icon ]
 
         Disable { text, icon } ->
             div [] [ icon ]
@@ -80,11 +90,34 @@ viewLarge : ActionType msg -> Html msg
 viewLarge actionType =
     case actionType of
         Link { text, icon, url, onClick } ->
-            UI.link [ css [ cursor pointer ] ] { url = url, msg = onClick, label = div [] [ icon, H.text text ] }
+            UI.link [ css [ cursor pointer ] ]
+                { url = url
+                , msg = onClick
+                , label =
+                    div
+                        [ css
+                            [ border3 (px 1) solid (rgba 0 0 0 0.25)
+                            , Grid.display
+                            , Grid.templateColumns [ "auto", "auto" ]
+                            , Grid.columnGap 10
+                            , UI.paddingEach
+                                { top = UI.Small
+                                , bottom = UI.Small
+                                , left = UI.Large
+                                , right = UI.Large
+                                }
+                            ]
+                        ]
+                        [ icon, H.text text ]
+                }
 
         Clickable { text, icon, onClick } ->
             div
-                [ css [ cursor pointer ]
+                [ css
+                    [ cursor pointer
+                    , displayFlex
+                    , border3 (px 1) solid (rgba 0 0 0 0.25)
+                    ]
                 , HE.onClick onClick
                 ]
                 [ icon, H.text text ]

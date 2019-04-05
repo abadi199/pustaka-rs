@@ -33,8 +33,8 @@ view items =
                                 UI.paddingEach
                                     { top = UI.Small
                                     , right = UI.Large
-                                    , bottom = UI.Large
-                                    , left = UI.Small
+                                    , bottom = UI.Small
+                                    , left = UI.Large
                                     }
                             ]
                         ]

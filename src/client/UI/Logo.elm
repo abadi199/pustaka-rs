@@ -1,19 +1,10 @@
 module UI.Logo exposing (full)
 
+import Css exposing (..)
 import Html.Styled as H exposing (..)
-import UI.Spacing as Spacing
+import Html.Styled.Attributes as HA exposing (alt, css, src)
 
 
-full : Html msg
-full =
-    text "UI.Logo.full"
-
-
-
--- el
---     [ Spacing.padding -2, Font.bold ]
---     (image [ height (px 50) ]
---         { src = logoUrl
---         , description = "Pustaka"
---         }
---     )
+full : String -> Html msg
+full logoUrl =
+    img [ css [ height (px 50) ], src logoUrl, alt "" ] []

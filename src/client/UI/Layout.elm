@@ -36,12 +36,13 @@ reset =
 
 withSideNav :
     { title : String
+    , logoUrl : String
     , sideNav : SideNav msg
     , content : Html msg
     , dialog : Dialog msg
     }
     -> Browser.Document msg
-withSideNav { title, sideNav, content, dialog } =
+withSideNav { title, logoUrl, sideNav, content, dialog } =
     { title = title
     , body =
         [ H.toUnstyled <| reset
@@ -65,7 +66,7 @@ withSideNav { title, sideNav, content, dialog } =
                         , overflowX hidden
                         ]
                     ]
-                    ((sideNav |> UI.Nav.Side.toHtml)
+                    ((sideNav |> UI.Nav.Side.toHtml logoUrl)
                         :: [ div
                                 [ css
                                     [ height (pct 100)

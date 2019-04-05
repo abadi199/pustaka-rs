@@ -6,7 +6,8 @@ import Html.Styled.Attributes as HA exposing (css)
 import UI.Action as Action exposing (Action)
 import UI.Background as Background
 import UI.Card as Card
-import UI.Heading as UI
+import UI.Css.Grid as Grid
+import UI.Heading as UI exposing (Level(..))
 import UI.List
 import UI.Spacing as UI
 
@@ -15,22 +16,27 @@ type alias Description msg =
     { term : String, details : String, onClick : msg }
 
 
-panel : { a | title : String, informationList : List (Description msg), actions : List (Action msg) } -> Html msg
-panel { title, informationList, actions } =
+panel : { a | title : String, poster : Html msg, informationList : List (Description msg), actions : List (Action msg) } -> Html msg
+panel { title, poster, informationList, actions } =
     Card.simple
         [ css
-            [ displayFlex
+            [ Grid.display
+            , Grid.templateColumns [ "auto", "1fr" ]
+            , Grid.columnGap 20
             , Background.transparentMediumBlack
             , width (pct 100)
-            , UI.padding UI.Small
+            , UI.padding UI.Large
             ]
         ]
-        [ div
+        [ poster
+        , div
             [ css
                 [ width (pct 100)
+                , Grid.display
+                , Grid.rowGap 10
                 ]
             ]
-            [ UI.heading 1 title
+            [ UI.heading One title
             , UI.List.dl (informationList |> List.map viewDescription)
             , viewActions actions
             ]
@@ -48,7 +54,12 @@ viewActions : List (Action msg) -> Html msg
 viewActions actions =
     div
         [ css
-            [ displayFlex
+            [ Grid.display
+            , Grid.templateColumns [ "auto", "auto" ]
+            , Grid.columnGap 20
+            , justifyContent flexEnd
+            , borderTop3 (px 1) solid (rgba 0 0 0 0.25)
+            , UI.padding UI.Large
             ]
         ]
         (actions |> List.map Action.toHtml)
