@@ -6,7 +6,7 @@
   "scripts": {
     "test": "elm-test",
     "watch": "run-p watch:client watch:rust",
-    "watch:client": "PARCEL_ELM_DISABLE_DEBUG=false parcel watch src/client/index.html -d app",
+    "watch:client": "parcel watch src/client/index.html -d app",
     "watch:rust": "watchexec --restart -w src/server 'npm run start:server'",
     "prod:client": "rm -rf elm-stuff .cache && parcel build src/client/index.html -d app --no-source-maps",
     "start:server": "cargo run --bin pustaka",
