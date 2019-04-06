@@ -1,25 +1,49 @@
-module UI.Layout exposing (withSideNav)
+module UI.Layout exposing (withNav)
 
 import Browser
 import Css exposing (..)
 import Css.Global as Global exposing (global)
 import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
+import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
 import UI.Nav.Side exposing (SideNav)
+import UI.Nav.Top exposing (TopNav)
 import UI.Parts.Dialog as Dialog exposing (Dialog)
 import UI.Reset exposing (reset)
 import UI.Spacing as Spacing
 
 
-withSideNav :
+withNav :
     { title : String
     , logoUrl : String
     , sideNav : SideNav msg
+    , topNav : TopNav msg
     , content : Html msg
     , dialog : Dialog msg
     }
     -> Browser.Document msg
-withSideNav { title, logoUrl, sideNav, content, dialog } =
+withNav { title, logoUrl, sideNav, topNav, content, dialog } =
+    let
+        viewSideNav =
+            div
+                [ css
+                    [ display none
+                    , MediaQuery.forTabletLandscapeUp [ display block ]
+                    ]
+                ]
+                [ sideNav |> UI.Nav.Side.toHtml logoUrl ]
+
+        viewTopNav =
+            div
+                [ css
+                    [ flexGrow (int 1)
+                    , display block
+                    , MediaQuery.forTabletLandscapeUp [ display none ]
+                    ]
+                ]
+                [ topNav |> UI.Nav.Top.toHtml logoUrl ]
+    in
     { title = title
     , body =
         [ H.toUnstyled <| reset
@@ -39,11 +63,13 @@ withSideNav { title, logoUrl, sideNav, content, dialog } =
                         [ width (pct 100)
                         , minHeight (pct 100)
                         , displayFlex
-                        , flexDirection row
+                        , flexWrap wrap
                         , overflowX hidden
+                        , MediaQuery.forTabletLandscapeUp [ flexWrap noWrap ]
                         ]
                     ]
-                    ((sideNav |> UI.Nav.Side.toHtml logoUrl)
+                    (viewSideNav
+                        :: viewTopNav
                         :: [ div
                                 [ css
                                     [ height (pct 100)

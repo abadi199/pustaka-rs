@@ -27,7 +27,9 @@ import UI.Css.Grid as Grid
 import UI.Heading as UI exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
+import UI.Nav
 import UI.Nav.Side
+import UI.Nav.Top
 import UI.Parts.BreadCrumb as UI
 import UI.Parts.Dialog as Dialog exposing (Dialog)
 import UI.Parts.Form as Form
@@ -97,12 +99,16 @@ type Field
 
 view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view logoUrl categories model =
-    UI.Layout.withSideNav
+    UI.Layout.withNav
         { title = "Pustaka - Edit Publication"
         , logoUrl = logoUrl
+        , topNav =
+            categories
+                |> UI.Nav.Top.view LinkClicked UI.Nav.NoSelection
+                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , sideNav =
             categories
-                |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
+                |> UI.Nav.Side.view LinkClicked UI.Nav.NoSelection
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view

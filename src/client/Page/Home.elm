@@ -28,7 +28,9 @@ import UI.Css.Grid as Grid
 import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
+import UI.Nav
 import UI.Nav.Side
+import UI.Nav.Top
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.Poster as UI
@@ -92,13 +94,17 @@ type Msg
 
 view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view key logoUrl categories model =
-    UI.Layout.withSideNav
+    UI.Layout.withNav
         { title = "Pustaka - Home"
         , logoUrl = logoUrl
         , sideNav =
             categories
                 |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
+        , topNav =
+            categories
+                |> UI.Nav.Top.view LinkClicked (selectedItem model.selectedCategoryId)
+                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             case model.selectedCategoryId of
                 Nothing ->
@@ -112,7 +118,13 @@ view key logoUrl categories model =
 
 viewLanding : Model -> Html Msg
 viewLanding model =
-    div [ css [ Grid.display, Grid.rowGap 20, Grid.templateColumns [ "100%" ] ] ]
+    div
+        [ css
+            [ Grid.display
+            , Grid.rowGap 20
+            , Grid.templateColumns [ "100%" ]
+            ]
+        ]
         (UI.ReloadableData.view (viewRecentPublications model) model.recentlyReadPublications
             :: (model.categories
                     |> ReloadableData.expand
@@ -404,11 +416,11 @@ selectCategory selectedCategoryId model =
     )
 
 
-selectedItem : Maybe (ReloadableWebData Int Category) -> UI.Nav.Side.SelectedItem
+selectedItem : Maybe (ReloadableWebData Int Category) -> UI.Nav.SelectedItem
 selectedItem selectedCategoryId =
     case selectedCategoryId |> Maybe.map ReloadableData.toInitial of
         Just id ->
-            UI.Nav.Side.CategoryId id
+            UI.Nav.CategoryId id
 
         Nothing ->
-            UI.Nav.Side.NoSelection
+            UI.Nav.NoSelection

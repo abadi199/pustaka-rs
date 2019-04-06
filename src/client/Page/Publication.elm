@@ -31,7 +31,9 @@ import UI.Heading as UI
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
+import UI.Nav
 import UI.Nav.Side
+import UI.Nav.Top
 import UI.Parts.BreadCrumb as UI
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Information as Information
@@ -85,12 +87,16 @@ type Msg
 
 view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view logoUrl categoryData model =
-    UI.Layout.withSideNav
+    UI.Layout.withNav
         { title = "Pustaka - Publication"
         , logoUrl = logoUrl
+        , topNav =
+            categoryData
+                |> UI.Nav.Top.view LinkClicked UI.Nav.NoSelection
+                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , sideNav =
             categoryData
-                |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
+                |> UI.Nav.Side.view LinkClicked UI.Nav.NoSelection
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view

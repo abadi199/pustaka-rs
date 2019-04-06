@@ -1,5 +1,5 @@
-module UI.Nav.Side exposing
-    ( SideNav
+module UI.Nav.Top exposing
+    ( TopNav
     , toHtml
     , view
     , withSearch
@@ -24,45 +24,45 @@ import UI.Parts.Search exposing (Search)
 import UI.Spacing as Spacing
 
 
-type SideNav msg
-    = SideNav (List (Html msg))
-    | SideNavWithSearch (Search msg) (List (Html msg))
+type TopNav msg
+    = TopNav (List (Html msg))
+    | TopNavWithSearch (Search msg) (List (Html msg))
 
 
-toHtml : String -> SideNav msg -> Html msg
+toHtml : String -> TopNav msg -> Html msg
 toHtml logoUrl sideNav =
     div
         [ css
-            [ height (pct 100)
-            , minHeight (vh 100)
+            [ height (px 100)
+            , width (pct 100)
             , Grid.display
-            , Grid.templateRows [ "auto", "1fr" ]
-            , Grid.rowGap 40
+            , Grid.templateRows [ "auto" ]
             , backgroundColor (rgba 0 0 0 0.125)
-            , Spacing.padding Spacing.ExtraLarge
+            , justifyContent center
+            , alignItems center
             ]
         ]
         (case sideNav of
-            SideNav element ->
-                Logo.full logoUrl :: element
+            TopNav element ->
+                Logo.full logoUrl :: []
 
-            SideNavWithSearch search element ->
+            TopNavWithSearch search element ->
                 Logo.full logoUrl
-                    :: element
+                    :: []
         )
 
 
-withSearch : Search msg -> SideNav msg -> SideNav msg
+withSearch : Search msg -> TopNav msg -> TopNav msg
 withSearch search sideNav =
     case sideNav of
-        SideNav element ->
-            SideNavWithSearch search element
+        TopNav element ->
+            TopNavWithSearch search element
 
-        SideNavWithSearch _ _ ->
+        TopNavWithSearch _ _ ->
             sideNav
 
 
-view : (String -> msg) -> SelectedItem -> ReloadableWebData () (List Category) -> SideNav msg
+view : (String -> msg) -> SelectedItem -> ReloadableWebData () (List Category) -> TopNav msg
 view onLinkClicked selectedItem data =
     (case data of
         NotAsked _ ->
@@ -83,7 +83,7 @@ view onLinkClicked selectedItem data =
         FailureWithData error _ categories ->
             [ categoriesView onLinkClicked selectedItem categories, UI.Error.http error ]
     )
-        |> SideNav
+        |> TopNav
 
 
 isSelectedCategoryId : Int -> SelectedItem -> Bool

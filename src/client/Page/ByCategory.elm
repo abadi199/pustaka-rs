@@ -17,7 +17,9 @@ import Route
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
+import UI.Nav
 import UI.Nav.Side
+import UI.Nav.Top
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import UI.ReloadableData
@@ -60,13 +62,17 @@ type Msg
 
 view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
 view key logoUrl categories model =
-    UI.Layout.withSideNav
+    UI.Layout.withNav
         { title = "Pustaka - Browse By Category"
         , logoUrl = logoUrl
         , sideNav =
             categories
-                |> UI.Nav.Side.view MenuItemClicked UI.Nav.Side.BrowseByCategory
+                |> UI.Nav.Side.view MenuItemClicked UI.Nav.BrowseByCategory
                 |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
+        , topNav =
+            categories
+                |> UI.Nav.Top.view MenuItemClicked UI.Nav.BrowseByCategory
+                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = categorySliderView key model
         , dialog = Dialog.none
         }

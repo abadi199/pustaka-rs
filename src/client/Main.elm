@@ -20,7 +20,9 @@ import ReloadableData exposing (ReloadableWebData)
 import Return
 import Task
 import UI.Layout
+import UI.Nav
 import UI.Nav.Side
+import UI.Nav.Top
 import UI.Parts.Dialog as Dialog
 import UI.Parts.Search
 import Url
@@ -155,12 +157,16 @@ view model =
             ProblemPage.view text
 
         ByMediaType ->
-            UI.Layout.withSideNav
+            UI.Layout.withNav
                 { title = "Pustaka - Browse By Media Type"
                 , logoUrl = model.flags.logo
+                , topNav =
+                    model.favoriteCategories
+                        |> UI.Nav.Top.view (always NoOp) UI.Nav.BrowseByMediaType
+                        |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
                 , sideNav =
                     model.favoriteCategories
-                        |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
+                        |> UI.Nav.Side.view (always NoOp) UI.Nav.BrowseByMediaType
                         |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
                 , content = text ""
                 , dialog = Dialog.none
