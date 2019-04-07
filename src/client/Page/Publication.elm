@@ -90,19 +90,16 @@ view logoUrl categoryData model =
     UI.Layout.withNav
         { title = "Pustaka - Publication"
         , logoUrl = logoUrl
-        , topNav =
-            categoryData
-                |> UI.Nav.Top.view LinkClicked UI.Nav.NoSelection
-                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , sideNav =
-            categoryData
-                |> UI.Nav.Side.view LinkClicked UI.Nav.NoSelection
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
                 (viewPublication model)
                 model.publication
         , dialog = Dialog.none
+        , categories = categoryData
+        , onLinkClick = LinkClicked
+        , selectedItem = UI.Nav.NoSelection
+        , onSearch = always NoOp
+        , searchText = model.searchText
         }
 
 

@@ -160,16 +160,13 @@ view model =
             UI.Layout.withNav
                 { title = "Pustaka - Browse By Media Type"
                 , logoUrl = model.flags.logo
-                , topNav =
-                    model.favoriteCategories
-                        |> UI.Nav.Top.view (always NoOp) UI.Nav.BrowseByMediaType
-                        |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-                , sideNav =
-                    model.favoriteCategories
-                        |> UI.Nav.Side.view (always NoOp) UI.Nav.BrowseByMediaType
-                        |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
                 , content = text ""
                 , dialog = Dialog.none
+                , categories = model.favoriteCategories
+                , onLinkClick = always NoOp
+                , selectedItem = UI.Nav.BrowseByMediaType
+                , searchText = model.searchText
+                , onSearch = always NoOp
                 }
 
         ByCategory byCategoryModel ->

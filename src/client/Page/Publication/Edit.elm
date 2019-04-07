@@ -102,14 +102,6 @@ view logoUrl categories model =
     UI.Layout.withNav
         { title = "Pustaka - Edit Publication"
         , logoUrl = logoUrl
-        , topNav =
-            categories
-                |> UI.Nav.Top.view LinkClicked UI.Nav.NoSelection
-                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , sideNav =
-            categories
-                |> UI.Nav.Side.view LinkClicked UI.Nav.NoSelection
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             UI.ReloadableData.view
                 (\publication ->
@@ -121,6 +113,11 @@ view logoUrl categories model =
                 )
                 model.publication
         , dialog = model.deleteConfirmation
+        , categories = categories
+        , onLinkClick = LinkClicked
+        , selectedItem = UI.Nav.NoSelection
+        , onSearch = always NoOp
+        , searchText = model.searchText
         }
 
 

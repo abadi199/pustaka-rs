@@ -65,16 +65,13 @@ view key logoUrl categories model =
     UI.Layout.withNav
         { title = "Pustaka - Browse By Category"
         , logoUrl = logoUrl
-        , sideNav =
-            categories
-                |> UI.Nav.Side.view MenuItemClicked UI.Nav.BrowseByCategory
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , topNav =
-            categories
-                |> UI.Nav.Top.view MenuItemClicked UI.Nav.BrowseByCategory
-                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content = categorySliderView key model
         , dialog = Dialog.none
+        , categories = categories
+        , onLinkClick = MenuItemClicked
+        , selectedItem = UI.Nav.BrowseByCategory
+        , searchText = model.searchText
+        , onSearch = always NoOp
         }
 
 

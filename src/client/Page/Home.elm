@@ -97,14 +97,6 @@ view key logoUrl categories model =
     UI.Layout.withNav
         { title = "Pustaka - Home"
         , logoUrl = logoUrl
-        , sideNav =
-            categories
-                |> UI.Nav.Side.view LinkClicked (selectedItem model.selectedCategoryId)
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-        , topNav =
-            categories
-                |> UI.Nav.Top.view LinkClicked (selectedItem model.selectedCategoryId)
-                |> UI.Nav.Top.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
         , content =
             case model.selectedCategoryId of
                 Nothing ->
@@ -113,6 +105,11 @@ view key logoUrl categories model =
                 Just _ ->
                     viewPerCategory model
         , dialog = Dialog.none
+        , categories = categories
+        , onLinkClick = LinkClicked
+        , selectedItem = selectedItem model.selectedCategoryId
+        , searchText = model.searchText
+        , onSearch = always NoOp
         }
 
 

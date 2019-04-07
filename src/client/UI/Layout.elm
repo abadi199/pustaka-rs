@@ -3,13 +3,17 @@ module UI.Layout exposing (withNav)
 import Browser
 import Css exposing (..)
 import Css.Global as Global exposing (global)
+import Entity.Category as Category exposing (Category)
 import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
+import ReloadableData exposing (ReloadableWebData)
 import UI.Css.Grid as Grid
 import UI.Css.MediaQuery as MediaQuery
+import UI.Nav exposing (SelectedItem)
 import UI.Nav.Side exposing (SideNav)
 import UI.Nav.Top exposing (TopNav)
 import UI.Parts.Dialog as Dialog exposing (Dialog)
+import UI.Parts.Search
 import UI.Reset exposing (reset)
 import UI.Spacing as Spacing
 
@@ -17,13 +21,16 @@ import UI.Spacing as Spacing
 withNav :
     { title : String
     , logoUrl : String
-    , sideNav : SideNav msg
-    , topNav : TopNav msg
     , content : Html msg
     , dialog : Dialog msg
+    , categories : ReloadableWebData () (List Category)
+    , onLinkClick : String -> msg
+    , selectedItem : SelectedItem
+    , searchText : String
+    , onSearch : String -> msg
     }
     -> Browser.Document msg
-withNav { title, logoUrl, sideNav, topNav, content, dialog } =
+withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem, searchText, onSearch } =
     let
         viewSideNav =
             div
@@ -32,7 +39,11 @@ withNav { title, logoUrl, sideNav, topNav, content, dialog } =
                     , MediaQuery.forTabletLandscapeUp [ display block ]
                     ]
                 ]
-                [ sideNav |> UI.Nav.Side.toHtml logoUrl ]
+                [ categories
+                    |> UI.Nav.Side.view onLinkClick selectedItem
+                    |> UI.Nav.Side.withSearch (UI.Parts.Search.view onSearch searchText)
+                    |> UI.Nav.Side.toHtml logoUrl
+                ]
 
         viewTopNav =
             div
@@ -42,7 +53,11 @@ withNav { title, logoUrl, sideNav, topNav, content, dialog } =
                     , MediaQuery.forTabletLandscapeUp [ display none ]
                     ]
                 ]
-                [ topNav |> UI.Nav.Top.toHtml logoUrl ]
+                [ categories
+                    |> UI.Nav.Top.view onLinkClick selectedItem
+                    |> UI.Nav.Top.withSearch (UI.Parts.Search.view onSearch searchText)
+                    |> UI.Nav.Top.toHtml logoUrl
+                ]
     in
     { title = title
     , body =
