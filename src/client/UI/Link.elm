@@ -10,11 +10,3 @@ import Json.Decode as JD
 link : List (Attribute msg) -> { url : String, label : Html msg, msg : String -> msg } -> Html msg
 link attrs { url, label, msg } =
     a (HA.href url :: onClick (msg url) :: attrs) [ label ]
-
-
-
--- E.link
---     (attrs ++ [ onClick (msg url) ])
---     { url = url
---     , label = label
---     }

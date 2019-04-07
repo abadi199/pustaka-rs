@@ -42,7 +42,7 @@ withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem
                 [ categories
                     |> UI.Nav.Side.view onLinkClick selectedItem
                     |> UI.Nav.Side.withSearch (UI.Parts.Search.view onSearch searchText)
-                    |> UI.Nav.Side.toHtml logoUrl
+                    |> UI.Nav.Side.toHtml { logoUrl = logoUrl, onLinkClick = onLinkClick }
                 ]
 
         viewTopNav =
@@ -56,7 +56,7 @@ withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem
                 [ categories
                     |> UI.Nav.Top.view onLinkClick selectedItem
                     |> UI.Nav.Top.withSearch (UI.Parts.Search.view onSearch searchText)
-                    |> UI.Nav.Top.toHtml logoUrl
+                    |> UI.Nav.Top.toHtml { logoUrl = logoUrl, onLinkClick = onLinkClick }
                 ]
     in
     { title = title

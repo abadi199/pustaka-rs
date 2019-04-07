@@ -29,8 +29,8 @@ type TopNav msg
     | TopNavWithSearch (Search msg) (List (Html msg))
 
 
-toHtml : String -> TopNav msg -> Html msg
-toHtml logoUrl sideNav =
+toHtml : { logoUrl : String, onLinkClick : String -> msg } -> TopNav msg -> Html msg
+toHtml { logoUrl, onLinkClick } sideNav =
     div
         [ css
             [ height (px 100)
@@ -44,10 +44,10 @@ toHtml logoUrl sideNav =
         ]
         (case sideNav of
             TopNav element ->
-                Logo.full logoUrl :: []
+                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick } :: []
 
             TopNavWithSearch search element ->
-                Logo.full logoUrl
+                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick }
                     :: []
         )
 
