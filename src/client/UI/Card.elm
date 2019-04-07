@@ -5,6 +5,7 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import UI.Action as Action exposing (Action)
 import UI.Poster as Poster
+import UI.Spacing as Spacing
 
 
 scaled : Int -> { width : Int, height : Int }
@@ -19,12 +20,18 @@ card scale attributes content =
         { width, height } =
             scaled scale
     in
-    div
+    node "poster"
         attributes
         content
 
 
-bordered : List (Attribute msg) -> { actions : List (Action msg), content : List (Html msg) } -> Html msg
+bordered :
+    List (Attribute msg)
+    ->
+        { actions : List (Action msg)
+        , content : List (Html msg)
+        }
+    -> Html msg
 bordered attributes { actions, content } =
     card 1
         (css
@@ -33,7 +40,15 @@ bordered attributes { actions, content } =
             , position relative
             , displayFlex
             , justifyContent center
+            , lastOfType [ Spacing.marginRight Spacing.None ]
+            , Spacing.marginEach
+                { top = Spacing.Medium
+                , right = Spacing.Large
+                , bottom = Spacing.Medium
+                , left = Spacing.None
+                }
             ]
+            :: HA.class "bla"
             :: attributes
         )
         (viewActions actions :: content)
@@ -50,6 +65,8 @@ viewActions actions =
             , alignItems flexEnd
             , width (pct 100)
             , backgroundColor (rgba 255 255 255 0.75)
+            , Spacing.paddingLeft Spacing.Small
+            , Spacing.paddingRight Spacing.Small
             ]
         ]
         [ div [] (actions |> List.map Action.toHtml) ]

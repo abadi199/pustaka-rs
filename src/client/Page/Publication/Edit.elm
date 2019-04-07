@@ -24,6 +24,7 @@ import Route
 import UI.Action as Action
 import UI.Card as Card
 import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
 import UI.Heading as UI exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
@@ -143,7 +144,10 @@ viewEdit { isHover, publication, cover } =
                 [ width (pct 100)
                 , backgroundColor (rgba 0 0 0 0.125)
                 , Grid.display
-                , Grid.templateColumns [ "auto", "1fr" ]
+                , Grid.templateColumns [ "1fr" ]
+                , MediaQuery.forTabletLandscapeUp
+                    [ Grid.templateColumns [ "auto", "1fr" ]
+                    ]
                 , Grid.columnGap 20
                 , UI.padding UI.Large
                 ]

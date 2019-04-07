@@ -5,6 +5,7 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import Html.Styled.Events as HE exposing (onClick)
 import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
 import UI.Spacing as UI
 
 
@@ -23,10 +24,20 @@ dl list =
 
 viewDescription : ( DT msg, DD msg ) -> Html msg
 viewDescription ( DT term termOnClick, DD details detailsOnClick ) =
-    div [ css [ Grid.display, Grid.templateColumns [ "150px", "1fr" ] ] ]
-        [ H.dt (onClick termOnClick :: resetStyles)
+    div
+        [ css
+            [ Grid.display
+            , Grid.templateColumns [ "1fr" ]
+            , MediaQuery.forTabletLandscapeUp
+                [ Grid.templateColumns [ "150px", "1fr" ]
+                ]
+            , maxWidth (pct 100)
+            , overflow auto
+            ]
+        ]
+        [ H.dt [ onClick termOnClick, css ([ fontWeight bold ] ++ resetStyles) ]
             [ text term ]
-        , H.dd (onClick detailsOnClick :: resetStyles)
+        , H.dd [ onClick detailsOnClick, css ([] ++ resetStyles) ]
             [ text details ]
         ]
 
@@ -49,6 +60,6 @@ dd { details, onClick } =
     DD details onClick
 
 
-resetStyles : List (H.Attribute msg)
+resetStyles : List Style
 resetStyles =
     []

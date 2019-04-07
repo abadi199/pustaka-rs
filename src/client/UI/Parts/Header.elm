@@ -98,5 +98,12 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                             , url = backUrl
                             , onClick = onLinkClicked
                             }
-                , div [] [ Heading.heading One title ]
+                , div
+                    [ css
+                        [ displayFlex
+                        , alignItems center
+                        , justifyContent center
+                        ]
+                    ]
+                    [ Heading.heading One title ]
                 ]

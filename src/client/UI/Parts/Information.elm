@@ -7,6 +7,7 @@ import UI.Action as Action exposing (Action)
 import UI.Background as Background
 import UI.Card as Card
 import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
 import UI.Heading as UI exposing (Level(..))
 import UI.List
 import UI.Spacing as UI
@@ -16,12 +17,22 @@ type alias Description msg =
     { term : String, details : String, onClick : msg }
 
 
-panel : { a | title : String, poster : Html msg, informationList : List (Description msg), actions : List (Action msg) } -> Html msg
+panel :
+    { a
+        | title : String
+        , poster : Html msg
+        , informationList : List (Description msg)
+        , actions : List (Action msg)
+    }
+    -> Html msg
 panel { title, poster, informationList, actions } =
     Card.simple
         [ css
             [ Grid.display
-            , Grid.templateColumns [ "auto", "1fr" ]
+            , Grid.templateColumns [ "1fr" ]
+            , MediaQuery.forTabletLandscapeUp
+                [ Grid.templateColumns [ "auto", "1fr" ]
+                ]
             , Grid.columnGap 20
             , Background.transparentMediumBlack
             , width (pct 100)

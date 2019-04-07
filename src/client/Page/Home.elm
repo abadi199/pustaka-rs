@@ -189,6 +189,7 @@ viewPublicationsRow title model publications =
                     [ displayFlex
                     , flexDirection row
                     , overflowX auto
+                    , overflowY hidden
                     , UI.paddingTop UI.Small
                     ]
                 ]
@@ -227,11 +228,7 @@ publicationView model publication =
             ReloadableData.Success () Image.none
     in
     Card.bordered
-        [ css
-            [ UI.padding UI.Small
-            , position relative
-            ]
-        ]
+        []
         { actions =
             [ Action.compact <|
                 Action.link

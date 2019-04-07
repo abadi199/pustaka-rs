@@ -79,9 +79,9 @@ marginEach : { top : Size, right : Size, bottom : Size, left : Size } -> Style
 marginEach { top, right, bottom, left } =
     margin4
         (px <| toFloat top)
+        (px <| toFloat right)
         (px <| toFloat bottom)
         (px <| toFloat left)
-        (px <| toFloat right)
 
 
 paddingLeft : Size -> Style
@@ -118,6 +118,6 @@ paddingEach : { top : Size, right : Size, bottom : Size, left : Size } -> Style
 paddingEach { top, right, bottom, left } =
     padding4
         (px <| toFloat top)
-        (px <| toFloat left)
-        (px <| toFloat bottom)
         (px <| toFloat right)
+        (px <| toFloat bottom)
+        (px <| toFloat left)

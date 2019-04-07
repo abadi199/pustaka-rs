@@ -16,13 +16,13 @@ heading : Level -> String -> Html msg
 heading level content =
     case level of
         One ->
-            h1 [ css [ fontSize (px 24) ] ] [ text content ]
+            h1 [ css [ fontSize (px 24), overflow hidden ] ] [ text content ]
 
         Two ->
-            h2 [] [ text content ]
+            h2 [ css [ fontSize (px 20), overflow hidden ] ] [ text content ]
 
         Three ->
-            h3 [] [ text content ]
+            h3 [ css [ fontSize (px 18), overflow hidden ] ] [ text content ]
 
         Four ->
-            h4 [] [ text content ]
+            h4 [ css [ fontSize (px 16), overflow hidden ] ] [ text content ]
