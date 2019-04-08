@@ -1,9 +1,10 @@
 module UI.Font exposing (darkRed)
 
-import Element exposing (..)
-import Element.Font
+import Css exposing (Style, color, rgba)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 
 
-darkRed : Attribute msg
+darkRed : Style
 darkRed =
-    Element.Font.color (rgba255 216 0 12 1)
+    color (rgba 216 0 12 1)

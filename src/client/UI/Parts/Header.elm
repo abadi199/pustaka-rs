@@ -8,13 +8,16 @@ module UI.Parts.Header exposing
     , visible
     )
 
-import Element as E exposing (..)
-import Element.Border as Border
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE
 import Route
 import UI.Action as Action
 import UI.Background as Background
+import UI.Css.Grid as Grid
 import UI.Events
-import UI.Heading as Heading
+import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
 import UI.Spacing as UI
 
@@ -70,26 +73,24 @@ header :
     , onLinkClicked : String -> msg
     , title : String
     }
-    -> Element msg
+    -> Html msg
 header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
     case visibility of
         Hidden ->
-            none
+            text ""
 
         Visible _ ->
-            row
-                [ width fill
-                , Background.solidWhite
-                , Border.shadow
-                    { offset = ( 0, 0 )
-                    , size = 0
-                    , blur = 10
-                    , color = rgba 0 0 0 0.5
-                    }
-                , UI.padding -5
+            div
+                [ css
+                    [ width (pct 100)
+                    , Grid.display
+                    , Grid.templateColumns [ "auto", "1fr" ]
+                    , Background.solidWhite
+                    , boxShadow5 zero zero (px 5) (px 5) (rgba 0 0 0 0.25)
+                    ]
                 , UI.Events.onMouseMove onMouseMove
                 ]
-                [ Action.toElement <|
+                [ Action.toHtml <|
                     Action.large <|
                         Action.link
                             { text = "Back"
@@ -97,5 +98,12 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                             , url = backUrl
                             , onClick = onLinkClicked
                             }
-                , el [ centerX ] (Heading.heading 1 title)
+                , div
+                    [ css
+                        [ displayFlex
+                        , alignItems center
+                        , justifyContent center
+                        ]
+                    ]
+                    [ Heading.heading One title ]
                 ]

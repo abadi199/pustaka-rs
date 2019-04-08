@@ -1,36 +1,44 @@
 module UI.List exposing (DD, DT, dd, dl, dt)
 
-import Element exposing (..)
-import Html exposing (Html, dd, dl, dt, span)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE exposing (onClick)
+import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
 import UI.Spacing as UI
 
 
-dl : List ( DT msg, DD msg ) -> Element msg
+dl : List ( DT msg, DD msg ) -> Html msg
 dl list =
-    el [ width fill ] <|
-        html
-            (Html.dl resetStyles
-                [ column [ width fill, UI.spacing -5 ] (list |> List.map viewDescription)
-                    |> layoutWith { options = [ noStaticStyleSheet ] } []
-                ]
-            )
+    H.dl
+        [ css
+            [ margin zero
+            , padding zero
+            , Grid.display
+            , Grid.rowGap 5
+            ]
+        ]
+        (list |> List.map viewDescription)
 
 
-viewDescription : ( DT msg, DD msg ) -> Element msg
+viewDescription : ( DT msg, DD msg ) -> Html msg
 viewDescription ( DT term termOnClick, DD details detailsOnClick ) =
-    row [ width fill ]
-        [ el [ width (px 100) ] <|
-            html
-                (Html.dt (onClick termOnClick :: resetStyles)
-                    [ Html.text term ]
-                )
-        , el [] <|
-            html
-                (Html.dd (onClick detailsOnClick :: resetStyles)
-                    [ Html.text details ]
-                )
+    div
+        [ css
+            [ Grid.display
+            , Grid.templateColumns [ "1fr" ]
+            , MediaQuery.forTabletLandscapeUp
+                [ Grid.templateColumns [ "150px", "1fr" ]
+                ]
+            , maxWidth (pct 100)
+            , overflow auto
+            ]
+        ]
+        [ H.dt [ onClick termOnClick, css ([ fontWeight bold ] ++ resetStyles) ]
+            [ text term ]
+        , H.dd [ onClick detailsOnClick, css ([] ++ resetStyles) ]
+            [ text details ]
         ]
 
 
@@ -52,8 +60,6 @@ dd { details, onClick } =
     DD details onClick
 
 
-resetStyles : List (Html.Attribute msg)
+resetStyles : List Style
 resetStyles =
-    [ style "margin" "0"
-    , style "padding" "0"
-    ]
+    []

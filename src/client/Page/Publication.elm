@@ -7,34 +7,28 @@ module Page.Publication exposing
     , view
     )
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Navigation as Nav
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Region as Region
+import Css exposing (..)
 import Entity.Category exposing (Category)
 import Entity.Image as Image exposing (Image)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import Entity.Thumbnail as Thumbnail exposing (Thumbnail)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
-import Set
 import String
-import Task
-import Tree exposing (Tree)
 import UI.Action as Action
-import UI.Background as Background
 import UI.Card as Card
-import UI.Heading as UI
+import UI.Css.Grid as Grid
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
-import UI.Nav.Side
 import UI.Parts.BreadCrumb as UI
-import UI.Parts.Dialog as Dialog
 import UI.Parts.Information as Information
-import UI.Parts.Search
 import UI.Poster as UI
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -47,7 +41,7 @@ import UI.Spacing as UI
 type alias Model =
     { publication : ReloadableWebData Int Publication.MetaData
     , cover : ReloadableWebData () Image
-    , searchText : String
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -62,7 +56,7 @@ initialModel : Int -> Model
 initialModel publicationId =
     { publication = ReloadableData.Loading publicationId
     , cover = ReloadableData.NotAsked ()
-    , searchText = ""
+    , layoutState = UI.Layout.initialState
     }
 
 
@@ -76,48 +70,63 @@ type Msg
     | PublicationClicked Int
     | CoverLoaded (ReloadableWebData () Image)
     | NoOp
+    | LayoutStateChanged (UI.Layout.State Msg) (Cmd Msg)
 
 
 
 -- VIEW
 
 
-view : ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view categoryData model =
-    UI.Layout.withSideNav
-        { title = "Pustaka - Publication"
-        , sideNav =
-            categoryData
-                |> UI.Nav.Side.view LinkClicked UI.Nav.Side.NoSelection
-                |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
+view :
+    { a
+        | key : Nav.Key
+        , assets : Assets
+        , favoriteCategories : ReloadableWebData () (List Category)
+    }
+    -> Model
+    -> Browser.Document Msg
+view { key, assets, favoriteCategories } model =
+    UI.Layout.withNav
+        { key = key
+        , title = "Pustaka - Publication"
+        , assets = assets
         , content =
             UI.ReloadableData.view
                 (viewPublication model)
                 model.publication
-        , dialog = Dialog.none
+        , categories = favoriteCategories
+        , state = model.layoutState
+        , onStateChange = LayoutStateChanged
         }
 
 
-viewPublication : Model -> Publication.MetaData -> Element Msg
+viewPublication : Model -> Publication.MetaData -> Html Msg
 viewPublication model publication =
-    column [ UI.spacing 1, width fill ]
+    div [ css [ width (pct 100) ] ]
         [ UI.breadCrumb []
-        , row
-            [ UI.spacing 1, width fill ]
-            [ viewCover
-                { publicationId = publication.id
-                , cover = model.cover
-                , title = publication.title
-                }
-            , viewInformation publication
+        , div
+            [ css
+                [ width (pct 100)
+                , Grid.display
+                , UI.paddingTop UI.ExtraLarge
+                , Grid.templateColumns [ "auto", "1fr" ]
+                ]
+            ]
+            [ viewInformation model publication
             ]
         ]
 
 
-viewInformation : Publication.MetaData -> Element Msg
-viewInformation publication =
+viewInformation : Model -> Publication.MetaData -> Html Msg
+viewInformation model publication =
     Information.panel
         { title = publication.title
+        , poster =
+            viewCover
+                { publicationId = publication.id
+                , cover = model.cover
+                , title = publication.title
+                }
         , informationList =
             [ { term = "Author", details = "N/A", onClick = NoOp }
             , { term = "ISBN", details = publication.isbn, onClick = NoOp }
@@ -144,13 +153,13 @@ viewInformation publication =
         }
 
 
-viewCover : { publicationId : Int, cover : ReloadableWebData () Image, title : String } -> Element Msg
+viewCover : { publicationId : Int, cover : ReloadableWebData () Image, title : String } -> Html Msg
 viewCover { publicationId, cover, title } =
-    Card.bordered [ alignTop ]
+    Card.bordered [ css [] ]
         { actions = []
         , content =
             [ UI.link
-                [ height fill ]
+                [ css [ height (pct 100) ] ]
                 { msg = LinkClicked
                 , url = Route.readUrl publicationId
                 , label = UI.reloadablePoster { title = title, image = cover }
@@ -180,6 +189,9 @@ update key msg model =
 
         CoverLoaded data ->
             ( { model | cover = data }, Cmd.none )
+
+        LayoutStateChanged layoutState cmd ->
+            ( { model | layoutState = layoutState }, cmd )
 
 
 loadPoster : ReloadableWebData a Publication.MetaData -> Model -> ( Model, Cmd Msg )

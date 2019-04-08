@@ -2,6 +2,7 @@ module ReloadableData exposing
     ( ReloadableData(..)
     , ReloadableWebData
     , andThen
+    , expand
     , join
     , loading
     , map
@@ -31,6 +32,28 @@ type ReloadableData e i a
     | Success i a
     | Failure e i
     | FailureWithData e i a
+
+
+expand : ReloadableData e i (List a) -> List (ReloadableData e i a)
+expand data =
+    case data of
+        NotAsked i ->
+            [ NotAsked i ]
+
+        Loading i ->
+            [ Loading i ]
+
+        Reloading i list ->
+            list |> List.map (\a -> Reloading i a)
+
+        Success i list ->
+            list |> List.map (\a -> Success i a)
+
+        Failure e i ->
+            [ Failure e i ]
+
+        FailureWithData e i list ->
+            list |> List.map (\a -> FailureWithData e i a)
 
 
 loading : ReloadableData e i a -> ReloadableData e i a

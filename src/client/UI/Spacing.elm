@@ -1,37 +1,123 @@
-module UI.Spacing exposing (padding, paddingEach, spacing)
+module UI.Spacing exposing
+    ( Size(..)
+    , margin
+    , marginBottom
+    , marginEach
+    , marginLeft
+    , marginRight
+    , marginTop
+    , padding
+    , paddingBottom
+    , paddingEach
+    , paddingLeft
+    , paddingRight
+    , paddingTop
+    )
 
-import Element as E exposing (Attribute, modular)
+import Css exposing (..)
+import Html.Styled as H exposing (Attribute)
 
 
-scaled : Int -> Int
-scaled n =
-    if n == 0 then
-        0
-
-    else
-        n |> modular 50 1.25 |> round
-
-
-spacing : Int -> Attribute msg
-spacing scale =
-    E.spacing (scaled scale)
+type Size
+    = ExtraLarge
+    | Large
+    | Medium
+    | Small
+    | None
 
 
-padding : Int -> Attribute msg
-padding scale =
+toFloat : Size -> Float
+toFloat size =
+    case size of
+        ExtraLarge ->
+            40
+
+        Large ->
+            20
+
+        Medium ->
+            10
+
+        Small ->
+            5
+
+        None ->
+            0
+
+
+marginLeft : Size -> Style
+marginLeft size =
+    Css.marginLeft (px <| toFloat size)
+
+
+marginRight : Size -> Style
+marginRight size =
+    Css.marginRight (px <| toFloat size)
+
+
+marginBottom : Size -> Style
+marginBottom size =
+    Css.marginBottom (px <| toFloat size)
+
+
+marginTop : Size -> Style
+marginTop size =
+    Css.marginTop (px <| toFloat size)
+
+
+margin : Size -> Style
+margin size =
+    marginEach
+        { top = size
+        , bottom = size
+        , right = size
+        , left = size
+        }
+
+
+marginEach : { top : Size, right : Size, bottom : Size, left : Size } -> Style
+marginEach { top, right, bottom, left } =
+    margin4
+        (px <| toFloat top)
+        (px <| toFloat right)
+        (px <| toFloat bottom)
+        (px <| toFloat left)
+
+
+paddingLeft : Size -> Style
+paddingLeft size =
+    Css.paddingLeft (px <| toFloat size)
+
+
+paddingRight : Size -> Style
+paddingRight size =
+    Css.paddingRight (px <| toFloat size)
+
+
+paddingBottom : Size -> Style
+paddingBottom size =
+    Css.paddingBottom (px <| toFloat size)
+
+
+paddingTop : Size -> Style
+paddingTop size =
+    Css.paddingTop (px <| toFloat size)
+
+
+padding : Size -> Style
+padding size =
     paddingEach
-        { top = scale
-        , bottom = scale
-        , right = scale
-        , left = scale
+        { top = size
+        , bottom = size
+        , right = size
+        , left = size
         }
 
 
-paddingEach : { top : Int, right : Int, bottom : Int, left : Int } -> Attribute msg
+paddingEach : { top : Size, right : Size, bottom : Size, left : Size } -> Style
 paddingEach { top, right, bottom, left } =
-    E.paddingEach
-        { top = scaled top
-        , bottom = scaled bottom
-        , left = scaled left
-        , right = scaled right
-        }
+    padding4
+        (px <| toFloat top)
+        (px <| toFloat right)
+        (px <| toFloat bottom)
+        (px <| toFloat left)

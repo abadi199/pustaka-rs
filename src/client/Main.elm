@@ -1,12 +1,13 @@
 module Main exposing (main)
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
-import Element as E
 import Entity.Category exposing (Category)
-import Html exposing (..)
+import Html
+import Html.Styled as H exposing (..)
 import Page.ByCategory as ByCategoryPage
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
@@ -17,14 +18,11 @@ import ReloadableData exposing (ReloadableWebData)
 import Return
 import Task
 import UI.Layout
-import UI.Nav.Side
-import UI.Parts.Dialog as Dialog
-import UI.Parts.Search
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, top)
 
 
-main : Program () Model Msg
+main : Program Assets Model Msg
 main =
     Browser.application
         { init = init
@@ -45,7 +43,8 @@ type alias Model =
     , page : Page
     , favoriteCategories : ReloadableWebData () (List Category)
     , viewport : Viewport
-    , searchText : String
+    , assets : Assets
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -59,8 +58,8 @@ type Page
     | Problem String
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Assets -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init assets url key =
     let
         ( model, cmd ) =
             stepUrl url
@@ -71,7 +70,8 @@ init _ url key =
                     { scene = { width = 0, height = 0 }
                     , viewport = { x = 0, y = 0, width = 0, height = 0 }
                     }
-                , searchText = ""
+                , assets = assets
+                , layoutState = UI.Layout.initialState
                 }
     in
     ( model
@@ -131,11 +131,11 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         Home homeModel ->
-            HomePage.view model.key model.favoriteCategories homeModel
+            HomePage.view model homeModel
                 |> mapPage (PageMsg << HomeMsg)
 
         Publication publicationModel ->
-            PublicationPage.view model.favoriteCategories publicationModel
+            PublicationPage.view model publicationModel
                 |> mapPage (PageMsg << PublicationMsg)
 
         Read readModel ->
@@ -146,22 +146,22 @@ view model =
             ProblemPage.view text
 
         ByMediaType ->
-            UI.Layout.withSideNav
-                { title = "Pustaka - Browse By Media Type"
-                , sideNav =
-                    model.favoriteCategories
-                        |> UI.Nav.Side.view (always NoOp) UI.Nav.Side.BrowseByMediaType
-                        |> UI.Nav.Side.withSearch (UI.Parts.Search.view (always NoOp) model.searchText)
-                , content = E.none
-                , dialog = Dialog.none
+            UI.Layout.withNav
+                { key = model.key
+                , title = "Pustaka - Browse By Media Type"
+                , assets = model.assets
+                , content = text "WIP"
+                , categories = model.favoriteCategories
+                , state = model.layoutState
+                , onStateChange = \_ _ -> NoOp
                 }
 
         ByCategory byCategoryModel ->
-            ByCategoryPage.view model.key model.favoriteCategories byCategoryModel
+            ByCategoryPage.view model byCategoryModel
                 |> mapPage (PageMsg << ByCategoryMsg)
 
         PublicationEdit pageModel ->
-            PublicationEditPage.view model.favoriteCategories pageModel
+            PublicationEditPage.view model pageModel
                 |> mapPage (PageMsg << PublicationEditMsg)
 
 

@@ -1,47 +1,77 @@
 module UI.Card exposing (bordered, simple)
 
-import Element as E exposing (..)
-import Element.Background as Background
-import Element.Border as Border
-import Html.Attributes as HA
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import UI.Action as Action exposing (Action)
 import UI.Poster as Poster
+import UI.Spacing as Spacing
 
 
 scaled : Int -> { width : Int, height : Int }
 scaled scale =
-    modular 300 1.25 scale
-        |> round
+    scale
         |> Poster.dimensionForHeight
 
 
-card : Int -> List (Attribute msg) -> List (Element msg) -> Element msg
+card : Int -> List (Attribute msg) -> List (Html msg) -> Html msg
 card scale attributes content =
     let
         { width, height } =
             scaled scale
     in
-    column
+    node "poster"
         attributes
         content
 
 
-bordered : List (Attribute msg) -> { actions : List (Action msg), content : List (Element msg) } -> Element msg
+bordered :
+    List (Attribute msg)
+    ->
+        { actions : List (Action msg)
+        , content : List (Html msg)
+        }
+    -> Html msg
 bordered attributes { actions, content } =
     card 1
-        (Border.color (rgba 0 0 0 0.125)
-            :: Border.width 10
-            :: inFront (viewActions actions)
+        (css
+            [ borderColor (rgba 255 0 0 0.125)
+            , borderWidth (px 10)
+            , position relative
+            , displayFlex
+            , justifyContent center
+            , lastOfType [ Spacing.marginRight Spacing.None ]
+            , Spacing.marginEach
+                { top = Spacing.Medium
+                , right = Spacing.Large
+                , bottom = Spacing.Medium
+                , left = Spacing.None
+                }
+            ]
+            :: HA.class "bla"
             :: attributes
         )
-        content
+        (viewActions actions :: content)
 
 
-viewActions : List (Action msg) -> Element msg
+viewActions : List (Action msg) -> Html msg
 viewActions actions =
-    row [ alignBottom, width fill, Background.color (rgba 1 1 1 0.75) ] [ row [ alignRight, alignBottom ] (actions |> List.map Action.toElement) ]
+    div
+        [ css
+            [ position absolute
+            , displayFlex
+            , justifyContent flexEnd
+            , bottom (px 0)
+            , alignItems flexEnd
+            , width (pct 100)
+            , backgroundColor (rgba 255 255 255 0.75)
+            , Spacing.paddingLeft Spacing.Small
+            , Spacing.paddingRight Spacing.Small
+            ]
+        ]
+        [ div [] (actions |> List.map Action.toHtml) ]
 
 
-simple : List (Attribute msg) -> List (Element msg) -> Element msg
+simple : List (Attribute msg) -> List (Html msg) -> Html msg
 simple attributes content =
     card 3 attributes content

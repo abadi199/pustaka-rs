@@ -16,17 +16,18 @@ module Reader.Comic exposing
 import Browser.Events
 import Browser.Navigation as Nav
 import Cmd
-import Element as E exposing (..)
-import Element.Events as EE exposing (onClick)
+import Css exposing (..)
 import Entity.Image as Image exposing (Image)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
-import Html as H
-import Html.Attributes as HA
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE exposing (onClick)
 import Keyboard
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
 import UI.Background as Background
+import UI.Css.Grid as Grid
 import UI.Error
 import UI.Events
 import UI.Icon as Icon
@@ -34,6 +35,7 @@ import UI.Image as Image
 import UI.Parts.Header as Header
 import UI.Parts.Slider as Slider
 import UI.ReloadableData
+import UI.Spacing as Spacing
 
 
 
@@ -102,7 +104,7 @@ subscription model =
 -- VIEW
 
 
-header : { backUrl : String } -> Publication.Data -> Model -> Element Msg
+header : { backUrl : String } -> Publication.Data -> Model -> Html Msg
 header { backUrl } publication model =
     Header.header
         { visibility = model.overlayVisibility
@@ -113,43 +115,55 @@ header { backUrl } publication model =
         }
 
 
-reader : Publication.Data -> Model -> Element Msg
-reader publication model =
-    el
-        [ width fill
-        , height fill
+reader : Publication.Data -> Model -> Html Msg
+reader _ model =
+    div
+        [ css
+            [ width (pct 100)
+            , height (pct 100)
+            , Grid.display
+            , Grid.templateColumns [ "50%", "50%" ]
+            , Grid.templateAreas [ "left right" ]
+            ]
         , UI.Events.onMouseMove MouseMoved
         ]
-    <|
-        E.row
-            [ width fill, height fill ]
-            [ el
-                [ width fill
-                , height fill
-                , Background.solidWhite
+        [ viewPage
+            (css
+                [ displayFlex
+                , justifyContent flexEnd
+                , position relative
+                , height (pct 100)
+                , Grid.area "left"
                 ]
-              <|
-                viewPage alignRight model.leftPage
-            , el
-                [ width fill
-                , height fill
-                , Background.solidWhite
+            )
+            model.leftPage
+        , viewPage
+            (css
+                [ textAlign left
+                , displayFlex
+                , justifyContent flexStart
+                , position relative
+                , height (pct 100)
+                , Grid.area "right"
                 ]
-              <|
-                viewPage alignLeft model.rightPage
-            ]
+            )
+            model.rightPage
+        ]
 
 
-viewPage : Attribute Msg -> ComicPage (ReloadableWebData () Image) -> Element Msg
+viewPage : Attribute Msg -> ComicPage (ReloadableWebData () Image) -> Html Msg
 viewPage alignment page =
     case page of
         ComicPage.Empty ->
-            E.none
+            text ""
 
         ComicPage.Page number data ->
             UI.ReloadableData.view
                 (\pageImage ->
-                    el [ width fill, inFront (viewPageNumber number) ] (el [ alignment ] (Image.fullHeight pageImage))
+                    div [ alignment ]
+                        [ Image.fullHeight pageImage
+                        , viewPageNumber number
+                        ]
                 )
                 data
 
@@ -157,21 +171,30 @@ viewPage alignment page =
             UI.Error.string "Out of bound"
 
 
-viewPageNumber : Int -> Element msg
+viewPageNumber : Int -> Html msg
 viewPageNumber number =
-    el
-        [ alignBottom
-        , if remainderBy 2 number == 0 then
-            alignRight
+    div
+        [ css
+            [ position absolute
+            , bottom (px 0)
+            , if remainderBy 2 number == 0 then
+                right (px 0)
 
-          else
-            alignLeft
-        , paddingEach { bottom = 10, top = 0, left = 0, right = 0 }
+              else
+                left (px 0)
+            , Spacing.paddingEach
+                { bottom = Spacing.Large
+                , top = Spacing.None
+                , left = Spacing.Large
+                , right = Spacing.Large
+                }
+            , textShadow4 (px 0) (px 0) (px 2) (rgba 255 255 255 0.5)
+            ]
         ]
-        (text <| String.fromInt number)
+        [ text <| String.fromInt number ]
 
 
-slider : Model -> Element Msg
+slider : Model -> Html Msg
 slider model =
     case ( Header.isVisible model.overlayVisibility, model.progress |> ReloadableData.toMaybe ) of
         ( False, Just progress ) ->
@@ -189,39 +212,52 @@ slider model =
                 }
 
         ( _, Nothing ) ->
-            none
+            text ""
 
 
-previous : Element Msg
+previous : Html Msg
 previous =
-    row
+    div
         [ onClick PreviousPage
-        , alignLeft
-        , height fill
-        , pointer
+        , css
+            [ height (pct 100)
+            , cursor pointer
+            , displayFlex
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
+            ]
         ]
         [ Icon.previous Icon.large ]
 
 
-next : Element Msg
+next : Html Msg
 next =
-    row
+    div
         [ onClick NextPage
-        , alignRight
-        , height fill
-        , pointer
+        , css
+            [ height (pct 100)
+            , cursor pointer
+            , displayFlex
+            , justifyContent center
+            , alignItems center
+            , hover
+                [ backgroundColor (rgba 0 0 0 0.025)
+                ]
+            ]
         ]
         [ Icon.next Icon.large ]
 
 
-image : Int -> Int -> Element msg
+image : Int -> Int -> Html msg
 image pubId pageNum =
-    E.html <|
-        H.img
-            [ HA.src <| imageUrl pubId pageNum
-            , HA.style "height" "100vh"
-            ]
-            []
+    H.img
+        [ HA.src <| imageUrl pubId pageNum
+        , HA.style "height" "100vh"
+        ]
+        []
 
 
 imageUrl : Int -> Int -> String
@@ -237,7 +273,7 @@ imageUrl pubId pageNum =
 
 
 update : Nav.Key -> Msg -> Model -> Publication.Data -> ( Model, Cmd Msg )
-update key msg model publication =
+update _ msg model publication =
     case msg of
         LeftImageLoaded data ->
             ( { model | leftPage = ComicPage.map (always data) model.leftPage }, Cmd.none )

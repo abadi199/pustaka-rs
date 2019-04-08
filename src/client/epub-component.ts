@@ -2,10 +2,7 @@ import ePub, { Rendition, Book } from "epubjs";
 import { Location, DisplayedLocation } from "epubjs/types/rendition";
 
 class EpubViewer extends HTMLElement {
-  constructor(
-    private rendition: Rendition,
-    private book: Book,
-  ) {
+  constructor(private rendition: Rendition, private book: Book) {
     super();
   }
   static get observedAttributes() {
@@ -18,10 +15,9 @@ class EpubViewer extends HTMLElement {
     }
     if (name === "width" || name === "height") {
       const width: number = parseInt(this.getAttribute("width") || "");
-      const height: number = parseInt(this.getAttribute("height") || "")
+      const height: number = parseInt(this.getAttribute("height") || "");
       this.rendition.resize(width, height);
-    }
-    else if (name === "page") {
+    } else if (name === "page") {
       const oldPage = parseInt(oldValue, 10);
       const newPage = parseInt(newValue, 10);
       if (newPage > oldPage) {
@@ -30,8 +26,9 @@ class EpubViewer extends HTMLElement {
         this.rendition.prev();
       }
     } else if (name === "percentage") {
-      console.log("js:percentage", oldValue, newValue);
-      const cfi = this.book.locations.cfiFromPercentage(parseFloat(newValue));
+      const cfi = this.book.locations.cfiFromPercentage(
+        parseFloat(newValue) / 100
+      );
       this.rendition.display(cfi);
     }
   }
@@ -57,26 +54,27 @@ class EpubViewer extends HTMLElement {
       height: height
     });
 
-    this.rendition.on('relocated', this.relocatedListener);
+    this.rendition.on("relocated", this.relocatedListener);
     this.rendition.on("keyup", this.keyListener);
-    this.rendition.hooks.content.register((contents) => {
-      contents.window.addEventListener("mousemove", (evt) => {
+    this.rendition.hooks.content.register(contents => {
+      contents.window.addEventListener("mousemove", evt => {
         this.dispatchEvent(new Event("mousemove"));
       });
     });
 
     const displayed = this.rendition.display();
 
-    this.book.ready.then(() => {
-      const locations = this.book.locations.generate(1600);
-      return locations;
-    }).then((locations: object) => {
-      this.dispatchEvent(new Event("ready"));
-    });
+    this.book.ready
+      .then(() => {
+        const locations = this.book.locations.generate(1600);
+        return locations;
+      })
+      .then((locations: object) => {
+        this.dispatchEvent(new Event("ready"));
+      });
   }
 
   keyListener = (event: KeyboardEvent) => {
-    console.log(event);
     switch (event.key) {
       case "ArrowLeft":
         this.rendition.prev();
@@ -95,14 +93,17 @@ class EpubViewer extends HTMLElement {
     }
   };
 
-  isLocation = (location: Location | DisplayedLocation): location is Location => {
+  isLocation = (
+    location: Location | DisplayedLocation
+  ): location is Location => {
     return (<Location>location).start != undefined;
   };
 
   relocatedListener = (location: Location | DisplayedLocation) => {
     const currentLocation = this.getCurrentPercentage(location);
-    console.log("js:relocatedListener", currentLocation);
-    const pageChangeEvent = new CustomEvent("pageChanged", { detail: currentLocation });
+    const pageChangeEvent = new CustomEvent("pageChanged", {
+      detail: currentLocation * 100
+    });
     this.dispatchEvent(pageChangeEvent);
   };
 }

@@ -34,6 +34,10 @@ pub fn unzip_nth(file: &str, output_path: &str, nth: usize) -> ZipResult<String>
         }
     }
 
+    let mut files: Vec<String> = files
+        .into_iter()
+        .filter(|file| !(*file).ends_with("/"))
+        .collect();
     files.sort();
     let name = files.get(nth).ok_or(zip::result::ZipError::FileNotFound)?;
 

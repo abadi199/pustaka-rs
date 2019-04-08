@@ -1,20 +1,28 @@
-module UI.Heading exposing (heading)
+module UI.Heading exposing (Level(..), heading)
 
-import Element as E exposing (..)
-import Element.Font as Font
-import Element.Region as Region
-
-
-scaled : Int -> Int
-scaled =
-    modular 24 1.25 >> round
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 
 
-heading : Int -> String -> Element msg
+type Level
+    = One
+    | Two
+    | Three
+    | Four
+
+
+heading : Level -> String -> Html msg
 heading level content =
-    el
-        [ Region.heading level
-        , Font.size (scaled (1 - level))
-        , Font.bold
-        ]
-        (text content)
+    case level of
+        One ->
+            h1 [ css [ fontSize (px 24), overflow hidden ] ] [ text content ]
+
+        Two ->
+            h2 [ css [ fontSize (px 20), overflow hidden ] ] [ text content ]
+
+        Three ->
+            h3 [ css [ fontSize (px 18), overflow hidden ] ] [ text content ]
+
+        Four ->
+            h4 [ css [ fontSize (px 16), overflow hidden ] ] [ text content ]

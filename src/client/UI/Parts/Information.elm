@@ -1,12 +1,14 @@
 module UI.Parts.Information exposing (panel)
 
-import Element exposing (..)
-import Entity.Publication as Publication
-import Svg exposing (Svg)
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
 import UI.Action as Action exposing (Action)
 import UI.Background as Background
 import UI.Card as Card
-import UI.Heading as UI
+import UI.Css.Grid as Grid
+import UI.Css.MediaQuery as MediaQuery
+import UI.Heading as UI exposing (Level(..))
 import UI.List
 import UI.Spacing as UI
 
@@ -15,19 +17,37 @@ type alias Description msg =
     { term : String, details : String, onClick : msg }
 
 
-panel : { a | title : String, informationList : List (Description msg), actions : List (Action msg) } -> Element msg
-panel { title, informationList, actions } =
+panel :
+    { a
+        | title : String
+        , poster : Html msg
+        , informationList : List (Description msg)
+        , actions : List (Action msg)
+    }
+    -> Html msg
+panel { title, poster, informationList, actions } =
     Card.simple
-        [ alignTop
-        , Background.transparentMediumBlack
-        , width fill
-        , UI.padding -2
-        ]
-        [ column
-            [ UI.spacing -2
-            , width fill
+        [ css
+            [ Grid.display
+            , Grid.templateColumns [ "1fr" ]
+            , MediaQuery.forTabletLandscapeUp
+                [ Grid.templateColumns [ "auto", "1fr" ]
+                ]
+            , Grid.columnGap 20
+            , Background.transparentMediumBlack
+            , width (pct 100)
+            , UI.padding UI.Large
             ]
-            [ UI.heading 1 title
+        ]
+        [ poster
+        , div
+            [ css
+                [ width (pct 100)
+                , Grid.display
+                , Grid.rowGap 10
+                ]
+            ]
+            [ UI.heading One title
             , UI.List.dl (informationList |> List.map viewDescription)
             , viewActions actions
             ]
@@ -41,11 +61,16 @@ viewDescription { term, details, onClick } =
     )
 
 
-viewActions : List (Action msg) -> Element msg
+viewActions : List (Action msg) -> Html msg
 viewActions actions =
-    row
-        [ alignBottom
-        , alignRight
-        , UI.spacing -5
+    div
+        [ css
+            [ Grid.display
+            , Grid.templateColumns [ "auto", "auto" ]
+            , Grid.columnGap 20
+            , justifyContent flexEnd
+            , borderTop3 (px 1) solid (rgba 0 0 0 0.25)
+            , UI.padding UI.Large
+            ]
         ]
-        (actions |> List.map Action.toElement)
+        (actions |> List.map Action.toHtml)

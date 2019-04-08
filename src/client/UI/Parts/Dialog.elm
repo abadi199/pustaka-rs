@@ -4,12 +4,13 @@ module UI.Parts.Dialog exposing
     , confirmation
     , modal
     , none
-    , toElement
+    , toHtml
     )
 
-import Element as E exposing (..)
-import Element.Events as Events exposing (onClick)
-import Html.Attributes as HA
+import Css exposing (..)
+import Html.Styled as H exposing (..)
+import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events as HE exposing (onClick)
 import UI.Action as Action
 import UI.Background as Background
 import UI.Icon as Icon
@@ -32,46 +33,53 @@ none =
 
 
 type DialogType msg
-    = ConfirmationDialog { element : Element msg, onPositive : msg, onNegative : msg, onClose : msg }
+    = ConfirmationDialog { element : Html msg, onPositive : msg, onNegative : msg, onClose : msg }
 
 
-confirmation : { content : Element msg, onPositive : msg, onNegative : msg, onClose : msg } -> DialogType msg
+confirmation : { content : Html msg, onPositive : msg, onNegative : msg, onClose : msg } -> DialogType msg
 confirmation { content, onPositive, onNegative, onClose } =
     ConfirmationDialog
         { onPositive = onPositive
         , onNegative = onNegative
         , onClose = onClose
         , element =
-            column
-                [ centerX
-                , centerY
-                , UI.padding 1
-                , Background.solidWhite
+            div
+                [ css
+                    [ displayFlex
+                    , alignItems center
+                    , justifyContent center
+                    , UI.padding UI.Large
+                    , Background.solidWhite
+                    ]
                 ]
                 [ content
-                , row
-                    [ UI.paddingEach { top = 1, bottom = -10, right = -10, left = -10 }
-                    , UI.spacing -5
-                    , centerX
+                , div
+                    [ css
+                        [ UI.paddingEach { top = UI.Small, bottom = UI.Small, right = UI.Small, left = UI.Small }
+                        , displayFlex
+                        , justifyContent center
+                        ]
                     ]
-                    [ Action.toElement <| Action.large <| Action.clickable { text = "Yes", icon = Icon.none, onClick = onPositive }
-                    , Action.toElement <| Action.large <| Action.clickable { text = "No", icon = Icon.none, onClick = onNegative }
+                    [ Action.toHtml <| Action.large <| Action.clickable { text = "Yes", icon = Icon.none, onClick = onPositive }
+                    , Action.toHtml <| Action.large <| Action.clickable { text = "No", icon = Icon.none, onClick = onNegative }
                     ]
                 ]
         }
 
 
-toElement : Dialog msg -> Element msg
-toElement dialog =
+toHtml : Dialog msg -> Html msg
+toHtml dialog =
     case dialog of
         NoDialog ->
-            E.none
+            text ""
 
         Modal (ConfirmationDialog { element, onPositive, onNegative, onClose }) ->
-            el
-                [ width fill
-                , height fill
-                , Background.transparentHeavyBlack
+            div
+                [ css
+                    [ width (pct 100)
+                    , height (pct 100)
+                    , Background.transparentHeavyBlack
+                    ]
                 , onClick onClose
                 ]
-                element
+                [ element ]
