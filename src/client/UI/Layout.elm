@@ -28,6 +28,7 @@ initialState =
         { searchText = ""
         , selectedItem = UI.Nav.NoSelection
         , dialog = Dialog.none
+        , topNavState = UI.Nav.Top.initialState
         }
 
 
@@ -35,6 +36,7 @@ type alias StateData msg =
     { searchText : String
     , selectedItem : SelectedItem
     , dialog : Dialog msg
+    , topNavState : UI.Nav.Top.State msg
     }
 
 
@@ -63,6 +65,9 @@ withNav { key, assets, title, content, categories, state, onStateChange } =
         (State stateData) =
             state
 
+        onTopNavStateChange topNavState cmd =
+            onStateChange (State { stateData | topNavState = topNavState }) cmd
+
         viewSideNav =
             div
                 [ css
@@ -87,7 +92,12 @@ withNav { key, assets, title, content, categories, state, onStateChange } =
                 [ categories
                     |> UI.Nav.Top.view (onLinkClick key state onStateChange) stateData.selectedItem
                     |> UI.Nav.Top.withSearch (UI.Parts.Search.view (onSearch state onStateChange) stateData.searchText)
-                    |> UI.Nav.Top.toHtml { assets = assets, onLinkClick = onLinkClick key state onStateChange }
+                    |> UI.Nav.Top.toHtml
+                        { key = key
+                        , assets = assets
+                        , onStateChange = onTopNavStateChange
+                        , state = stateData.topNavState
+                        }
                 ]
     in
     { title = title
