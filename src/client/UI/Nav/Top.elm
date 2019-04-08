@@ -5,6 +5,7 @@ module UI.Nav.Top exposing
     , withSearch
     )
 
+import Assets exposing (Assets)
 import Css exposing (..)
 import Css.Transitions as Transitions exposing (transition)
 import Entity.Category exposing (Category)
@@ -29,27 +30,44 @@ type TopNav msg
     | TopNavWithSearch (Search msg) (List (Html msg))
 
 
-toHtml : { logoUrl : String, onLinkClick : String -> msg } -> TopNav msg -> Html msg
-toHtml { logoUrl, onLinkClick } sideNav =
+toHtml : { assets : Assets, onLinkClick : String -> msg } -> TopNav msg -> Html msg
+toHtml { assets, onLinkClick } sideNav =
     div
         [ css
-            [ height (px 100)
-            , width (pct 100)
-            , Grid.display
-            , Grid.templateRows [ "auto" ]
+            [ width (pct 100)
             , backgroundColor (rgba 0 0 0 0.125)
+            , displayFlex
             , justifyContent center
             , alignItems center
+            , position relative
+            , Spacing.padding Spacing.Medium
+            , Spacing.marginBottom Spacing.Large
+            , boxShadow5 (px 0) (px 0) (px 10) (px 5) (rgba 0 0 0 0.25)
             ]
         ]
         (case sideNav of
             TopNav element ->
-                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick } :: []
+                Logo.text { assets = assets, homeUrl = Route.homeUrl, onLinkClick = onLinkClick } :: [ mobileMenu assets ]
 
             TopNavWithSearch search element ->
-                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick }
-                    :: []
+                Logo.text { assets = assets, homeUrl = Route.homeUrl, onLinkClick = onLinkClick }
+                    :: [ mobileMenu assets ]
         )
+
+
+mobileMenu : Assets -> Html msg
+mobileMenu assets =
+    img
+        [ HA.src assets.menuIcon
+        , HA.alt "Menu"
+        , css
+            [ Css.height (px 70)
+            , position absolute
+            , top (px 0)
+            , left (px 20)
+            ]
+        ]
+        []
 
 
 withSearch : Search msg -> TopNav msg -> TopNav msg

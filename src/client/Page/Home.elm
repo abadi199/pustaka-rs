@@ -8,6 +8,7 @@ module Page.Home exposing
     , view
     )
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Navigation as Nav
 import Cmd
@@ -29,10 +30,6 @@ import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
 import UI.Layout
 import UI.Nav
-import UI.Nav.Side
-import UI.Nav.Top
-import UI.Parts.Dialog as Dialog
-import UI.Parts.Search
 import UI.Poster as UI
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -49,7 +46,7 @@ type alias Model =
     , recentlyAddedPublications : Dict Int (ReloadableWebData () (List Publication.MetaData))
     , recentlyReadPublications : ReloadableWebData () (List Publication.MetaData)
     , covers : Dict Int (ReloadableWebData () Image)
-    , searchText : String
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -68,7 +65,7 @@ initialModel =
     , recentlyAddedPublications = Dict.empty
     , recentlyReadPublications = ReloadableData.NotAsked ()
     , covers = Dict.empty
-    , searchText = ""
+    , layoutState = UI.Layout.initialState
     }
 
 
@@ -86,17 +83,26 @@ type Msg
     | GetCategoriesCompleted (ReloadableWebData () (List Category))
     | GetRecentlyAddedPublicationCompleted Int (ReloadableWebData () (List Publication.MetaData))
     | GetCategoryCompleted (ReloadableWebData Int Category)
+    | LayoutStateChanged (UI.Layout.State Msg) (Cmd Msg)
 
 
 
 -- VIEW
 
 
-view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view key logoUrl categories model =
+view :
+    { a
+        | key : Nav.Key
+        , assets : Assets
+        , favoriteCategories : ReloadableWebData () (List Category)
+    }
+    -> Model
+    -> Browser.Document Msg
+view { key, assets, favoriteCategories } model =
     UI.Layout.withNav
-        { title = "Pustaka - Home"
-        , logoUrl = logoUrl
+        { key = key
+        , title = "Pustaka - Home"
+        , assets = assets
         , content =
             case model.selectedCategoryId of
                 Nothing ->
@@ -104,12 +110,9 @@ view key logoUrl categories model =
 
                 Just _ ->
                     viewPerCategory model
-        , dialog = Dialog.none
-        , categories = categories
-        , onLinkClick = LinkClicked
-        , selectedItem = selectedItem model.selectedCategoryId
-        , searchText = model.searchText
-        , onSearch = always NoOp
+        , categories = favoriteCategories
+        , state = model.layoutState
+        , onStateChange = LayoutStateChanged
         }
 
 
@@ -349,6 +352,9 @@ update key msg model =
 
         GetCategoryCompleted data ->
             ( { model | selectedCategoryId = Just data }, Cmd.none )
+
+        LayoutStateChanged layoutState cmd ->
+            ( { model | layoutState = layoutState }, cmd )
 
 
 downloadCovers : ReloadableWebData a (List Publication.MetaData) -> Cmd Msg

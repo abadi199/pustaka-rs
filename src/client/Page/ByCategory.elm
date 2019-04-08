@@ -6,22 +6,16 @@ module Page.ByCategory exposing
     , view
     )
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Navigation as Nav
-import Css exposing (..)
 import Entity.Category exposing (Category)
 import Html.Styled as H exposing (..)
-import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableWebData)
 import Route
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
-import UI.Nav
-import UI.Nav.Side
-import UI.Nav.Top
-import UI.Parts.Dialog as Dialog
-import UI.Parts.Search
 import UI.ReloadableData
 
 
@@ -32,7 +26,7 @@ import UI.ReloadableData
 type alias Model =
     { categories : ReloadableWebData () (List Category)
     , selectedCategoryId : Maybe Int
-    , searchText : String
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -40,7 +34,7 @@ init : Maybe Int -> ( Model, Cmd Msg )
 init selectedCategoryId =
     ( { categories = ReloadableData.Loading ()
       , selectedCategoryId = selectedCategoryId
-      , searchText = ""
+      , layoutState = UI.Layout.initialState
       }
     , Entity.Category.list LoadCategoryCompleted
     )
@@ -54,24 +48,23 @@ type Msg
     = NoOp
     | MenuItemClicked String
     | LoadCategoryCompleted (ReloadableWebData () (List Category))
+    | LayoutStateChanged (UI.Layout.State Msg) (Cmd Msg)
 
 
 
 -- VIEW
 
 
-view : Nav.Key -> String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view key logoUrl categories model =
+view : { a | key : Nav.Key, assets : Assets, favoriteCategories : ReloadableWebData () (List Category) } -> Model -> Browser.Document Msg
+view { key, assets, favoriteCategories } model =
     UI.Layout.withNav
-        { title = "Pustaka - Browse By Category"
-        , logoUrl = logoUrl
+        { key = key
+        , title = "Pustaka - Browse By Category"
+        , assets = assets
         , content = categorySliderView key model
-        , dialog = Dialog.none
-        , categories = categories
-        , onLinkClick = MenuItemClicked
-        , selectedItem = UI.Nav.BrowseByCategory
-        , searchText = model.searchText
-        , onSearch = always NoOp
+        , categories = favoriteCategories
+        , state = model.layoutState
+        , onStateChange = LayoutStateChanged
         }
 
 
@@ -147,3 +140,6 @@ update key msg model =
 
         LoadCategoryCompleted categories ->
             ( { model | categories = categories }, Cmd.none )
+
+        LayoutStateChanged layoutState cmd ->
+            ( { model | layoutState = layoutState }, cmd )

@@ -6,6 +6,7 @@ module Page.Publication.Edit exposing
     , view
     )
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Navigation as Nav
 import Css exposing (..)
@@ -45,21 +46,21 @@ import UI.Spacing as UI
 
 
 type alias Model =
-    { searchText : String
-    , publication : ReloadableWebData Int Publication.MetaData
+    { publication : ReloadableWebData Int Publication.MetaData
     , thumbnailHover : Bool
     , deleteConfirmation : Dialog Msg
     , cover : ReloadableWebData () Image
+    , layoutState : UI.Layout.State Msg
     }
 
 
 init : Int -> ( Model, Cmd Msg )
 init publicationId =
-    ( { searchText = ""
-      , publication = ReloadableData.Loading publicationId
+    ( { publication = ReloadableData.Loading publicationId
       , thumbnailHover = False
       , deleteConfirmation = Dialog.none
       , cover = ReloadableData.NotAsked ()
+      , layoutState = UI.Layout.initialState
       }
     , Publication.get { publicationId = publicationId, msg = GetPublicationCompleted }
     )
@@ -87,6 +88,7 @@ type Msg
     | DeleteConfirmed
     | DeleteCancelled
     | CoverDownloaded (ReloadableWebData () Image)
+    | LayoutStateChanged (UI.Layout.State Msg) (Cmd Msg)
 
 
 type Field
@@ -98,11 +100,19 @@ type Field
 -- VIEW
 
 
-view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view logoUrl categories model =
+view :
+    { a
+        | key : Nav.Key
+        , assets : Assets
+        , favoriteCategories : ReloadableWebData () (List Category)
+    }
+    -> Model
+    -> Browser.Document Msg
+view { key, assets, favoriteCategories } model =
     UI.Layout.withNav
-        { title = "Pustaka - Edit Publication"
-        , logoUrl = logoUrl
+        { key = key
+        , title = "Pustaka - Edit Publication"
+        , assets = assets
         , content =
             UI.ReloadableData.view
                 (\publication ->
@@ -113,12 +123,9 @@ view logoUrl categories model =
                         }
                 )
                 model.publication
-        , dialog = model.deleteConfirmation
-        , categories = categories
-        , onLinkClick = LinkClicked
-        , selectedItem = UI.Nav.NoSelection
-        , onSearch = always NoOp
-        , searchText = model.searchText
+        , categories = favoriteCategories
+        , state = model.layoutState
+        , onStateChange = LayoutStateChanged
         }
 
 
@@ -408,9 +415,8 @@ update key msg model =
         CoverDownloaded data ->
             ( { model | cover = data }, Cmd.none )
 
-
-refreshThumbnail model _ =
-    ( model, Cmd.none )
+        LayoutStateChanged layoutState cmd ->
+            ( { model | layoutState = layoutState }, cmd )
 
 
 uploadFile : File -> Model -> ( Model, Cmd Msg )

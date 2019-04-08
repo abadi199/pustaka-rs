@@ -7,6 +7,7 @@ module Page.Publication exposing
     , view
     )
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Navigation as Nav
 import Css exposing (..)
@@ -19,25 +20,15 @@ import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
-import Set
 import String
-import Task
-import Tree exposing (Tree)
 import UI.Action as Action
-import UI.Background as Background
 import UI.Card as Card
 import UI.Css.Grid as Grid
-import UI.Heading as UI
 import UI.Icon as Icon
 import UI.Layout
 import UI.Link as UI
-import UI.Nav
-import UI.Nav.Side
-import UI.Nav.Top
 import UI.Parts.BreadCrumb as UI
-import UI.Parts.Dialog as Dialog
 import UI.Parts.Information as Information
-import UI.Parts.Search
 import UI.Poster as UI
 import UI.ReloadableData
 import UI.Spacing as UI
@@ -50,7 +41,7 @@ import UI.Spacing as UI
 type alias Model =
     { publication : ReloadableWebData Int Publication.MetaData
     , cover : ReloadableWebData () Image
-    , searchText : String
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -65,7 +56,7 @@ initialModel : Int -> Model
 initialModel publicationId =
     { publication = ReloadableData.Loading publicationId
     , cover = ReloadableData.NotAsked ()
-    , searchText = ""
+    , layoutState = UI.Layout.initialState
     }
 
 
@@ -79,27 +70,33 @@ type Msg
     | PublicationClicked Int
     | CoverLoaded (ReloadableWebData () Image)
     | NoOp
+    | LayoutStateChanged (UI.Layout.State Msg) (Cmd Msg)
 
 
 
 -- VIEW
 
 
-view : String -> ReloadableWebData () (List Category) -> Model -> Browser.Document Msg
-view logoUrl categoryData model =
+view :
+    { a
+        | key : Nav.Key
+        , assets : Assets
+        , favoriteCategories : ReloadableWebData () (List Category)
+    }
+    -> Model
+    -> Browser.Document Msg
+view { key, assets, favoriteCategories } model =
     UI.Layout.withNav
-        { title = "Pustaka - Publication"
-        , logoUrl = logoUrl
+        { key = key
+        , title = "Pustaka - Publication"
+        , assets = assets
         , content =
             UI.ReloadableData.view
                 (viewPublication model)
                 model.publication
-        , dialog = Dialog.none
-        , categories = categoryData
-        , onLinkClick = LinkClicked
-        , selectedItem = UI.Nav.NoSelection
-        , onSearch = always NoOp
-        , searchText = model.searchText
+        , categories = favoriteCategories
+        , state = model.layoutState
+        , onStateChange = LayoutStateChanged
         }
 
 
@@ -192,6 +189,9 @@ update key msg model =
 
         CoverLoaded data ->
             ( { model | cover = data }, Cmd.none )
+
+        LayoutStateChanged layoutState cmd ->
+            ( { model | layoutState = layoutState }, cmd )
 
 
 loadPoster : ReloadableWebData a Publication.MetaData -> Model -> ( Model, Cmd Msg )

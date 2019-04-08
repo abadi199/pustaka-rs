@@ -5,6 +5,7 @@ module UI.Nav.Side exposing
     , withSearch
     )
 
+import Assets exposing (Assets)
 import Css exposing (..)
 import Css.Transitions as Transitions exposing (transition)
 import Entity.Category exposing (Category)
@@ -29,8 +30,8 @@ type SideNav msg
     | SideNavWithSearch (Search msg) (List (Html msg))
 
 
-toHtml : { logoUrl : String, onLinkClick : String -> msg } -> SideNav msg -> Html msg
-toHtml { logoUrl, onLinkClick } sideNav =
+toHtml : { assets : Assets, onLinkClick : String -> msg } -> SideNav msg -> Html msg
+toHtml { assets, onLinkClick } sideNav =
     div
         [ css
             [ height (pct 100)
@@ -44,10 +45,10 @@ toHtml { logoUrl, onLinkClick } sideNav =
         ]
         (case sideNav of
             SideNav element ->
-                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick } :: element
+                Logo.full { assets = assets, homeUrl = Route.homeUrl, onLinkClick = onLinkClick } :: element
 
             SideNavWithSearch search element ->
-                Logo.full { logoUrl = logoUrl, homeUrl = Route.homeUrl, onLinkClick = onLinkClick }
+                Logo.full { assets = assets, homeUrl = Route.homeUrl, onLinkClick = onLinkClick }
                     :: element
         )
 

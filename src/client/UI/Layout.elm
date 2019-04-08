@@ -1,13 +1,13 @@
-module UI.Layout exposing (withNav)
+module UI.Layout exposing (State, initialState, withNav)
 
+import Assets exposing (Assets)
 import Browser
+import Browser.Navigation as Nav
 import Css exposing (..)
-import Css.Global as Global exposing (global)
 import Entity.Category as Category exposing (Category)
 import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
 import ReloadableData exposing (ReloadableWebData)
-import UI.Css.Grid as Grid
 import UI.Css.MediaQuery as MediaQuery
 import UI.Nav exposing (SelectedItem)
 import UI.Nav.Side exposing (SideNav)
@@ -18,20 +18,51 @@ import UI.Reset exposing (reset)
 import UI.Spacing as Spacing
 
 
-withNav :
-    { title : String
-    , logoUrl : String
-    , content : Html msg
-    , dialog : Dialog msg
-    , categories : ReloadableWebData () (List Category)
-    , onLinkClick : String -> msg
+type State msg
+    = State (StateData msg)
+
+
+initialState : State msg
+initialState =
+    State
+        { searchText = ""
+        , selectedItem = UI.Nav.NoSelection
+        , dialog = Dialog.none
+        }
+
+
+type alias StateData msg =
+    { searchText : String
     , selectedItem : SelectedItem
-    , searchText : String
-    , onSearch : String -> msg
+    , dialog : Dialog msg
+    }
+
+
+onLinkClick : Nav.Key -> State msg -> (State msg -> Cmd msg -> msg) -> (String -> msg)
+onLinkClick key (State stateData) onStateChange =
+    \url -> onStateChange (State stateData) (Nav.pushUrl key url)
+
+
+onSearch : State msg -> (State msg -> Cmd msg -> msg) -> (String -> msg)
+onSearch (State stateData) onStateChange =
+    \searchText -> onStateChange (State { stateData | searchText = searchText }) Cmd.none
+
+
+withNav :
+    { key : Nav.Key
+    , title : String
+    , assets : Assets
+    , content : Html msg
+    , categories : ReloadableWebData () (List Category)
+    , state : State msg
+    , onStateChange : State msg -> Cmd msg -> msg
     }
     -> Browser.Document msg
-withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem, searchText, onSearch } =
+withNav { key, assets, title, content, categories, state, onStateChange } =
     let
+        (State stateData) =
+            state
+
         viewSideNav =
             div
                 [ css
@@ -40,9 +71,9 @@ withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem
                     ]
                 ]
                 [ categories
-                    |> UI.Nav.Side.view onLinkClick selectedItem
-                    |> UI.Nav.Side.withSearch (UI.Parts.Search.view onSearch searchText)
-                    |> UI.Nav.Side.toHtml { logoUrl = logoUrl, onLinkClick = onLinkClick }
+                    |> UI.Nav.Side.view (onLinkClick key state onStateChange) stateData.selectedItem
+                    |> UI.Nav.Side.withSearch (UI.Parts.Search.view (onSearch state onStateChange) stateData.searchText)
+                    |> UI.Nav.Side.toHtml { assets = assets, onLinkClick = onLinkClick key state onStateChange }
                 ]
 
         viewTopNav =
@@ -54,9 +85,9 @@ withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem
                     ]
                 ]
                 [ categories
-                    |> UI.Nav.Top.view onLinkClick selectedItem
-                    |> UI.Nav.Top.withSearch (UI.Parts.Search.view onSearch searchText)
-                    |> UI.Nav.Top.toHtml { logoUrl = logoUrl, onLinkClick = onLinkClick }
+                    |> UI.Nav.Top.view (onLinkClick key state onStateChange) stateData.selectedItem
+                    |> UI.Nav.Top.withSearch (UI.Parts.Search.view (onSearch state onStateChange) stateData.searchText)
+                    |> UI.Nav.Top.toHtml { assets = assets, onLinkClick = onLinkClick key state onStateChange }
                 ]
     in
     { title = title
@@ -72,7 +103,7 @@ withNav { title, logoUrl, content, dialog, categories, onLinkClick, selectedItem
                     , overflowX hidden
                     ]
                 ]
-                [ viewDialog dialog
+                [ viewDialog stateData.dialog
                 , div
                     [ css
                         [ width (pct 100)

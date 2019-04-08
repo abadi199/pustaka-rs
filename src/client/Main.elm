@@ -1,15 +1,13 @@
 module Main exposing (main)
 
+import Assets exposing (Assets)
 import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
-import Css
 import Entity.Category exposing (Category)
 import Html
 import Html.Styled as H exposing (..)
-import Html.Styled.Attributes as HA exposing (css)
-import Html.Styled.Events as HE
 import Page.ByCategory as ByCategoryPage
 import Page.Home as HomePage
 import Page.Problem as ProblemPage
@@ -20,20 +18,11 @@ import ReloadableData exposing (ReloadableWebData)
 import Return
 import Task
 import UI.Layout
-import UI.Nav
-import UI.Nav.Side
-import UI.Nav.Top
-import UI.Parts.Dialog as Dialog
-import UI.Parts.Search
 import Url
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, top)
 
 
-type alias Flags =
-    { logo : String }
-
-
-main : Program Flags Model Msg
+main : Program Assets Model Msg
 main =
     Browser.application
         { init = init
@@ -54,8 +43,8 @@ type alias Model =
     , page : Page
     , favoriteCategories : ReloadableWebData () (List Category)
     , viewport : Viewport
-    , searchText : String
-    , flags : Flags
+    , assets : Assets
+    , layoutState : UI.Layout.State Msg
     }
 
 
@@ -69,8 +58,8 @@ type Page
     | Problem String
 
 
-init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
+init : Assets -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init assets url key =
     let
         ( model, cmd ) =
             stepUrl url
@@ -81,8 +70,8 @@ init flags url key =
                     { scene = { width = 0, height = 0 }
                     , viewport = { x = 0, y = 0, width = 0, height = 0 }
                     }
-                , searchText = ""
-                , flags = flags
+                , assets = assets
+                , layoutState = UI.Layout.initialState
                 }
     in
     ( model
@@ -142,11 +131,11 @@ view : Model -> Browser.Document Msg
 view model =
     case model.page of
         Home homeModel ->
-            HomePage.view model.key model.flags.logo model.favoriteCategories homeModel
+            HomePage.view model homeModel
                 |> mapPage (PageMsg << HomeMsg)
 
         Publication publicationModel ->
-            PublicationPage.view model.flags.logo model.favoriteCategories publicationModel
+            PublicationPage.view model publicationModel
                 |> mapPage (PageMsg << PublicationMsg)
 
         Read readModel ->
@@ -158,23 +147,21 @@ view model =
 
         ByMediaType ->
             UI.Layout.withNav
-                { title = "Pustaka - Browse By Media Type"
-                , logoUrl = model.flags.logo
-                , content = text ""
-                , dialog = Dialog.none
+                { key = model.key
+                , title = "Pustaka - Browse By Media Type"
+                , assets = model.assets
+                , content = text "WIP"
                 , categories = model.favoriteCategories
-                , onLinkClick = always NoOp
-                , selectedItem = UI.Nav.BrowseByMediaType
-                , searchText = model.searchText
-                , onSearch = always NoOp
+                , state = model.layoutState
+                , onStateChange = \_ _ -> NoOp
                 }
 
         ByCategory byCategoryModel ->
-            ByCategoryPage.view model.key model.flags.logo model.favoriteCategories byCategoryModel
+            ByCategoryPage.view model byCategoryModel
                 |> mapPage (PageMsg << ByCategoryMsg)
 
         PublicationEdit pageModel ->
-            PublicationEditPage.view model.flags.logo model.favoriteCategories pageModel
+            PublicationEditPage.view model pageModel
                 |> mapPage (PageMsg << PublicationEditMsg)
 
 
