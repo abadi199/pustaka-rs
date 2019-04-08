@@ -13,6 +13,7 @@ module Reader.Comic exposing
     , updateProgress
     )
 
+import Browser.Dom exposing (Viewport)
 import Browser.Events
 import Browser.Navigation as Nav
 import Cmd
@@ -115,8 +116,8 @@ header { backUrl } publication model =
         }
 
 
-reader : Publication.Data -> Model -> Html Msg
-reader _ model =
+reader : { viewport : Viewport, publication : Publication.Data, model : Model } -> Html Msg
+reader { viewport, publication, model } =
     div
         [ css
             [ width (pct 100)

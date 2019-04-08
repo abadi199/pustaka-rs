@@ -145,7 +145,12 @@ view viewport model =
                                         publication
                                         comicModel
                                 , slider = Comic.slider comicModel
-                                , reader = Comic.reader publication comicModel
+                                , reader =
+                                    Comic.reader
+                                        { viewport = viewport
+                                        , publication = publication
+                                        , model = comicModel
+                                        }
                                 , previous = Comic.previous
                                 , next = Comic.next
                                 }
