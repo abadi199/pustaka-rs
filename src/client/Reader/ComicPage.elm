@@ -2,26 +2,29 @@ module Reader.ComicPage exposing
     ( ComicPage(..)
     , calculatePageNumber
     , empty
-    , map
+    , set
     , toLeftPage
     , toMaybe
     , toPageNumber
     , toRightPage
     )
 
+import Entity.Image exposing (Image, ReloadableImage)
+import ReloadableData exposing (ReloadableWebData)
 
-type ComicPage a
+
+type ComicPage
     = Empty
-    | Page Int a
+    | Page Int ReloadableImage
     | OutOfBound
 
 
-empty : ComicPage a
+empty : ComicPage
 empty =
     Empty
 
 
-toMaybe : ComicPage a -> Maybe a
+toMaybe : ComicPage -> Maybe ReloadableImage
 toMaybe page =
     case page of
         Page _ a ->
@@ -34,7 +37,7 @@ toMaybe page =
             Nothing
 
 
-toPageNumber : ComicPage a -> Maybe Int
+toPageNumber : ComicPage -> Maybe Int
 toPageNumber page =
     case page of
         Page pageNumber _ ->
@@ -54,7 +57,7 @@ calculatePageNumber { totalPages, percentage } =
         |> round
 
 
-toLeftPage : a -> (a -> a) -> { totalPages : Int, percentage : Float } -> (ComicPage a -> ComicPage a)
+toLeftPage : ReloadableImage -> (ReloadableImage -> ReloadableImage) -> { totalPages : Int, percentage : Float } -> (ComicPage -> ComicPage)
 toLeftPage default f ({ totalPages, percentage } as args) =
     let
         page =
@@ -84,7 +87,7 @@ toLeftPage default f ({ totalPages, percentage } as args) =
                 |> (\a -> Page page (f a))
 
 
-toRightPage : a -> (a -> a) -> { totalPages : Int, percentage : Float } -> (ComicPage a -> ComicPage a)
+toRightPage : ReloadableImage -> (ReloadableImage -> ReloadableImage) -> { totalPages : Int, percentage : Float } -> (ComicPage -> ComicPage)
 toRightPage default f ({ totalPages, percentage } as args) =
     let
         page =
@@ -114,14 +117,14 @@ toRightPage default f ({ totalPages, percentage } as args) =
                 |> (\a -> Page (page + 1) (f a))
 
 
-map : (a -> b) -> ComicPage a -> ComicPage b
-map f page =
+set : ReloadableImage -> ComicPage -> ComicPage
+set value page =
     case page of
         Empty ->
             Empty
 
         Page i a ->
-            Page i (f a)
+            Page i value
 
         OutOfBound ->
             OutOfBound

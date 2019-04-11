@@ -1,5 +1,6 @@
 module Entity.Image exposing
     ( Image(..)
+    , ReloadableImage
     , fromBase64
     , fromBytes
     , get
@@ -13,6 +14,10 @@ import Bytes.Decode
 import Json.Decode as JD
 import ReloadableData exposing (ReloadableWebData)
 import ReloadableData.Http
+
+
+type alias ReloadableImage =
+    ReloadableWebData () Image
 
 
 type Image

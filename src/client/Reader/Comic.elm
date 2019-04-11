@@ -18,7 +18,7 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Cmd
 import Css exposing (..)
-import Entity.Image as Image exposing (Image)
+import Entity.Image as Image exposing (Image, ReloadableImage)
 import Entity.Progress as Progress exposing (Progress)
 import Entity.Publication as Publication
 import Html.Styled as H exposing (..)
@@ -27,7 +27,6 @@ import Html.Styled.Events as HE exposing (onClick)
 import Keyboard
 import Reader.ComicPage as ComicPage exposing (ComicPage)
 import ReloadableData exposing (ReloadableWebData)
-import UI.Background as Background
 import UI.Css.Grid as Grid
 import UI.Error
 import UI.Events
@@ -46,23 +45,27 @@ import UI.Spacing as Spacing
 type alias Model =
     { overlayVisibility : Header.Visibility
     , progress : ReloadableWebData Int Progress
-    , leftPage : ComicPage (ReloadableWebData () Image)
-    , rightPage : ComicPage (ReloadableWebData () Image)
+    , pageLayout : PageLayout
+
+    -- , leftPage : ComicPage (ReloadableWebData () Image)
+    -- , rightPage : ComicPage (ReloadableWebData () Image)
     }
 
 
-init publication =
-    ( initialModel publication
+init viewport publication =
+    ( initialModel viewport publication
     , Publication.getProgress { publicationId = publication.id, msg = GetProgressCompleted }
     )
 
 
-initialModel : Publication.Data -> Model
-initialModel publication =
+initialModel : Viewport -> Publication.Data -> Model
+initialModel viewport publication =
     { overlayVisibility = Header.visible counter
     , progress = ReloadableData.Loading publication.id
-    , leftPage = ComicPage.empty
-    , rightPage = ComicPage.empty
+    , pageLayout = calculatePageLayout viewport
+
+    -- , leftPage = ComicPage.empty
+    -- , rightPage = ComicPage.empty
     }
 
 
@@ -82,8 +85,8 @@ type Msg
     | NextPage
     | PreviousPage
     | SliderClicked Float
-    | LeftImageLoaded (ReloadableWebData () Image)
-    | RightImageLoaded (ReloadableWebData () Image)
+    | LeftImageLoaded ReloadableImage
+    | RightImageLoaded ReloadableImage
     | Tick Float
     | GetProgressCompleted (ReloadableWebData Int Float)
 
@@ -116,8 +119,86 @@ header { backUrl } publication model =
         }
 
 
+type PageLayout
+    = SinglePageLayout ComicPage
+    | DoublePagesLayout { left : ComicPage, right : ComicPage }
+
+
+calculatePageLayout : Viewport -> PageLayout
+calculatePageLayout viewport =
+    if viewport.viewport.width >= viewport.viewport.height then
+        DoublePagesLayout { left = ComicPage.empty, right = ComicPage.empty }
+
+    else
+        SinglePageLayout ComicPage.empty
+
+
+setLeftPage : ReloadableImage -> PageLayout -> PageLayout
+setLeftPage data pageLayout =
+    case pageLayout of
+        DoublePagesLayout pages ->
+            DoublePagesLayout { pages | left = ComicPage.set data pages.left }
+
+        SinglePageLayout _ ->
+            pageLayout
+
+
+setRightPage : ReloadableImage -> PageLayout -> PageLayout
+setRightPage data pageLayout =
+    case pageLayout of
+        DoublePagesLayout pages ->
+            DoublePagesLayout { pages | right = ComicPage.set data pages.right }
+
+        SinglePageLayout _ ->
+            pageLayout
+
+
+setPage : ComicPage -> PageLayout -> PageLayout
+setPage page pageLayout =
+    case pageLayout of
+        SinglePageLayout _ ->
+            SinglePageLayout page
+
+        DoublePagesLayout _ ->
+            pageLayout
+
+
 reader : { viewport : Viewport, publication : Publication.Data, model : Model } -> Html Msg
-reader { viewport, publication, model } =
+reader ({ viewport, publication, model } as args) =
+    case calculatePageLayout viewport of
+        SinglePageLayout page ->
+            singlePageReader args page
+
+        DoublePagesLayout pages ->
+            dualPagesReader args pages
+
+
+singlePageReader : { viewport : Viewport, publication : Publication.Data, model : Model } -> ComicPage -> Html Msg
+singlePageReader ({ publication, model } as args) page =
+    div
+        [ css
+            [ width (pct 100)
+            , height (pct 100)
+            , Grid.display
+            , Grid.templateColumns [ "100%" ]
+            , overflowX auto
+            ]
+        , UI.Events.onMouseMove MouseMoved
+        ]
+        [ viewPage
+            (css
+                [ displayFlex
+                , justifyContent flexEnd
+                , position relative
+                , height (pct 100)
+                ]
+            )
+            page
+        ]
+
+
+dualPagesReader : { viewport : Viewport, publication : Publication.Data, model : Model } -> { left : ComicPage, right : ComicPage } -> Html Msg
+dualPagesReader { publication, model } { left, right } =
     div
         [ css
             [ width (pct 100)
@@ -137,10 +218,10 @@ reader { viewport, publication, model } =
                 , Grid.area "left"
                 ]
             )
-            model.leftPage
+            left
         , viewPage
             (css
-                [ textAlign left
+                [ textAlign Css.left
                 , displayFlex
                 , justifyContent flexStart
                 , position relative
@@ -148,11 +229,11 @@ reader { viewport, publication, model } =
                 , Grid.area "right"
                 ]
             )
-            model.rightPage
+            right
         ]
 
 
-viewPage : Attribute Msg -> ComicPage (ReloadableWebData () Image) -> Html Msg
+viewPage : Attribute Msg -> ComicPage -> Html Msg
 viewPage alignment page =
     case page of
         ComicPage.Empty ->
@@ -273,14 +354,18 @@ imageUrl pubId pageNum =
 -- UPDATE
 
 
-update : Nav.Key -> Msg -> Model -> Publication.Data -> ( Model, Cmd Msg )
-update _ msg model publication =
+update : Nav.Key -> Viewport -> Msg -> Model -> Publication.Data -> ( Model, Cmd Msg )
+update _ viewport msg model publication =
+    let
+        pageLayout =
+            calculatePageLayout viewport
+    in
     case msg of
         LeftImageLoaded data ->
-            ( { model | leftPage = ComicPage.map (always data) model.leftPage }, Cmd.none )
+            ( { model | pageLayout = setLeftPage data model.pageLayout }, Cmd.none )
 
         RightImageLoaded data ->
-            ( { model | rightPage = ComicPage.map (always data) model.rightPage }, Cmd.none )
+            ( { model | pageLayout = setRightPage data model.pageLayout }, Cmd.none )
 
         Tick delta ->
             model.overlayVisibility
@@ -303,13 +388,13 @@ update _ msg model publication =
 
         NextPage ->
             model.progress
-                |> calculateNextPercentage (+) publication
+                |> calculateNextPercentage (+) pageLayout publication
                 |> updateProgress publication model
                 |> Cmd.alsoDo (submitProgress publication)
 
         PreviousPage ->
             model.progress
-                |> calculateNextPercentage (-) publication
+                |> calculateNextPercentage (-) pageLayout publication
                 |> updateProgress publication model
                 |> Cmd.alsoDo (submitProgress publication)
 
@@ -327,77 +412,95 @@ updateProgress : Publication.Data -> Model -> ReloadableWebData Int Float -> ( M
 updateProgress publication model data =
     case data of
         ReloadableData.Success _ unclampedPercentage ->
-            let
-                percentage =
-                    unclampedPercentage |> clamp 0 100
+            case model.pageLayout of
+                SinglePageLayout comicPage ->
+                    Debug.todo "singlepagelayout"
 
-                leftPage =
-                    model.leftPage
-                        |> ComicPage.toLeftPage (ReloadableData.Loading ())
-                            ReloadableData.loading
-                            { totalPages = publication.totalPages, percentage = percentage }
-
-                rightPage =
-                    model.rightPage
-                        |> ComicPage.toRightPage (ReloadableData.Loading ())
-                            ReloadableData.loading
-                            { totalPages = publication.totalPages, percentage = percentage }
-
-                progress =
-                    ReloadableData.Success publication.id (Progress.percentage percentage)
-
-                updatedModel =
-                    { model
-                        | leftPage = leftPage
-                        , rightPage = rightPage
-                        , progress = progress
-                    }
-
-                cmd =
-                    Cmd.batch
-                        [ leftPage
-                            |> ComicPage.toPageNumber
-                            |> Maybe.map
-                                (\pageNumber ->
-                                    Publication.downloadPage
-                                        { publicationId = publication.id
-                                        , page = pageNumber
-                                        , msg = LeftImageLoaded
-                                        }
-                                )
-                            |> Maybe.withDefault Cmd.none
-                        , rightPage
-                            |> ComicPage.toPageNumber
-                            |> Maybe.map
-                                (\pageNumber ->
-                                    Publication.downloadPage
-                                        { publicationId = publication.id
-                                        , page = pageNumber
-                                        , msg = RightImageLoaded
-                                        }
-                                )
-                            |> Maybe.withDefault Cmd.none
-                        ]
-            in
-            ( updatedModel, cmd )
+                DoublePagesLayout pages ->
+                    updateDoublePagesProgress publication data unclampedPercentage pages model
 
         _ ->
             ( model, Cmd.none )
 
 
+updateDoublePagesProgress : Publication.Data -> ReloadableWebData Int Float -> Float -> { left : ComicPage, right : ComicPage } -> Model -> ( Model, Cmd Msg )
+updateDoublePagesProgress publication data unclampedPercentage { left, right } model =
+    let
+        percentage =
+            unclampedPercentage |> clamp 0 100
+
+        leftPage =
+            left
+                |> ComicPage.toLeftPage (ReloadableData.Loading ())
+                    ReloadableData.loading
+                    { totalPages = publication.totalPages, percentage = percentage }
+
+        rightPage =
+            right
+                |> ComicPage.toRightPage (ReloadableData.Loading ())
+                    ReloadableData.loading
+                    { totalPages = publication.totalPages, percentage = percentage }
+
+        progress =
+            ReloadableData.Success publication.id (Progress.percentage percentage)
+
+        updatedModel =
+            { model
+                | progress = progress
+                , pageLayout = DoublePagesLayout { left = leftPage, right = rightPage }
+            }
+
+        cmd =
+            Cmd.batch
+                [ leftPage
+                    |> ComicPage.toPageNumber
+                    |> Maybe.map
+                        (\pageNumber ->
+                            Publication.downloadPage
+                                { publicationId = publication.id
+                                , page = pageNumber
+                                , msg = LeftImageLoaded
+                                }
+                        )
+                    |> Maybe.withDefault Cmd.none
+                , rightPage
+                    |> ComicPage.toPageNumber
+                    |> Maybe.map
+                        (\pageNumber ->
+                            Publication.downloadPage
+                                { publicationId = publication.id
+                                , page = pageNumber
+                                , msg = RightImageLoaded
+                                }
+                        )
+                    |> Maybe.withDefault Cmd.none
+                ]
+    in
+    ( updatedModel, cmd )
+
+
 calculateNextPercentage :
     (Float -> Float -> Float)
+    -> PageLayout
     -> Publication.Data
     -> ReloadableWebData Int Progress
     -> ReloadableWebData Int Float
-calculateNextPercentage operator publication progress =
+calculateNextPercentage operator pageLayout publication progress =
     let
         delta =
             100 / toFloat (publication.totalPages - 1)
+
+        multiplier =
+            case pageLayout of
+                SinglePageLayout _ ->
+                    1
+
+                DoublePagesLayout _ ->
+                    2
     in
     progress
         |> ReloadableData.map Progress.toFloat
-        |> ReloadableData.map (\float -> operator float (delta * 2))
+        |> ReloadableData.map (\float -> operator float (delta * multiplier))
 
 
 submitProgress : Publication.Data -> Model -> Cmd Msg

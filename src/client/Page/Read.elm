@@ -246,8 +246,8 @@ layout tagger { header, slider, reader, previous, next } =
 -- UPDATE
 
 
-update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
-update key msg model =
+update : Nav.Key -> Viewport -> Msg -> Model -> ( Model, Cmd Msg )
+update key viewport msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
@@ -273,7 +273,7 @@ update key msg model =
             model.publication
                 |> ReloadableData.toMaybe
                 |> Maybe.andThen toComic
-                |> Maybe.map (updateComic key comicMsg model)
+                |> Maybe.map (updateComic key viewport comicMsg model)
                 |> Maybe.withDefault ( model, Cmd.none )
 
 
@@ -288,11 +288,11 @@ updateEpub key epubMsg model ( publication, epubModel ) =
     )
 
 
-updateComic : Nav.Key -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model ) -> ( Model, Cmd Msg )
-updateComic key comicMsg model ( publication, comicModel ) =
+updateComic : Nav.Key -> Viewport -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model ) -> ( Model, Cmd Msg )
+updateComic key viewport comicMsg model ( publication, comicModel ) =
     let
         ( updatedComicModel, comicCmd ) =
-            Comic.update key comicMsg comicModel publication
+            Comic.update key viewport comicMsg comicModel publication
     in
     ( { model
         | publication =
