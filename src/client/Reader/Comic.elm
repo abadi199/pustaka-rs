@@ -87,6 +87,7 @@ type Msg
     | SliderClicked Float
     | LeftImageLoaded ReloadableImage
     | RightImageLoaded ReloadableImage
+    | SingleImageLoaded ReloadableImage
     | Tick Float
     | GetProgressCompleted (ReloadableWebData Int Float)
 
@@ -153,28 +154,28 @@ setRightPage data pageLayout =
             pageLayout
 
 
-setPage : ComicPage -> PageLayout -> PageLayout
-setPage page pageLayout =
+setSinglePage : ReloadableImage -> PageLayout -> PageLayout
+setSinglePage data pageLayout =
     case pageLayout of
-        SinglePageLayout _ ->
-            SinglePageLayout page
-
         DoublePagesLayout _ ->
             pageLayout
 
+        SinglePageLayout page ->
+            SinglePageLayout (ComicPage.set data page)
+
 
 reader : { viewport : Viewport, publication : Publication.Data, model : Model } -> Html Msg
-reader ({ viewport, publication, model } as args) =
-    case calculatePageLayout viewport of
+reader ({ model } as args) =
+    case model.pageLayout of
         SinglePageLayout page ->
-            singlePageReader args page
+            singlePageReader model.pageLayout page
 
         DoublePagesLayout pages ->
-            dualPagesReader args pages
+            dualPagesReader model.pageLayout pages
 
 
-singlePageReader : { viewport : Viewport, publication : Publication.Data, model : Model } -> ComicPage -> Html Msg
-singlePageReader ({ publication, model } as args) page =
+singlePageReader : PageLayout -> ComicPage -> Html Msg
+singlePageReader pageLayout page =
     div
         [ css
             [ width (pct 100)
@@ -188,17 +189,20 @@ singlePageReader ({ publication, model } as args) page =
         [ viewPage
             (css
                 [ displayFlex
-                , justifyContent flexEnd
+                , justifyContent flexStart
                 , position relative
                 , height (pct 100)
+                , width (pct 100)
+                , overflowY auto
                 ]
             )
+            pageLayout
             page
         ]
 
 
-dualPagesReader : { viewport : Viewport, publication : Publication.Data, model : Model } -> { left : ComicPage, right : ComicPage } -> Html Msg
-dualPagesReader { publication, model } { left, right } =
+dualPagesReader : PageLayout -> { left : ComicPage, right : ComicPage } -> Html Msg
+dualPagesReader pageLayout { left, right } =
     div
         [ css
             [ width (pct 100)
@@ -212,12 +216,15 @@ dualPagesReader { publication, model } { left, right } =
         [ viewPage
             (css
                 [ displayFlex
-                , justifyContent flexEnd
+                , justifyContent flexStart
                 , position relative
                 , height (pct 100)
+                , width (pct 100)
                 , Grid.area "left"
+                , overflowY auto
                 ]
             )
+            pageLayout
             left
         , viewPage
             (css
@@ -226,15 +233,18 @@ dualPagesReader { publication, model } { left, right } =
                 , justifyContent flexStart
                 , position relative
                 , height (pct 100)
+                , width (pct 100)
                 , Grid.area "right"
+                , overflowY auto
                 ]
             )
+            pageLayout
             right
         ]
 
 
-viewPage : Attribute Msg -> ComicPage -> Html Msg
-viewPage alignment page =
+viewPage : Attribute Msg -> PageLayout -> ComicPage -> Html Msg
+viewPage alignment pageLayout page =
     case page of
         ComicPage.Empty ->
             text ""
@@ -244,7 +254,7 @@ viewPage alignment page =
                 (\pageImage ->
                     div [ alignment ]
                         [ Image.fullHeight pageImage
-                        , viewPageNumber number
+                        , viewPageNumber pageLayout number
                         ]
                 )
                 data
@@ -253,17 +263,22 @@ viewPage alignment page =
             UI.Error.string "Out of bound"
 
 
-viewPageNumber : Int -> Html msg
-viewPageNumber number =
+viewPageNumber : PageLayout -> Int -> Html msg
+viewPageNumber pageLayout number =
     div
         [ css
             [ position absolute
             , bottom (px 0)
-            , if remainderBy 2 number == 0 then
-                right (px 0)
+            , case pageLayout of
+                SinglePageLayout _ ->
+                    right (px 0)
 
-              else
-                left (px 0)
+                DoublePagesLayout _ ->
+                    if remainderBy 2 number == 0 then
+                        right (px 0)
+
+                    else
+                        left (px 0)
             , Spacing.paddingEach
                 { bottom = Spacing.Large
                 , top = Spacing.None
@@ -367,6 +382,9 @@ update _ viewport msg model publication =
         RightImageLoaded data ->
             ( { model | pageLayout = setRightPage data model.pageLayout }, Cmd.none )
 
+        SingleImageLoaded data ->
+            ( { model | pageLayout = setSinglePage data model.pageLayout }, Cmd.none )
+
         Tick delta ->
             model.overlayVisibility
                 |> Header.toCounter
@@ -413,18 +431,57 @@ updateProgress publication model data =
     case data of
         ReloadableData.Success _ unclampedPercentage ->
             case model.pageLayout of
-                SinglePageLayout comicPage ->
-                    Debug.todo "singlepagelayout"
+                SinglePageLayout page ->
+                    updateSinglePageProgress publication unclampedPercentage page model
 
                 DoublePagesLayout pages ->
-                    updateDoublePagesProgress publication data unclampedPercentage pages model
+                    updateDoublePagesProgress publication unclampedPercentage pages model
 
         _ ->
             ( model, Cmd.none )
 
 
-updateDoublePagesProgress : Publication.Data -> ReloadableWebData Int Float -> Float -> { left : ComicPage, right : ComicPage } -> Model -> ( Model, Cmd Msg )
-updateDoublePagesProgress publication data unclampedPercentage { left, right } model =
+updateSinglePageProgress : Publication.Data -> Float -> ComicPage -> Model -> ( Model, Cmd Msg )
+updateSinglePageProgress publication unclampedPercentage page model =
+    let
+        percentage =
+            unclampedPercentage |> clamp 0 100
+
+        updatedPage =
+            page
+                |> ComicPage.toSinglePage (ReloadableData.Loading ())
+                    ReloadableData.loading
+                    { totalPages = publication.totalPages, percentage = percentage }
+
+        progress =
+            ReloadableData.Success publication.id (Progress.percentage percentage)
+
+        updatedModel =
+            { model
+                | progress = progress
+                , pageLayout = SinglePageLayout updatedPage
+            }
+
+        cmd =
+            Cmd.batch
+                [ updatedPage
+                    |> ComicPage.toPageNumber
+                    |> Maybe.map
+                        (\pageNumber ->
+                            Publication.downloadPage
+                                { publicationId = publication.id
+                                , page = pageNumber
+                                , msg = SingleImageLoaded
+                                }
+                        )
+                    |> Maybe.withDefault Cmd.none
+                ]
+    in
+    ( updatedModel, cmd )
+
+
+updateDoublePagesProgress : Publication.Data -> Float -> { left : ComicPage, right : ComicPage } -> Model -> ( Model, Cmd Msg )
+updateDoublePagesProgress publication unclampedPercentage { left, right } model =
     let
         percentage =
             unclampedPercentage |> clamp 0 100

@@ -253,7 +253,7 @@ update key viewport msg model =
             ( model, Cmd.none )
 
         GetDataCompleted data ->
-            updateCompletedData data model
+            updateCompletedData viewport data model
 
         LinkClicked url ->
             ( model, Nav.pushUrl key url )
@@ -303,8 +303,8 @@ updateComic key viewport comicMsg model ( publication, comicModel ) =
     )
 
 
-updateCompletedData : ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
-updateCompletedData data model =
+updateCompletedData : Viewport -> ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
+updateCompletedData viewport data model =
     let
         publicationId =
             ReloadableData.toInitial data
@@ -319,14 +319,14 @@ updateCompletedData data model =
                 Just MediaFormat.CBR ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init viewport publication |> Tuple.mapFirst (Comic publication))
                         |> extract
                         |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
                 Just MediaFormat.CBZ ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init viewport publication |> Tuple.mapFirst (Comic publication))
                         |> extract
                         |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
@@ -339,13 +339,13 @@ updateCompletedData data model =
                 Just MediaFormat.NoMediaFormat ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> ReloadableData.andThen (\_ -> Failure (SimpleError "Unknown media format") publicationId)
                         |> (\a -> ( a, Cmd.none ))
 
                 Nothing ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> ReloadableData.andThen (\_ -> Failure (SimpleError "Unknown media format") publicationId)
                         |> (\a -> ( a, Cmd.none ))
     in
     ( { model | publication = publicationType }
