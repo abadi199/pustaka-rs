@@ -145,7 +145,12 @@ view viewport model =
                                         publication
                                         comicModel
                                 , slider = Comic.slider comicModel
-                                , reader = Comic.reader publication comicModel
+                                , reader =
+                                    Comic.reader
+                                        { viewport = viewport
+                                        , publication = publication
+                                        , model = comicModel
+                                        }
                                 , previous = Comic.previous
                                 , next = Comic.next
                                 }
@@ -241,14 +246,14 @@ layout tagger { header, slider, reader, previous, next } =
 -- UPDATE
 
 
-update : Nav.Key -> Msg -> Model -> ( Model, Cmd Msg )
-update key msg model =
+update : Nav.Key -> Viewport -> Msg -> Model -> ( Model, Cmd Msg )
+update key viewport msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
 
         GetDataCompleted data ->
-            updateCompletedData data model
+            updateCompletedData viewport data model
 
         LinkClicked url ->
             ( model, Nav.pushUrl key url )
@@ -268,7 +273,7 @@ update key msg model =
             model.publication
                 |> ReloadableData.toMaybe
                 |> Maybe.andThen toComic
-                |> Maybe.map (updateComic key comicMsg model)
+                |> Maybe.map (updateComic key viewport comicMsg model)
                 |> Maybe.withDefault ( model, Cmd.none )
 
 
@@ -283,11 +288,11 @@ updateEpub key epubMsg model ( publication, epubModel ) =
     )
 
 
-updateComic : Nav.Key -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model ) -> ( Model, Cmd Msg )
-updateComic key comicMsg model ( publication, comicModel ) =
+updateComic : Nav.Key -> Viewport -> Comic.Msg -> Model -> ( Publication.Data, Comic.Model ) -> ( Model, Cmd Msg )
+updateComic key viewport comicMsg model ( publication, comicModel ) =
     let
         ( updatedComicModel, comicCmd ) =
-            Comic.update key comicMsg comicModel publication
+            Comic.update key viewport comicMsg comicModel publication
     in
     ( { model
         | publication =
@@ -298,8 +303,8 @@ updateComic key comicMsg model ( publication, comicModel ) =
     )
 
 
-updateCompletedData : ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
-updateCompletedData data model =
+updateCompletedData : Viewport -> ReloadableWebData Int Publication.Data -> Model -> ( Model, Cmd Msg )
+updateCompletedData viewport data model =
     let
         publicationId =
             ReloadableData.toInitial data
@@ -314,14 +319,14 @@ updateCompletedData data model =
                 Just MediaFormat.CBR ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init viewport publication |> Tuple.mapFirst (Comic publication))
                         |> extract
                         |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
                 Just MediaFormat.CBZ ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.map (\publication -> Comic.init publication |> Tuple.mapFirst (Comic publication))
+                        |> ReloadableData.map (\publication -> Comic.init viewport publication |> Tuple.mapFirst (Comic publication))
                         |> extract
                         |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map ComicMsg)
 
@@ -334,13 +339,13 @@ updateCompletedData data model =
                 Just MediaFormat.NoMediaFormat ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> ReloadableData.andThen (\_ -> Failure (SimpleError "Unknown media format") publicationId)
                         |> (\a -> ( a, Cmd.none ))
 
                 Nothing ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Failure (SimpleError "Unknown media format") publicationId)
+                        |> ReloadableData.andThen (\_ -> Failure (SimpleError "Unknown media format") publicationId)
                         |> (\a -> ( a, Cmd.none ))
     in
     ( { model | publication = publicationType }

@@ -94,7 +94,7 @@ reader { viewport, publication, model } =
                         ++ "/epub"
                )
             |> HA.attribute "epub"
-        , HA.attribute "width" (viewport.viewport.width - 200 |> String.fromFloat)
+        , HA.attribute "width" (viewport.viewport.width |> String.fromFloat)
         , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
         , HA.attribute "page" (model.pageCounter |> String.fromInt)
         , HA.attribute "percentage" (model.progress |> Progress.toFloat |> String.fromFloat)
