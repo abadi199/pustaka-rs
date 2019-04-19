@@ -333,8 +333,9 @@ updateCompletedData viewport data model =
                 Just MediaFormat.Epub ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Success publicationId (Epub publication Epub.initialModel))
-                        |> (\a -> ( a, Cmd.none ))
+                        |> ReloadableData.map (\publication -> Epub.init publication |> Tuple.mapFirst (Epub publication))
+                        |> extract
+                        |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map EpubMsg)
 
                 Just MediaFormat.NoMediaFormat ->
                     data

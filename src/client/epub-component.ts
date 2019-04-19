@@ -18,6 +18,7 @@ class EpubViewer extends HTMLElement {
       const height: number = parseInt(this.getAttribute("height") || "");
       this.rendition.resize(width, height);
     } else if (name === "page") {
+      console.log("page", oldValue, newValue);
       const oldPage = parseInt(oldValue, 10);
       const newPage = parseInt(newValue, 10);
       if (newPage > oldPage) {
@@ -26,8 +27,14 @@ class EpubViewer extends HTMLElement {
         this.rendition.prev();
       }
     } else if (name === "percentage") {
+      this.setPercentage(newValue);
+    }
+  }
+
+  setPercentage(percentage: string | null) {
+    if (percentage) {
       const cfi = this.book.locations.cfiFromPercentage(
-        parseFloat(newValue) / 100
+        parseFloat(percentage) / 100
       );
       this.rendition.display(cfi);
     }
@@ -39,11 +46,13 @@ class EpubViewer extends HTMLElement {
     const location = this.getAttribute("epub");
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
+    const percentage = this.getAttribute("percentage");
+    console.log("initialPercentage", percentage);
 
     shadow.appendChild(bookContainer);
 
     if (!location) {
-      alert("location attribute is empty!");
+      console.error("location attribute is empty!");
       return;
     }
 
@@ -70,6 +79,7 @@ class EpubViewer extends HTMLElement {
         return locations;
       })
       .then((locations: object) => {
+        this.setPercentage(percentage);
         this.dispatchEvent(new Event("ready"));
       });
   }
