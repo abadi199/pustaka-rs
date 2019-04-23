@@ -64,8 +64,8 @@ class EpubViewer extends HTMLElement {
     this.rendition.on("relocated", this.relocatedListener);
     this.rendition.on("keyup", this.keyListener);
     this.rendition.hooks.content.register(contents => {
-      contents.window.addEventListener("mousemove", evt => {
-        this.dispatchEvent(new Event("mousemove"));
+      contents.window.addEventListener("click", evt => {
+        this.dispatchEvent(new Event("click"));
       });
     });
 

@@ -85,6 +85,7 @@ subscription model =
 type Msg
     = NoOp
     | MouseMoved
+    | MouseClicked
     | Ready
     | PageChanged Float
     | PreviousPage
@@ -127,7 +128,7 @@ epubViewer { viewport, publication, model } progress =
          , HA.attribute "page" (model.pageCounter |> String.fromInt)
          , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
          , HE.on "ready" (JD.succeed Ready)
-         , UI.Events.onMouseMove MouseMoved
+         , HE.on "click" (JD.succeed MouseClicked)
          ]
             ++ (case model.initialProgress of
                     Just initialProgress ->
@@ -216,6 +217,11 @@ update key msg { model, publication } =
 
         MouseMoved ->
             ( { model | overlayVisibility = Header.visible counter }, Cmd.none )
+
+        MouseClicked ->
+            ( { model | overlayVisibility = Header.toggle counter model.overlayVisibility }
+            , Cmd.none
+            )
 
         Ready ->
             ( { model | isReady = True }
