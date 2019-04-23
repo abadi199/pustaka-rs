@@ -11,6 +11,7 @@ import Browser
 import Browser.Dom exposing (Viewport)
 import Browser.Navigation as Nav
 import Css exposing (..)
+import Css.Global as Global exposing (global)
 import Entity.MediaFormat as MediaFormat
 import Entity.Publication as Publication
 import Html.Styled as H exposing (..)
@@ -125,6 +126,7 @@ view viewport model =
     { title = "Read"
     , body =
         [ H.toUnstyled <| reset
+        , H.toUnstyled <| global [ Global.body [ overflowY hidden ] ]
         , H.toUnstyled <|
             UI.ReloadableData.custom
                 (\error ->
