@@ -4,6 +4,7 @@ module UI.Parts.Header exposing
     , hidden
     , isVisible
     , toCounter
+    , toggle
     , visibilityFromCounter
     , visible
     )
@@ -11,20 +12,27 @@ module UI.Parts.Header exposing
 import Css exposing (..)
 import Html.Styled as H exposing (..)
 import Html.Styled.Attributes as HA exposing (css)
-import Html.Styled.Events as HE
-import Route
 import UI.Action as Action
 import UI.Background as Background
 import UI.Css.Grid as Grid
 import UI.Events
 import UI.Heading as Heading exposing (Level(..))
 import UI.Icon as Icon
-import UI.Spacing as UI
 
 
 type Visibility
     = Hidden
     | Visible { counter : Float }
+
+
+toggle : { counter : Float } -> Visibility -> Visibility
+toggle { counter } visibility =
+    case visibility of
+        Visible _ ->
+            Hidden
+
+        Hidden ->
+            Visible { counter = counter }
 
 
 hidden : Visibility

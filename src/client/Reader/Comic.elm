@@ -75,6 +75,7 @@ counter =
 type Msg
     = NoOp
     | MouseMoved
+    | MouseClicked
     | LinkClicked String
     | NextPage
     | PreviousPage
@@ -178,7 +179,7 @@ singlePageReader pageLayout page =
             , Grid.templateColumns [ "100%" ]
             , overflowX auto
             ]
-        , UI.Events.onMouseMove MouseMoved
+        , onClick MouseClicked
         ]
         [ viewPage
             (css
@@ -205,21 +206,24 @@ dualPagesReader pageLayout { left, right } =
             , Grid.templateColumns [ "50%", "50%" ]
             , Grid.templateAreas [ "left right" ]
             ]
-        , UI.Events.onMouseMove MouseMoved
+        , onClick MouseClicked
         ]
-        [ viewPage
-            (css
+        [ div
+            [ css
                 [ displayFlex
-                , justifyContent flexStart
+                , justifyContent flexEnd
                 , position relative
                 , height (pct 100)
                 , width (pct 100)
                 , Grid.area "left"
                 , overflowY auto
                 ]
-            )
-            pageLayout
-            left
+            ]
+            [ viewPage
+                (css [ maxWidth (pct 100) ])
+                pageLayout
+                left
+            ]
         , viewPage
             (css
                 [ textAlign Css.left
@@ -391,6 +395,11 @@ update _ viewport msg model publication =
                         )
                     )
                 |> Maybe.withDefault ( model, Cmd.none )
+
+        MouseClicked ->
+            ( { model | overlayVisibility = Header.toggle counter model.overlayVisibility }
+            , Cmd.none
+            )
 
         MouseMoved ->
             ( { model | overlayVisibility = Header.visible counter }, Cmd.none )
