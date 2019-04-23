@@ -84,7 +84,7 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                 [ css
                     [ width (pct 100)
                     , Grid.display
-                    , Grid.templateColumns [ "auto", "1fr" ]
+                    , Grid.templateColumns [ "auto", "1fr", "auto" ]
                     , Background.solidWhite
                     , boxShadow5 zero zero (px 5) (px 5) (rgba 0 0 0 0.25)
                     ]
@@ -106,4 +106,5 @@ header { visibility, backUrl, onMouseMove, onLinkClicked, title } =
                         ]
                     ]
                     [ Heading.heading One title ]
+                , node "full-screen" [] []
                 ]

@@ -224,21 +224,21 @@ layout tagger { header, slider, reader, previous, next } =
         , div
             [ css
                 [ position absolute
-                , width (pct 100)
-                , top (px 0)
-                , left (px 0)
-                ]
-            ]
-            [ H.map tagger <| header ]
-        , div
-            [ css
-                [ position absolute
                 , top (px 0)
                 , right (px 0)
                 , height (pct 100)
                 ]
             ]
             [ next |> H.map tagger ]
+        , div
+            [ css
+                [ position absolute
+                , width (pct 100)
+                , top (px 0)
+                , left (px 0)
+                ]
+            ]
+            [ H.map tagger <| header ]
         ]
 
 
@@ -333,8 +333,9 @@ updateCompletedData viewport data model =
                 Just MediaFormat.Epub ->
                     data
                         |> ReloadableData.mapErr HttpError
-                        |> ReloadableData.andThen (\publication -> Success publicationId (Epub publication Epub.initialModel))
-                        |> (\a -> ( a, Cmd.none ))
+                        |> ReloadableData.map (\publication -> Epub.init publication |> Tuple.mapFirst (Epub publication))
+                        |> extract
+                        |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map EpubMsg)
 
                 Just MediaFormat.NoMediaFormat ->
                     data

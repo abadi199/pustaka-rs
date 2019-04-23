@@ -46,9 +46,6 @@ type alias Model =
     { overlayVisibility : Header.Visibility
     , progress : ReloadableWebData Int Progress
     , pageLayout : PageLayout
-
-    -- , leftPage : ComicPage (ReloadableWebData () Image)
-    -- , rightPage : ComicPage (ReloadableWebData () Image)
     }
 
 
@@ -63,9 +60,6 @@ initialModel viewport publication =
     { overlayVisibility = Header.visible counter
     , progress = ReloadableData.Loading publication.id
     , pageLayout = calculatePageLayout viewport
-
-    -- , leftPage = ComicPage.empty
-    -- , rightPage = ComicPage.empty
     }
 
 

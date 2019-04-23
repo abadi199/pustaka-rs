@@ -1,4 +1,15 @@
-module Reader.Epub exposing (Model, Msg, header, initialModel, next, previous, reader, slider, subscription, update)
+module Reader.Epub exposing
+    ( Model
+    , Msg
+    , header
+    , init
+    , next
+    , previous
+    , reader
+    , slider
+    , subscription
+    , update
+    )
 
 import Browser.Dom exposing (Viewport)
 import Browser.Events
@@ -14,6 +25,7 @@ import Keyboard
 import ReloadableData exposing (ReloadableWebData)
 import UI.Events
 import UI.Icon as Icon
+import UI.Loading
 import UI.Parts.Header as Header
 import UI.Parts.Slider as Slider
 
@@ -23,17 +35,26 @@ import UI.Parts.Slider as Slider
 
 
 type alias Model =
-    { progress : Progress
+    { initialProgress : Maybe Progress
+    , progress : Maybe Progress
     , isReady : Bool
     , overlayVisibility : Header.Visibility
     , pageCounter : Int
     }
 
 
+init : Publication.Data -> ( Model, Cmd Msg )
+init publication =
+    ( initialModel
+    , Publication.getProgress { publicationId = publication.id, msg = GetProgressCompleted }
+    )
+
+
 initialModel : Model
 initialModel =
-    { progress = Progress.percentage 0
-    , isReady = False
+    { initialProgress = Nothing
+    , progress = Nothing
+    , isReady = True
     , overlayVisibility = Header.visible counter
     , pageCounter = 0
     }
@@ -84,9 +105,16 @@ reader :
     , model : Model
     }
     -> Html Msg
-reader { viewport, publication, model } =
+reader ({ viewport, publication, model } as args) =
+    model.progress
+        |> Maybe.map (epubViewer args)
+        |> Maybe.withDefault UI.Loading.view
+
+
+epubViewer : { viewport : Viewport, publication : Publication.Data, model : Model } -> Progress -> Html Msg
+epubViewer { viewport, publication, model } progress =
     H.node "epub-viewer"
-        [ publication.id
+        ([ publication.id
             |> String.fromInt
             |> (\id ->
                     "/api/publication/download/"
@@ -94,14 +122,21 @@ reader { viewport, publication, model } =
                         ++ "/epub"
                )
             |> HA.attribute "epub"
-        , HA.attribute "width" (viewport.viewport.width |> String.fromFloat)
-        , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
-        , HA.attribute "page" (model.pageCounter |> String.fromInt)
-        , HA.attribute "percentage" (model.progress |> Progress.toFloat |> String.fromFloat)
-        , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
-        , HE.on "ready" (JD.succeed Ready)
-        , UI.Events.onMouseMove MouseMoved
-        ]
+         , HA.attribute "width" (viewport.viewport.width |> String.fromFloat)
+         , HA.attribute "height" (viewport.viewport.height |> String.fromFloat)
+         , HA.attribute "page" (model.pageCounter |> String.fromInt)
+         , HE.on "pageChanged" (JD.at [ "detail" ] JD.float |> JD.map PageChanged)
+         , HE.on "ready" (JD.succeed Ready)
+         , UI.Events.onMouseMove MouseMoved
+         ]
+            ++ (case model.initialProgress of
+                    Just initialProgress ->
+                        [ HA.attribute "percentage" (initialProgress |> Progress.toFloat |> String.fromFloat) ]
+
+                    Nothing ->
+                        []
+               )
+        )
         []
 
 
@@ -118,21 +153,21 @@ header { backUrl, publication, model } =
 
 slider : Model -> Html Msg
 slider model =
-    case ( model.isReady, Header.isVisible model.overlayVisibility ) of
-        ( False, _ ) ->
+    case ( model.progress, Header.isVisible model.overlayVisibility ) of
+        ( Nothing, _ ) ->
             text ""
 
-        ( True, False ) ->
+        ( Just progress, False ) ->
             Slider.compact
                 { onMouseMove = MouseMoved
-                , percentage = model.progress |> Progress.toFloat
+                , percentage = progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
-        ( True, True ) ->
+        ( Just progress, True ) ->
             Slider.large
                 { onMouseMove = MouseMoved
-                , percentage = model.progress |> Progress.toFloat
+                , percentage = progress |> Progress.toFloat
                 , onClick = SliderClicked
                 }
 
@@ -184,7 +219,7 @@ update key msg { model, publication } =
 
         Ready ->
             ( { model | isReady = True }
-            , Publication.getProgress { publicationId = publication.id, msg = GetProgressCompleted }
+            , Cmd.none
             )
 
         GetProgressCompleted data ->
@@ -192,7 +227,12 @@ update key msg { model, publication } =
                 |> ReloadableData.toMaybe
                 |> Maybe.map
                     (\float ->
-                        ( { model | progress = Progress.percentage float }, Cmd.none )
+                        ( { model
+                            | initialProgress = Just <| Progress.percentage float
+                            , progress = Just <| Progress.percentage float
+                          }
+                        , Cmd.none
+                        )
                     )
                 |> Maybe.withDefault ( model, Cmd.none )
 
@@ -201,7 +241,7 @@ update key msg { model, publication } =
                 progress =
                     Progress.percentage float
             in
-            ( { model | progress = progress }
+            ( { model | initialProgress = Just progress, progress = Just progress }
             , if model.isReady then
                 Publication.updateProgress
                     { publicationId = publication.id
@@ -214,13 +254,40 @@ update key msg { model, publication } =
             )
 
         PreviousPage ->
-            ( { model | pageCounter = model.pageCounter - 1 }, Cmd.none )
+            case model.progress of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just progress ->
+                    if Progress.toFloat progress <= 0 then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | pageCounter = model.pageCounter - 1, initialProgress = Nothing }
+                        , Cmd.none
+                        )
 
         NextPage ->
-            ( { model | pageCounter = model.pageCounter + 1 }, Cmd.none )
+            case model.progress of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just progress ->
+                    if Progress.toFloat progress >= 100 then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | pageCounter = model.pageCounter + 1, initialProgress = Nothing }
+                        , Cmd.none
+                        )
 
         SliderClicked float ->
-            ( { model | progress = Progress.percentage float }, Cmd.none )
+            ( { model
+                | progress = Just <| Progress.percentage float
+                , initialProgress = Just <| Progress.percentage float
+              }
+            , Cmd.none
+            )
 
         LinkClicked string ->
             ( model, Nav.pushUrl key string )
