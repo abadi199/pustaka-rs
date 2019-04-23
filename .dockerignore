@@ -6,3 +6,8 @@ elm-stuff/
 app/*.js
 *.md
 *.db
+Dockerfile
+_build
+azure-pipelines.yml
+.project
+.dockerignore
