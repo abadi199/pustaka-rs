@@ -254,10 +254,32 @@ update key msg { model, publication } =
             )
 
         PreviousPage ->
-            ( { model | pageCounter = model.pageCounter - 1, initialProgress = Nothing }, Cmd.none )
+            case model.progress of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just progress ->
+                    if Progress.toFloat progress <= 0 then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | pageCounter = model.pageCounter - 1, initialProgress = Nothing }
+                        , Cmd.none
+                        )
 
         NextPage ->
-            ( { model | pageCounter = model.pageCounter + 1, initialProgress = Nothing }, Cmd.none )
+            case model.progress of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just progress ->
+                    if Progress.toFloat progress >= 100 then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | pageCounter = model.pageCounter + 1, initialProgress = Nothing }
+                        , Cmd.none
+                        )
 
         SliderClicked float ->
             ( { model

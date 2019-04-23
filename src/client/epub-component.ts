@@ -18,7 +18,6 @@ class EpubViewer extends HTMLElement {
       const height: number = parseInt(this.getAttribute("height") || "");
       this.rendition.resize(width, height);
     } else if (name === "page") {
-      console.log("page", oldValue, newValue);
       const oldPage = parseInt(oldValue, 10);
       const newPage = parseInt(newValue, 10);
       if (newPage > oldPage) {
@@ -47,7 +46,6 @@ class EpubViewer extends HTMLElement {
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
     const percentage = this.getAttribute("percentage");
-    console.log("initialPercentage", percentage);
 
     shadow.appendChild(bookContainer);
 
