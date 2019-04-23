@@ -26,6 +26,9 @@ jobs:
         BACKEND: sqlite
       setup:
         - bash: |
+            sudo rm -rf /home/vsts/.elm
+          displayName: Clean elm cache
+        - bash: |
             sudo apt-get update &&
             sudo apt-get -y install sqlite3 libsqlite3-dev
           displayName: Install sqlite
