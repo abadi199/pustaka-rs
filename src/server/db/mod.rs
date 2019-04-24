@@ -8,6 +8,7 @@ pub mod executor;
 pub mod media_type;
 pub mod publication;
 pub mod publication_category;
+pub mod setting;
 pub mod tag;
 
 pub fn create_db_pool(database_url: &str) -> Pool<ConnectionManager<SqliteConnection>> {

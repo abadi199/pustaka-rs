@@ -1,11 +1,11 @@
+use chrono;
 use schema::{
     author, category, favorite_category, media_type, publication, publication_category,
-    publication_progress, recent_publication, tag,
+    publication_progress, recent_publication, setting, tag,
 };
 use serde::ser::SerializeStruct;
 use serde::Serialize;
 use serde::Serializer;
-use chrono;
 
 pub const CBR: &str = "cbr";
 pub const CBZ: &str = "cbz";
@@ -166,4 +166,12 @@ pub struct PublicationProgress {
 pub struct RecentPublication {
     pub publication_id: i32,
     pub timestamp: Option<chrono::NaiveDateTime>,
+}
+
+#[derive(Identifiable, Debug, Queryable, Serialize, Deserialize, Insertable)]
+#[table_name = "setting"]
+#[primary_key(setting_id)]
+pub struct Setting {
+    pub setting_id: i32,
+    pub publication_path: Option<String>,
 }

@@ -69,6 +69,13 @@ table! {
 }
 
 table! {
+    setting (setting_id) {
+        setting_id -> Integer,
+        publication_path -> Nullable<Text>,
+    }
+}
+
+table! {
     tag (id) {
         id -> Integer,
         name -> Text,
@@ -102,6 +109,7 @@ allow_tables_to_appear_in_same_query!(
     publication_progress,
     publication_tag,
     recent_publication,
+    setting,
     tag,
     user,
 );

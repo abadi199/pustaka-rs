@@ -9,6 +9,7 @@ use actix::prelude::*;
 use futures::future::{join_all, Future};
 use pustaka::config::{self, Config};
 use pustaka::db::executor::DbExecutor;
+use pustaka::db::setting;
 use pustaka::db::{publication, publication_category};
 use pustaka::models::{NewPublication, Publication, PublicationCategory};
 use pustaka::scan::actor::{
@@ -28,26 +29,35 @@ fn main() {
     let db_1 = db.clone();
     let db_2 = db.clone();
     let db_3 = db.clone();
+    let db_4 = db.clone();
 
     let scanner = SyncArbiter::start(5, || Scanner {});
     let scanner_1 = scanner.clone();
     let scanner_2 = scanner.clone();
-    let config = config::get_config();
-    let config_1 = config.clone();
-    let config_2 = config.clone();
-
     let task = db
-        .send(pustaka::db::category::List {})
-        .join(scanner.clone().send(ScanFolder {}))
-        .and_then(|(categories, files)| process_files(scanner_1, config_1, categories, files))
-        .and_then(|res| save_publication(db_1, res))
-        .and_then(|res| update_metadata(config_2, scanner_2, res))
-        .and_then(|res| update_publication(db_2, res))
-        .and_then(|res| save_publication_categories(db_3, res))
-        .map(|_| {
-            println!("The End");
-            System::current().stop();
+        .send(setting::Get {})
+        .and_then(move |res| {
+            let publication_path = res
+                .ok()
+                .and_then(|setting| setting.publication_path)
+                .unwrap_or("".to_string());
+            let config = config::get_config();
+            let config_1 = config.clone();
+            let config_2 = config.clone();
+
+            db_1.send(pustaka::db::category::List {})
+                .join(scanner.clone().send(ScanFolder {
+                    publication_path: publication_path.clone(),
+                }))
+                .and_then(|(categories, files)| {
+                    process_files(scanner_1, config_1, publication_path, categories, files)
+                })
+                .and_then(|res| save_publication(db_2, res))
+                .and_then(|res| update_metadata(config_2, scanner_2, res))
+                .and_then(|res| update_publication(db_3, res))
+                .and_then(|res| save_publication_categories(db_4, res))
         })
+        .map(|_| System::current().stop())
         .map_err(|err| println!("{:?}", err));
 
     Arbiter::spawn(task);
@@ -57,6 +67,7 @@ fn main() {
 fn process_files(
     scanner: Addr<Scanner>,
     config: Config,
+    publication_path: String,
     categories: Result<Vec<pustaka::models::Category>, actix_web::Error>,
     files: Result<Vec<File>, ScannerError>,
 ) -> Box<Future<Item = Vec<Result<(File, CategoryId), ScannerError>>, Error = actix::MailboxError>>
@@ -71,6 +82,7 @@ fn process_files(
     for file in files.iter() {
         let scanner = scanner.clone();
         let task = scanner.send(ProcessFile {
+            publication_path: publication_path.clone(),
             config: config.clone(),
             categories: categories.clone(),
             file: file.clone(),

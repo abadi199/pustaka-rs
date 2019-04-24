@@ -1,5 +1,4 @@
 use actix::prelude::*;
-use config;
 use scan::actor::{File, Scanner};
 use scan::error::ScannerError;
 use std::collections::HashSet;
@@ -17,7 +16,9 @@ lazy_static! {
 }
 
 #[derive(Debug, Clone)]
-pub struct ScanFolder();
+pub struct ScanFolder {
+    pub publication_path: String,
+}
 impl Message for ScanFolder {
     type Result = Result<Vec<File>, ScannerError>;
 }
@@ -25,9 +26,8 @@ impl Message for ScanFolder {
 impl Handler<ScanFolder> for Scanner {
     type Result = Result<Vec<File>, ScannerError>;
 
-    fn handle(&mut self, _msg: ScanFolder, _: &mut Self::Context) -> Self::Result {
-        let config = config::get_config();
-        Ok(WalkDir::new(&config.publication_path)
+    fn handle(&mut self, msg: ScanFolder, _: &mut Self::Context) -> Self::Result {
+        Ok(WalkDir::new(&msg.publication_path)
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(is_accepted_file)

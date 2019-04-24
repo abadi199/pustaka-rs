@@ -7,6 +7,7 @@ use std::path::Path;
 #[derive(Debug, Clone)]
 pub struct ProcessFile {
     pub config: Config,
+    pub publication_path: String,
     pub categories: Vec<Category>,
     pub file: File,
 }
@@ -20,13 +21,13 @@ impl Handler<ProcessFile> for Scanner {
     fn handle(&mut self, msg: ProcessFile, _: &mut Self::Context) -> Self::Result {
         let file = msg.file;
         let categories = msg.categories;
-        let matched_category = process_category(&msg.config, &file, &categories)?;
+        let matched_category = process_category(&msg.publication_path, &file, &categories)?;
         Ok((file, matched_category.id))
     }
 }
 
 fn process_category<'a>(
-    config: &Config,
+    publication_path: &str,
     file: &File,
     categories: &'a [Category],
 ) -> Result<&'a Category, ScannerError> {
@@ -35,12 +36,7 @@ fn process_category<'a>(
         false => {
             let matched_category = categories
                 .iter()
-                .map(|category| {
-                    (
-                        rank_category(&config.publication_path, category, file),
-                        category,
-                    )
-                })
+                .map(|category| (rank_category(publication_path, category, file), category))
                 .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
                 .map(|(_, cat)| cat);
             matched_category.ok_or(ScannerError::NoMatchCategory)
