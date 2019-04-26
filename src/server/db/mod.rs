@@ -6,6 +6,7 @@ pub mod author;
 pub mod category;
 pub mod executor;
 pub mod media_type;
+pub mod migration;
 pub mod publication;
 pub mod publication_category;
 pub mod setting;

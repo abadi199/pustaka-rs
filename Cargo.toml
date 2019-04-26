@@ -23,6 +23,7 @@ path = "src/server/lib.rs"
 [dependencies]
 diesel = { version = "1.4.2", features = ["chrono", "sqlite"] }
 diesel-derive-enum = { version = "0.4.4", features = ["sqlite"] }
+diesel_migrations = "1.4.0"
 dotenv = "0.13.0"
 r2d2 = "0.8.3"
 r2d2-diesel = "1.0.0"

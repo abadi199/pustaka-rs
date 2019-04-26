@@ -1,15 +1,17 @@
 extern crate actix;
 extern crate actix_web;
 extern crate diesel;
+extern crate futures;
 extern crate pustaka;
 
 use actix::prelude::*;
 use actix_web::{fs::NamedFile, http, server, App, HttpRequest, Result};
+use futures::Future;
 use http::Method;
 use pustaka::api::{author, category, media_type, publication, tag};
 use pustaka::config;
 use pustaka::db::executor::DbExecutor;
-use pustaka::db::setting;
+use pustaka::db::migration;
 use pustaka::fs::executor::FsExecutor;
 use pustaka::state::AppState;
 use std::path::PathBuf;
