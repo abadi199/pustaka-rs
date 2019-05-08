@@ -25,7 +25,7 @@ fn assets(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     }
 }
 
-fn main() {
+fn main() { 
     let sys = actix::System::new("pustaka");
 
     // start db executor
