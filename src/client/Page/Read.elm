@@ -20,6 +20,7 @@ import Http
 import Keyboard
 import Reader.Comic as Comic
 import Reader.Epub as Epub
+import Reader.Pdf as Pdf
 import ReloadableData exposing (ReloadableData(..), ReloadableWebData)
 import Route
 import UI.Error
@@ -47,12 +48,23 @@ type ReadError
 type PublicationType
     = Epub Publication.Data Epub.Model
     | Comic Publication.Data Comic.Model
+    | Pdf Publication.Data Pdf.Model
 
 
 toEpub : PublicationType -> Maybe ( Publication.Data, Epub.Model )
 toEpub publicationType =
     case publicationType of
         Epub publication model ->
+            Just ( publication, model )
+
+        _ ->
+            Nothing
+
+
+toPdf : PublicationType -> Maybe ( Publication.Data, Pdf.Model )
+toPdf publicationType =
+    case publicationType of
+        Pdf publication model ->
             Just ( publication, model )
 
         _ ->
@@ -92,6 +104,9 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ case model.publication |> ReloadableData.toMaybe of
+            Just (Pdf _ pdfModel) ->
+                Pdf.subscription pdfModel |> Sub.map PdfMsg
+
             Just (Epub _ epubModel) ->
                 Epub.subscription epubModel |> Sub.map EpubMsg
 
@@ -115,6 +130,7 @@ type Msg
     | MouseMoved
     | EpubMsg Epub.Msg
     | ComicMsg Comic.Msg
+    | PdfMsg Pdf.Msg
 
 
 
@@ -174,6 +190,25 @@ view viewport model =
                                         }
                                 , previous = Epub.previous
                                 , next = Epub.next
+                                }
+
+                        Pdf publication pdfModel ->
+                            layout PdfMsg
+                                { header =
+                                    Pdf.header
+                                        { backUrl = model.backUrl
+                                        , publication = publication
+                                        , model = pdfModel
+                                        }
+                                , slider = Pdf.slider pdfModel
+                                , reader =
+                                    Pdf.reader
+                                        { viewport = viewport
+                                        , publication = publication
+                                        , model = pdfModel
+                                        }
+                                , previous = Pdf.previous
+                                , next = Pdf.next
                                 }
                 )
                 model.publication
@@ -271,6 +306,14 @@ update key viewport msg model =
                 |> Maybe.withDefault
                     ( model, Cmd.none )
 
+        PdfMsg pdfMsg ->
+            model.publication
+                |> ReloadableData.toMaybe
+                |> Maybe.andThen toPdf
+                |> Maybe.map (updatePdf key pdfMsg model)
+                |> Maybe.withDefault
+                    ( model, Cmd.none )
+
         ComicMsg comicMsg ->
             model.publication
                 |> ReloadableData.toMaybe
@@ -287,6 +330,17 @@ updateEpub key epubMsg model ( publication, epubModel ) =
     in
     ( { model | publication = model.publication |> ReloadableData.map (always (Epub publication updatedEpubModel)) }
     , epubCmd |> Cmd.map EpubMsg
+    )
+
+
+updatePdf : Nav.Key -> Pdf.Msg -> Model -> ( Publication.Data, Pdf.Model ) -> ( Model, Cmd Msg )
+updatePdf key pdfMsg model ( publication, pdfModel ) =
+    let
+        ( updatedPdfModel, cmd ) =
+            Pdf.update key pdfMsg { model = pdfModel, publication = publication }
+    in
+    ( { model | publication = model.publication |> ReloadableData.map (always (Pdf publication updatedPdfModel)) }
+    , cmd |> Cmd.map PdfMsg
     )
 
 

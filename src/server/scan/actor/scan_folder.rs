@@ -11,6 +11,7 @@ lazy_static! {
         m.insert("cbr");
         m.insert("cbz");
         m.insert("epub");
+        m.insert("pdf");
         m
     };
 }

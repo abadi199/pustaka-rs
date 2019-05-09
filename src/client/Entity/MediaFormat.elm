@@ -9,6 +9,7 @@ type MediaFormat
     | CBR
     | CBZ
     | Epub
+    | Pdf
 
 
 none : MediaFormat
@@ -28,6 +29,9 @@ decoder =
                     "cbz" ->
                         JD.succeed CBZ
 
+                    "pdf" ->
+                        JD.succeed Pdf
+
                     "epub" ->
                         JD.succeed Epub
 
@@ -41,19 +45,7 @@ decoder =
 
 encode : MediaFormat -> JE.Value
 encode mediaFormat =
-    case mediaFormat of
-        CBR ->
-            JE.string "cbr"
-
-        CBZ ->
-            JE.string "cbz"
-
-        Epub ->
-            JE.string "epub"
-
-        NoMediaFormat ->
-            JE.string ""
-
+    JE.string <| toString mediaFormat
 
 toString : MediaFormat -> String
 toString mediaFormat =
@@ -63,6 +55,9 @@ toString mediaFormat =
 
         CBZ ->
             "cbz"
+
+        Pdf ->
+            "pdf"
 
         Epub ->
             "epub"

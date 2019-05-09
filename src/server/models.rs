@@ -10,6 +10,7 @@ use serde::Serializer;
 pub const CBR: &str = "cbr";
 pub const CBZ: &str = "cbz";
 pub const EPUB: &str = "epub";
+pub const PDF: &str = "pdf";
 
 pub type CategoryId = i32;
 

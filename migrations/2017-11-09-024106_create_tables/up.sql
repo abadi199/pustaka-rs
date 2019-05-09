@@ -25,7 +25,7 @@ CREATE TABLE publication (
   isbn VARCHAR NOT NULL,
   title VARCHAR NOT NULL,
   media_type_id INTEGER NOT NULL,
-  media_format TEXT CHECK(media_format IN ('cbr', 'cbz', 'epub')) NOT NULL,
+  media_format TEXT CHECK(media_format IN ('cbr', 'cbz', 'epub', 'pdf')) NOT NULL,
   author_id INTEGER NOT NULL,
   thumbnail VARCHAR NULL,
   file VARCHAR NOT NULL,

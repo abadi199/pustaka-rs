@@ -35,6 +35,7 @@ fn get_thumbnail(config: &Config, publication: &Publication) -> Option<String> {
         CBR => get_thumbnail_cbr(config, publication),
         CBZ => get_thumbnail_cbz(config, publication),
         EPUB => None,
+        PDF => None,
         _ => None,
     }
 }
