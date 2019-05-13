@@ -28,6 +28,7 @@ fn insert_favorite_category(connection: &SqliteConnection) {
         "Fantasy".to_string(),
         "Science fiction".to_string(),
         "Programming".to_string(),
+        "Design".to_string(),
         "Picture book".to_string(),
     ];
 
@@ -121,6 +122,7 @@ fn insert_category(connection: &SqliteConnection) {
         "Speech".to_string(),
         "Textbook".to_string(),
         "Programming".to_string(),
+        "Design".to_string(),
     ];
     for category_name in non_fictions {
         diesel::insert_into(category)

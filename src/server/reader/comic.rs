@@ -72,7 +72,7 @@ fn open_cbr(config: &Config, the_publication: &Publication) -> Result<Data, Comi
         has_thumbnail: the_publication.has_thumbnail().clone(),
         file: the_publication.file.clone(),
         media_format: the_publication.media_format.clone(),
-        total_pages: open_archive.count(),
+        total_pages: Some(open_archive.count()),
     })
 }
 
@@ -90,7 +90,7 @@ fn open_cbz(the_publication: &Publication) -> Result<Data, ComicError> {
         has_thumbnail: the_publication.has_thumbnail().clone(),
         file: the_publication.file.clone(),
         media_format: the_publication.media_format.clone(),
-        total_pages: count,
+        total_pages: Some(count),
     })
 }
 

@@ -393,6 +393,13 @@ updateCompletedData viewport data model =
                         |> extract
                         |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map EpubMsg)
 
+                Just MediaFormat.Pdf ->
+                    data
+                        |> ReloadableData.mapErr HttpError
+                        |> ReloadableData.map (\publication -> Pdf.init publication |> Tuple.mapFirst (Pdf publication))
+                        |> extract
+                        |> Tuple.mapSecond (Maybe.withDefault Cmd.none >> Cmd.map PdfMsg)
+
                 Just MediaFormat.NoMediaFormat ->
                     data
                         |> ReloadableData.mapErr HttpError

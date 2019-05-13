@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use config::Config;
 use fs::thumbnail;
-use models::{CategoryId, Publication, CBR, CBZ, EPUB};
+use models::{CategoryId, Publication, CBR, CBZ, EPUB, PDF};
 use reader::comic;
 use scan::actor::Scanner;
 use scan::error::ScannerError;

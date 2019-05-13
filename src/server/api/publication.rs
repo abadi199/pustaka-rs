@@ -15,7 +15,7 @@ use fs::thumbnail;
 use futures::{future, Future, IntoFuture, Stream};
 use mime;
 use models::{NewPublication, Publication, PublicationProgress, CBR, CBZ, EPUB};
-use reader::{comic, epub};
+use reader::{comic, epub, pdf};
 use state::AppState;
 use std::{
     error::Error,
@@ -146,6 +146,7 @@ fn read(state: State<AppState>, publication_id: Path<i32>) -> FutureResponse<Htt
             CBR => read_cbr(&config, &publication),
             CBZ => read_cbz(&config, &publication),
             EPUB => read_epub(&publication),
+            PDF => read_pdf(&publication),
             _ => Ok(HttpResponse::InternalServerError().into()),
         },
     )
@@ -166,6 +167,12 @@ fn read_cbr(config: &Config, publication: &Publication) -> Result<HttpResponse, 
 
 fn read_epub(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
     epub::open(&publication)
+        .map_err(|err| err.into())
+        .and_then(|data| Ok(HttpResponse::Ok().json(data)))
+}
+
+fn read_pdf(publication: &Publication) -> Result<HttpResponse, actix_web::Error> {
+    pdf::open(&publication)
         .map_err(|err| err.into())
         .and_then(|data| Ok(HttpResponse::Ok().json(data)))
 }

@@ -1,6 +1,5 @@
 use actix_web::{fs::NamedFile, ResponseError};
 use config::Config;
-use epub::doc::EpubDoc;
 use models::Publication;
 use reader::models::Data;
 use std::{convert::From, error::Error, fmt, path::PathBuf};
@@ -8,8 +7,8 @@ use unzip;
 use zip::result::ZipError;
 
 #[derive(Debug)]
-pub enum EpubError {
-    EpubError(failure::Error),
+pub enum PdfError {
+    PdfError(failure::Error),
     PageError,
     PageNotFound,
     FileNotFound,
@@ -17,31 +16,30 @@ pub enum EpubError {
     GenericError(String),
 }
 
-impl From<failure::Error> for EpubError {
+impl From<failure::Error> for PdfError {
     fn from(error: failure::Error) -> Self {
-        EpubError::EpubError(error)
+        PdfError::PdfError(error)
     }
 }
 
-impl fmt::Display for EpubError {
+impl fmt::Display for PdfError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            EpubError::EpubError(err) => write!(f, "EpubError: {}", err),
-            EpubError::PageError => write!(f, "PageError"),
-            EpubError::PageNotFound => write!(f, "PageNotFound"),
-            EpubError::FileNotFound => write!(f, "FileNotFound"),
-            EpubError::ZipError(err) => write!(f, "ZipError: {:?}", err),
-            EpubError::GenericError(err) => write!(f, "GenericError: {}", &err),
+            PdfError::PdfError(err) => write!(f, "PdfError: {}", err),
+            PdfError::PageError => write!(f, "PageError"),
+            PdfError::PageNotFound => write!(f, "PageNotFound"),
+            PdfError::FileNotFound => write!(f, "FileNotFound"),
+            PdfError::ZipError(err) => write!(f, "ZipError: {:?}", err),
+            PdfError::GenericError(err) => write!(f, "GenericError: {}", &err),
         }
     }
 }
 
-impl Error for EpubError {}
+impl Error for PdfError {}
 
-impl ResponseError for EpubError {}
+impl ResponseError for PdfError {}
 
-pub fn open(the_publication: &Publication) -> Result<Data, EpubError> {
-    let doc = EpubDoc::new(&the_publication.file)?;
+pub fn open(the_publication: &Publication) -> Result<Data, PdfError> {
     Ok(Data {
         id: the_publication.id,
         isbn: the_publication.isbn.clone(),
@@ -50,15 +48,15 @@ pub fn open(the_publication: &Publication) -> Result<Data, EpubError> {
         author_id: the_publication.author_id,
         has_thumbnail: the_publication.has_thumbnail().clone(),
         file: the_publication.file.clone(),
-        total_pages: Some(doc.get_num_pages()),
+        total_pages: None,
         media_format: the_publication.media_format.clone(),
     })
 }
 
-pub fn page(the_publication: &Publication, page_number: usize) -> Result<String, EpubError> {
-    let mut doc = EpubDoc::new(&the_publication.file)?;
-    doc.set_current_page(page_number)?;
-    doc.get_current_str().map_err(|e| EpubError::EpubError(e))
+pub fn page(_: &Publication, _: usize) -> Result<String, PdfError> {
+    Err(PdfError::GenericError(
+        "Reading page is not supported for PDF".to_string(),
+    ))
 }
 
 const EXTRACT_LOCATION: &str = "cache";
@@ -67,7 +65,7 @@ pub fn file(
     config: &Config,
     the_publication: &Publication,
     path: PathBuf,
-) -> Result<NamedFile, EpubError> {
+) -> Result<NamedFile, PdfError> {
     let mut extract_location = PathBuf::from(config.pustaka_home.clone());
     extract_location.push(EXTRACT_LOCATION);
     extract_location.push(the_publication.id.to_string());
@@ -77,11 +75,11 @@ pub fn file(
 
     if !filepath.exists() {
         let extract_location_str: &str = extract_location.to_str().ok_or(
-            EpubError::GenericError("Unable to get extract location path".to_string()),
+            PdfError::GenericError("Unable to get extract location path".to_string()),
         )?;
         unzip::unzip(&the_publication.file, extract_location_str)
-            .map_err(|err| EpubError::ZipError(err))?;
+            .map_err(|err| PdfError::ZipError(err))?;
     }
 
-    NamedFile::open(filepath).map_err(|_| EpubError::FileNotFound)
+    NamedFile::open(filepath).map_err(|_| PdfError::FileNotFound)
 }

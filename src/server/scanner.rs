@@ -53,9 +53,8 @@ fn main() {
                     process_files(scanner_1, config_1, publication_path, categories, files)
                 })
                 .and_then(|res| save_publication(db_2, res))
-                .and_then(|res| update_metadata(config_2, scanner_2, res))
-                .and_then(|res| update_publication(db_3, res))
-                .and_then(|res| save_publication_categories(db_4, res))
+                .and_then(|res| save_publication_categories(db_3, res))
+                .and_then(|res| update_metadata(config_2, db_4, scanner_2, res))
         })
         .map(|_| System::current().stop())
         .map_err(|err| println!("{:?}", err));
@@ -136,6 +135,7 @@ fn save_publication(
 
 fn update_metadata(
     config: Config,
+    db: Addr<DbExecutor>,
     scanner: Addr<Scanner>,
     result: Result<Vec<(Publication, CategoryId)>, actix_web::Error>,
 ) -> Box<
@@ -144,15 +144,19 @@ fn update_metadata(
         Error = actix::MailboxError,
     >,
 > {
+    println!("Updating Metadata");
     let mut batch = Vec::new();
     let publications = result.unwrap();
     for data in publications.into_iter() {
+        let db_clone = db.clone();
         let scanner = scanner.clone();
-        let task = scanner.send(LoadMetadata {
-            config: config.clone(),
-            publication: data.0,
-            category_id: data.1,
-        });
+        let task = scanner
+            .send(LoadMetadata {
+                config: config.clone(),
+                publication: data.0,
+                category_id: data.1,
+            })
+            .and_then(move |res| update_publication(db_clone, res));
         batch.push(task);
     }
 
@@ -161,41 +165,45 @@ fn update_metadata(
 
 fn update_publication(
     db: Addr<DbExecutor>,
-    result: Vec<Result<(Publication, CategoryId), ScannerError>>,
-) -> Box<
-    Future<
-        Item = Vec<Result<(Publication, CategoryId), ScannerError>>,
-        Error = actix::MailboxError,
-    >,
-> {
-    let mut batch = Vec::new();
-    for data in result.into_iter() {
-        let db = db.clone();
-        let data = data.unwrap();
-        let task = db
-            .send(publication::Update {
-                publication: data.0.clone(),
-            })
-            .map(|_| Ok(data));
-        batch.push(task)
-    }
+    result: Result<(Publication, CategoryId), ScannerError>,
+) -> Box<Future<Item = Result<(Publication, CategoryId), ScannerError>, Error = actix::MailboxError>>
+{
+    println!("Updating Publication");
+    let db = db.clone();
+    let data = result.unwrap();
+    let task = db
+        .send(publication::Update {
+            publication: data.0.clone(),
+        })
+        .map(|_| Ok(data));
 
-    Box::new(join_all(batch))
+    Box::new(task)
 }
 
 fn save_publication_categories(
     db: Addr<DbExecutor>,
-    publications: Vec<Result<(Publication, CategoryId), ScannerError>>,
-) -> Box<Future<Item = Result<(), actix_web::Error>, Error = actix::MailboxError>> {
+    result: Result<Vec<(Publication, CategoryId)>, actix_web::Error>,
+) -> Box<
+    Future<
+        Item = Result<Vec<(Publication, CategoryId)>, actix_web::Error>,
+        Error = actix::MailboxError,
+    >,
+> {
+    println!("Saving Publication Categories");
+    let publications: Vec<(Publication, CategoryId)> = result.unwrap();
     let publication_categories: Vec<PublicationCategory> = publications
+        .clone()
         .into_iter()
         .map(|res| {
-            let (publication, category_id) = res.unwrap();
+            let (publication, category_id) = res;
             PublicationCategory {
                 publication_id: publication.id,
                 category_id: category_id,
             }
         })
         .collect();
-    Box::new(db.send(publication_category::CreateBatch(publication_categories)))
+    Box::new(
+        db.send(publication_category::CreateBatch(publication_categories))
+            .map(|_| Ok(publications)),
+    )
 }
